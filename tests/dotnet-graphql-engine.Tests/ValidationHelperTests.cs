@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -9,7 +10,7 @@ using Xunit;
 
 namespace GraphQLEngine.Tests.Common.Utilities;
 
-public class ValidationHelperTests
+sealed public class ValidationHelperTests
 {
     [Fact]
     public void ValidateQueryString_WhenQueryIsEmpty_ReturnsFalseAndPopulatesErrorList()

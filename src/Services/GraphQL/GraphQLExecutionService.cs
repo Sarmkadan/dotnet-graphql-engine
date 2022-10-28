@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -12,7 +13,7 @@ namespace GraphQLEngine.Services.GraphQL;
 /// <summary>
 /// Service for executing GraphQL queries and mutations
 /// </summary>
-public class GraphQLExecutionService
+sealed public class GraphQLExecutionService
 {
     private readonly ILogger<GraphQLExecutionService> _logger;
     private readonly Dictionary<string, object> _resolvers = new();
@@ -30,7 +31,7 @@ public class GraphQLExecutionService
         if (string.IsNullOrEmpty(fieldPath))
             throw new ArgumentException("Field path cannot be empty", nameof(fieldPath));
 
-        if (resolver == null) throw new ArgumentNullException(nameof(resolver));
+        if (resolver is null) throw new ArgumentNullException(nameof(resolver));
 
         _resolvers[fieldPath] = resolver;
         _logger.LogInformation("Resolver registered for field: {FieldPath}", fieldPath);
@@ -41,7 +42,7 @@ public class GraphQLExecutionService
     /// </summary>
     public async Task<ExecutionContext> ExecuteAsync(GraphQLQuery query)
     {
-        if (query == null) throw new ArgumentNullException(nameof(query));
+        if (query is null) throw new ArgumentNullException(nameof(query));
 
         var context = new ExecutionContext(query.Id);
         context.RequestedFieldCount = query.SelectedFields.Count;

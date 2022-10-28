@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -17,7 +18,7 @@ using Moq;
 using NUnit.Framework;
 
 [TestFixture]
-public class GraphQLExecutionTests
+sealed public class GraphQLExecutionTests
 {
     private ServiceProvider _serviceProvider;
     private GraphQLExecutionService _executionService;

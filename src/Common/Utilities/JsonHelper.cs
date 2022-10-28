@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -35,7 +36,7 @@ public static class JsonHelper
     /// </summary>
     public static string Serialize(object? obj, bool pretty = false)
     {
-        if (obj == null)
+        if (obj is null)
             return "null";
 
         try
@@ -54,7 +55,7 @@ public static class JsonHelper
     /// </summary>
     public static string Serialize(object? obj, JsonSerializerOptions options)
     {
-        if (obj == null)
+        if (obj is null)
             return "null";
 
         try
@@ -124,7 +125,7 @@ public static class JsonHelper
     /// </summary>
     public static Dictionary<string, object?>? ToDict(object? obj)
     {
-        if (obj == null)
+        if (obj is null)
             return null;
 
         try
@@ -143,7 +144,7 @@ public static class JsonHelper
     /// </summary>
     public static T? FromDict<T>(Dictionary<string, object?>? dict)
     {
-        if (dict == null)
+        if (dict is null)
             return default;
 
         try
@@ -214,11 +215,11 @@ public static class JsonHelper
 
         foreach (var obj in objects)
         {
-            if (obj == null)
+            if (obj is null)
                 continue;
 
             var dict = ToDict(obj);
-            if (dict != null)
+            if (dict is not null)
             {
                 foreach (var kvp in dict)
                     result[kvp.Key] = kvp.Value;
@@ -271,10 +272,10 @@ public static class JsonHelper
     public static string RemoveNulls(string json)
     {
         var dict = DeserializeToDictionary(json);
-        if (dict == null)
+        if (dict is null)
             return json;
 
-        var filtered = dict.Where(kvp => kvp.Value != null)
+        var filtered = dict.Where(kvp => kvp.Value is not null)
             .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
         return Serialize(filtered);

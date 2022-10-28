@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -8,7 +9,7 @@ namespace GraphQLEngine.Domain.ValueObjects;
 /// <summary>
 /// Configuration for GraphQL subscriptions
 /// </summary>
-public class SubscriptionConfig
+sealed public class SubscriptionConfig
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public bool Enabled { get; set; } = true;
@@ -29,7 +30,7 @@ public class SubscriptionConfig
         if (string.IsNullOrEmpty(name))
             throw new ArgumentException("Filter name cannot be empty", nameof(name));
 
-        if (filter == null) throw new ArgumentNullException(nameof(filter));
+        if (filter is null) throw new ArgumentNullException(nameof(filter));
 
         _filters[name] = filter;
     }
@@ -77,7 +78,7 @@ public class SubscriptionConfig
 /// <summary>
 /// Represents a filter for subscriptions
 /// </summary>
-public class SubscriptionFilter
+sealed public class SubscriptionFilter
 {
     public string Name { get; set; } = string.Empty;
     public string Expression { get; set; } = string.Empty;

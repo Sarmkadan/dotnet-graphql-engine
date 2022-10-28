@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -12,7 +13,7 @@ namespace GraphQLEngine.Api.Controllers;
 /// Health check endpoint for monitoring and deployment orchestration
 /// Provides detailed service health information
 /// </summary>
-public class HealthCheckController
+sealed public class HealthCheckController
 {
     private readonly GraphQLExecutionService _executionService;
     private readonly ILogger<HealthCheckController> _logger;
@@ -157,7 +158,7 @@ public class HealthCheckController
 /// <summary>
 /// Simple health status response
 /// </summary>
-public class HealthStatusResponse
+sealed public class HealthStatusResponse
 {
     public string Status { get; set; } = "healthy";
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
@@ -166,7 +167,7 @@ public class HealthStatusResponse
 /// <summary>
 /// Detailed health information response
 /// </summary>
-public class HealthDetailsResponse
+sealed public class HealthDetailsResponse
 {
     public string Status { get; set; } = string.Empty;
     public DateTime Timestamp { get; set; }
@@ -180,7 +181,7 @@ public class HealthDetailsResponse
 /// <summary>
 /// Environment and system information
 /// </summary>
-public class EnvironmentInfoDto
+sealed public class EnvironmentInfoDto
 {
     public string? Platform { get; set; }
     public string? DotNetVersion { get; set; }
@@ -192,7 +193,7 @@ public class EnvironmentInfoDto
 /// <summary>
 /// Individual service health status
 /// </summary>
-public class HealthServiceInfo
+sealed public class HealthServiceInfo
 {
     public ServiceStatus? GraphQL { get; set; }
     public ServiceStatus? Schema { get; set; }
@@ -203,7 +204,7 @@ public class HealthServiceInfo
 /// <summary>
 /// Single service status
 /// </summary>
-public class ServiceStatus
+sealed public class ServiceStatus
 {
     public string Status { get; set; } = "operational";
     public string? Message { get; set; }
@@ -213,7 +214,7 @@ public class ServiceStatus
 /// <summary>
 /// Service metrics and statistics
 /// </summary>
-public class ServiceMetricsDto
+sealed public class ServiceMetricsDto
 {
     public int TotalQueries { get; set; }
     public double AverageExecutionTime { get; set; }
@@ -224,7 +225,7 @@ public class ServiceMetricsDto
 /// <summary>
 /// Diagnostics test result
 /// </summary>
-public class DiagnosticTest
+sealed public class DiagnosticTest
 {
     public string Name { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
@@ -235,7 +236,7 @@ public class DiagnosticTest
 /// <summary>
 /// Complete diagnostics response
 /// </summary>
-public class DiagnosticsResponse
+sealed public class DiagnosticsResponse
 {
     public DateTime StartTime { get; set; }
     public DateTime? EndTime { get; set; }

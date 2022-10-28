@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -15,7 +16,7 @@
 
 using Microsoft.Extensions.DependencyInjection;
 
-public class AuthAndErrorHandlingExample
+sealed public class AuthAndErrorHandlingExample
 {
     public static async Task Run(IServiceProvider serviceProvider)
     {

@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -13,7 +14,7 @@ using Xunit;
 
 namespace GraphQLEngine.Tests.Domain;
 
-public class QueryComplexityTests
+sealed public class QueryComplexityTests
 {
     [Fact]
     public void RecordFieldComplexity_WhenCalled_AccumulatesTotalScoreAndFieldCount()
@@ -73,7 +74,7 @@ public class QueryComplexityTests
     }
 }
 
-public class CacheServiceTests
+sealed public class CacheServiceTests
 {
     private static CacheService CreateCacheService(bool enableCaching = true)
     {

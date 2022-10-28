@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -8,7 +9,7 @@ namespace GraphQLEngine.Exceptions;
 /// <summary>
 /// Base exception for GraphQL engine operations
 /// </summary>
-public class GraphQLException : Exception
+sealed public class GraphQLException : Exception
 {
     public string? ErrorCode { get; set; }
     public Dictionary<string, object> Extensions { get; set; } = new();
@@ -37,7 +38,7 @@ public class GraphQLException : Exception
 /// <summary>
 /// Exception thrown during schema operations
 /// </summary>
-public class SchemaException : GraphQLException
+sealed public class SchemaException : GraphQLException
 {
     public SchemaException(string message) : base(message, "SCHEMA_ERROR") { }
 
@@ -48,7 +49,7 @@ public class SchemaException : GraphQLException
 /// <summary>
 /// Exception thrown during query execution
 /// </summary>
-public class ExecutionException : GraphQLException
+sealed public class ExecutionException : GraphQLException
 {
     public string? FieldPath { get; set; }
     public int? LineNumber { get; set; }
@@ -66,7 +67,7 @@ public class ExecutionException : GraphQLException
 /// <summary>
 /// Exception thrown during query complexity analysis
 /// </summary>
-public class QueryComplexityException : GraphQLException
+sealed public class QueryComplexityException : GraphQLException
 {
     public int ActualScore { get; set; }
     public int MaxScore { get; set; }
@@ -82,7 +83,7 @@ public class QueryComplexityException : GraphQLException
 /// <summary>
 /// Exception thrown when validation fails
 /// </summary>
-public class ValidationException : GraphQLException
+sealed public class ValidationException : GraphQLException
 {
     public List<string> ValidationErrors { get; set; } = new();
 
@@ -96,7 +97,7 @@ public class ValidationException : GraphQLException
 /// <summary>
 /// Exception thrown during data loading
 /// </summary>
-public class DataLoaderException : GraphQLException
+sealed public class DataLoaderException : GraphQLException
 {
     public string LoaderName { get; set; } = string.Empty;
 
@@ -110,7 +111,7 @@ public class DataLoaderException : GraphQLException
 /// <summary>
 /// Exception thrown during subscription operations
 /// </summary>
-public class SubscriptionException : GraphQLException
+sealed public class SubscriptionException : GraphQLException
 {
     public string? ClientId { get; set; }
 

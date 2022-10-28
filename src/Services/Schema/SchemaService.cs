@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -12,7 +13,7 @@ namespace GraphQLEngine.Services.Schema;
 /// <summary>
 /// Service for managing GraphQL schemas
 /// </summary>
-public class SchemaService
+sealed public class SchemaService
 {
     private readonly ILogger<SchemaService> _logger;
     private readonly Dictionary<string, GraphQLSchema> _schemas = new();
@@ -145,7 +146,7 @@ public class SchemaService
         sdl.AppendLine();
 
         // Export Query type
-        if (schema.QueryType != null)
+        if (schema.QueryType is not null)
         {
             sdl.AppendLine($"type {schema.QueryType.Name} {{");
             foreach (var field in schema.QueryType.Fields)
@@ -155,7 +156,7 @@ public class SchemaService
         }
 
         // Export Mutation type
-        if (schema.MutationType != null)
+        if (schema.MutationType is not null)
         {
             sdl.AppendLine($"type {schema.MutationType.Name} {{");
             foreach (var field in schema.MutationType.Fields)

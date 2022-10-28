@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -12,7 +13,7 @@ namespace GraphQLEngine.Api.Middleware;
 /// Error handling middleware that catches and formats exceptions
 /// Converts various exception types to appropriate error responses
 /// </summary>
-public class ErrorHandlingMiddleware
+sealed public class ErrorHandlingMiddleware
 {
     private readonly ILogger<ErrorHandlingMiddleware> _logger;
     private readonly ErrorHandlingOptions _options;
@@ -142,7 +143,7 @@ public class ErrorHandlingMiddleware
 /// <summary>
 /// Error handling configuration options
 /// </summary>
-public class ErrorHandlingOptions
+sealed public class ErrorHandlingOptions
 {
     public bool IncludeDetailedErrorMessages { get; set; } = false;
     public bool LogStackTraces { get; set; } = true;
@@ -153,7 +154,7 @@ public class ErrorHandlingOptions
 /// <summary>
 /// Formatted error response
 /// </summary>
-public class ErrorResponse
+sealed public class ErrorResponse
 {
     public int StatusCode { get; set; } = 500;
     public string Code { get; set; } = string.Empty;
@@ -185,7 +186,7 @@ public class ErrorResponse
 /// <summary>
 /// Represents a validation error for a specific field
 /// </summary>
-public class FieldErrorDto
+sealed public class FieldErrorDto
 {
     public string FieldName { get; set; } = string.Empty;
     public string ErrorMessage { get; set; } = string.Empty;
@@ -195,7 +196,7 @@ public class FieldErrorDto
 /// <summary>
 /// Validation error response with field-level errors
 /// </summary>
-public class ValidationErrorResponse
+sealed public class ValidationErrorResponse
 {
     public int StatusCode { get; set; } = 400;
     public string Code { get; set; } = "VALIDATION_ERROR";

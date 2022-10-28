@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -16,7 +17,7 @@ public static class CollectionExtensions
     /// </summary>
     public static bool IsNullOrEmpty<T>(this IEnumerable<T>? collection)
     {
-        return collection == null || !collection.Any();
+        return collection is null || !collection.Any();
     }
 
     /// <summary>
@@ -24,7 +25,7 @@ public static class CollectionExtensions
     /// </summary>
     public static bool HasItems<T>(this IEnumerable<T>? collection)
     {
-        return collection != null && collection.Any();
+        return collection is not null && collection.Any();
     }
 
     /// <summary>
@@ -40,7 +41,7 @@ public static class CollectionExtensions
     /// </summary>
     public static void AddIfNotNull<T>(this ICollection<T> collection, T? item)
     {
-        if (item != null)
+        if (item is not null)
             collection.Add(item);
     }
 
@@ -49,7 +50,7 @@ public static class CollectionExtensions
     /// </summary>
     public static void AddRange<T>(this ICollection<T> collection, IEnumerable<T>? items)
     {
-        if (items == null)
+        if (items is null)
             return;
 
         foreach (var item in items)
@@ -61,7 +62,7 @@ public static class CollectionExtensions
     /// </summary>
     public static void RemoveRange<T>(this ICollection<T> collection, IEnumerable<T>? items)
     {
-        if (items == null)
+        if (items is null)
             return;
 
         foreach (var item in items)
@@ -156,7 +157,7 @@ public static class CollectionExtensions
     /// </summary>
     public static IEnumerable<T> Combine<T>(params IEnumerable<T>?[] collections)
     {
-        foreach (var collection in collections.Where(c => c != null))
+        foreach (var collection in collections.Where(c => c is not null))
         {
             foreach (var item in collection!)
                 yield return item;
