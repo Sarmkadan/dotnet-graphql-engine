@@ -9,7 +9,8 @@
     <Title>dotnet-graphql-engine</Title>
     <Description>Code-first GraphQL server for .NET - schema stitching, DataLoader, subscriptions, query complexity analysis</Description>
     <Authors>Vladyslav Zaiets</Authors>
-    <PackageProjectUrl>https://github.com/vladyslavzaiets/dotnet-graphql-engine</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/sarmkadan/dotnet-graphql-engine</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/sarmkadan/dotnet-graphql-engine</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 

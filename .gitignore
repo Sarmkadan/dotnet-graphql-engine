@@ -15,6 +15,7 @@ obj/
 # NuGet
 *.nupkg
 *.snupkg
+*.suo
 *.dll
 *.exe
 *.pdb
@@ -23,11 +24,13 @@ obj/
 .idea/
 .idea/**
 *.sln.iml
+*.DotSettings.user
 
 # Local environment variables
 .env
 .env.local
 appsettings.local.json
+appsettings.Development.json
 
 # Build results
 [Dd]ebug/

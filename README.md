@@ -965,9 +965,9 @@ See LICENSE file for complete details.
 
 ## Support
 
-- 📖 [Documentation](docs/)
-- 💬 [Issues & Discussion](https://github.com/vladyslavzaiets/dotnet-graphql-engine/issues)
-- 📧 [Email Support](mailto:rutova2@gmail.com)
+- [Documentation](docs/)
+- [Issues & Discussion](https://github.com/vladyslavzaiets/dotnet-graphql-engine/issues)
+- [Email Support](mailto:rutova2@gmail.com)
 
 ---
 
