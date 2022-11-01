@@ -5,6 +5,7 @@
 
 using GraphQLEngine.Domain.Entities;
 using Microsoft.Extensions.Logging;
+using ExecutionContext = GraphQLEngine.Domain.Entities.ExecutionContext;
 
 namespace GraphQLEngine.Services.GraphQL;
 

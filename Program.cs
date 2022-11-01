@@ -124,7 +124,6 @@ class Program
             getUserField.AddArgument(idArg);
 
             var getUsersField = new GraphQLField("getUsers", "User");
-            getUsersField.IsArray = true;
             getUsersField.Description = "Get all users";
 
             queryType.AddField(getUserField);

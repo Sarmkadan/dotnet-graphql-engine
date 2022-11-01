@@ -67,7 +67,7 @@ public class ExternalApiIntegration : IDisposable
                 endpoint.LastSuccessfulCall = DateTime.UtcNow;
                 endpoint.CallCount++;
 
-                return ApiResponse<T>.Success(data);
+                return ApiResponse<T>.Ok(data);
             }
 
             endpoint.FailureCount++;
@@ -111,7 +111,7 @@ public class ExternalApiIntegration : IDisposable
                 endpoint.LastSuccessfulCall = DateTime.UtcNow;
                 endpoint.CallCount++;
 
-                return ApiResponse<TResponse>.Success(result);
+                return ApiResponse<TResponse>.Ok(result);
             }
 
             endpoint.FailureCount++;
@@ -254,7 +254,7 @@ public class ApiResponse<T> where T : class
     public string? Error { get; set; }
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 
-    public static ApiResponse<T> Success(T? data)
+    public static ApiResponse<T> Ok(T? data)
     {
         return new ApiResponse<T>
         {

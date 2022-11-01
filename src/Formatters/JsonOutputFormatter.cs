@@ -80,7 +80,7 @@ public class JsonOutputFormatter
             success = true,
             message = message ?? "Operation successful",
             data = data,
-            timestamp = _options.IncludeTimestamp ? DateTime.UtcNow : null
+            timestamp = _options.IncludeTimestamp ? (DateTime?)DateTime.UtcNow : null
         };
 
         return Format(response);
@@ -97,7 +97,7 @@ public class JsonOutputFormatter
             error = error,
             code = code,
             details = details,
-            timestamp = _options.IncludeTimestamp ? DateTime.UtcNow : null
+            timestamp = _options.IncludeTimestamp ? (DateTime?)DateTime.UtcNow : null
         };
 
         return Format(response);
@@ -126,7 +126,7 @@ public class JsonOutputFormatter
                 hasNextPage = pageNumber < totalPages,
                 hasPreviousPage = pageNumber > 1
             },
-            timestamp = _options.IncludeTimestamp ? DateTime.UtcNow : null
+            timestamp = _options.IncludeTimestamp ? (DateTime?)DateTime.UtcNow : null
         };
 
         return Format(response);
@@ -143,7 +143,7 @@ public class JsonOutputFormatter
             batch = new
             {
                 count = count,
-                processedAt = _options.IncludeTimestamp ? DateTime.UtcNow : null
+                processedAt = _options.IncludeTimestamp ? (DateTime?)DateTime.UtcNow : null
             }
         };
 

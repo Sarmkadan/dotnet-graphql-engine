@@ -151,7 +151,7 @@ public class SchemaDocumentationFormatter
         if (schema.QueryType?.Fields != null)
         {
             sb.AppendLine("### Queries:");
-            foreach (var field in schema.QueryType.Fields.Values)
+            foreach (var field in schema.QueryType.Fields)
             {
                 sb.AppendLine($"  - `{field.Name}`: {field.Description}");
             }
@@ -161,7 +161,7 @@ public class SchemaDocumentationFormatter
         if (schema.MutationType?.Fields != null)
         {
             sb.AppendLine("### Mutations:");
-            foreach (var field in schema.MutationType.Fields.Values)
+            foreach (var field in schema.MutationType.Fields)
             {
                 sb.AppendLine($"  - `{field.Name}`: {field.Description}");
             }
@@ -185,7 +185,7 @@ public class SchemaDocumentationFormatter
             sb.AppendLine("### Basic Queries");
             sb.AppendLine("```graphql");
 
-            var firstField = schema.QueryType.Fields.Values.First();
+            var firstField = schema.QueryType.Fields.First();
             sb.AppendLine($"query {{");
             sb.AppendLine($"  {firstField.Name} {{");
             sb.AppendLine($"    # Add fields here");
@@ -223,9 +223,9 @@ public class SchemaDocumentationFormatter
             sb.AppendLine($"{heading}# Fields");
             sb.AppendLine();
 
-            foreach (var field in type.Fields.Values)
+            foreach (var field in type.Fields)
             {
-                sb.AppendLine($"- **{field.Name}**: `{field.Type}`");
+                sb.AppendLine($"- **{field.Name}**: `{field.ReturnType}`");
                 if (!string.IsNullOrEmpty(field.Description))
                     sb.AppendLine($"  - {field.Description}");
             }
@@ -250,9 +250,9 @@ public class SchemaDocumentationFormatter
         if (type.Fields != null)
         {
             sb.AppendLine($"{indent}Fields:");
-            foreach (var field in type.Fields.Values)
+            foreach (var field in type.Fields)
             {
-                sb.AppendLine($"{indent}  - {field.Name}: {field.Type}");
+                sb.AppendLine($"{indent}  - {field.Name}: {field.ReturnType}");
             }
         }
 

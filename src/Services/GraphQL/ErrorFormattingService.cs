@@ -7,6 +7,7 @@ using GraphQLEngine.Configuration;
 using GraphQLEngine.Domain.Entities;
 using GraphQLEngine.Exceptions;
 using Microsoft.Extensions.Logging;
+using ExecutionContext = GraphQLEngine.Domain.Entities.ExecutionContext;
 
 namespace GraphQLEngine.Services.GraphQL;
 
