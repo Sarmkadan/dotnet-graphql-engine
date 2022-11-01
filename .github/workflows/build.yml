@@ -1,0 +1,109 @@
+# =============================================================================
+# Author: Vladyslav Zaiets | https://sarmkadan.com
+# CTO & Software Architect
+# =============================================================================
+
+name: Build & Test
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build -c Release --no-restore
+
+    - name: Run tests
+      run: dotnet test -c Release --no-build --verbosity normal
+
+    - name: Code quality
+      run: |
+        dotnet tool install -g dotnet-sonarscanner
+        dotnet tool install -g dotnet-coverage
+        dotnet-sonarscanner begin /k:"dotnet-graphql-engine" /o:"vladyslavzaiets" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+        dotnet build -c Release
+        dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+      continue-on-error: true
+
+    - name: Publish
+      run: dotnet publish -c Release -o ./publish
+
+    - name: Build Docker image
+      run: docker build -t vladyslavzaiets/dotnet-graphql-engine:latest .
+
+    - name: Push Docker image
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      run: |
+        echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+        docker tag vladyslavzaiets/dotnet-graphql-engine:latest vladyslavzaiets/dotnet-graphql-engine:${{ github.sha }}
+        docker push vladyslavzaiets/dotnet-graphql-engine:latest
+        docker push vladyslavzaiets/dotnet-graphql-engine:${{ github.sha }}
+
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: build
+        path: ./publish
+
+  security-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Install security tools
+      run: |
+        dotnet tool install -g security-scan
+        dotnet tool install -g dotnet-format
+
+    - name: Check formatting
+      run: dotnet format --verify-no-changes
+      continue-on-error: true
+
+    - name: Run security scan
+      run: dotnet list package --vulnerable
+      continue-on-error: true
+
+  performance-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Build benchmark
+      run: dotnet build -c Release
+
+    - name: Run performance tests
+      run: dotnet test -c Release --filter "Category=Performance"
+      continue-on-error: true
