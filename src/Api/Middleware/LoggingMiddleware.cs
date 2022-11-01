@@ -125,7 +125,7 @@ public class LoggingMiddleware
 
         _logger.LogInformation(message, operationName ?? "Anonymous", errorCount ?? 0, durationMs);
 
-        if (_options.LogLevel >= LogLevel.Debug && _options.LogQueryBody)
+        if (_options.LogLevel >= LogLevel.Debug && _options.LogRequestBody)
             _logger.LogDebug("GraphQL Query: {Query}", truncatedQuery);
     }
 

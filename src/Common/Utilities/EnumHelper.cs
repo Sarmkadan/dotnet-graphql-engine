@@ -173,7 +173,7 @@ public static class EnumHelper
     public static T CombineFlags<T>(params T[] values) where T : Enum
     {
         if (values == null || values.Length == 0)
-            return values?.FirstOrDefault() ?? default!;
+            return default!;
 
         if (!IsFlagsEnum<T>())
             throw new InvalidOperationException("Type is not a Flags enum");
