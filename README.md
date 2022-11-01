@@ -1,3 +1,7 @@
+[![Build](https://github.com/sarmkadan/dotnet-graphql-engine/actions/workflows/build.yml/badge.svg)](https://github.com/sarmkadan/dotnet-graphql-engine/actions/workflows/build.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![.NET](https://img.shields.io/badge/.NET-10.0-purple.svg)](https://dotnet.microsoft.com/)
+
 # dotnet-graphql-engine
 
 > **A production-grade, code-first GraphQL server for .NET 10** with advanced features including schema stitching, batch data loading (DataLoader), subscriptions, and query complexity analysis.
