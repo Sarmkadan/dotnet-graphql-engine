@@ -1039,6 +1039,6 @@ See LICENSE file for complete details.
 
 ---
 
-**Built by [Vladyslav Zaiets](https://sarmkadan.com) - CTO & Software Architect**
+**Built by [Vladyslav Zaiets](https://sarmkadan.com)**
 
 [Portfolio](https://sarmkadan.com) | [GitHub](https://github.com/Sarmkadan) | [Telegram](https://t.me/sarmkadan)

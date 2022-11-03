@@ -5,227 +5,182 @@ All notable changes to dotnet-graphql-engine are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.2.0] - 2026-05-04
+## [1.0.0] - 2025-10-27
 
 ### Added
-- **Schema Type System** - Complete GraphQL type system with support for scalars, objects, interfaces, unions, and enums
-- **Code-First API** - Define entire GraphQL schemas in C# without SDL files
-- **Query Execution** - Full query and mutation execution with field resolution
-- **Error Handling** - Comprehensive error formatting with field-level location tracking
-- **Type Introspection** - Built-in __schema and __type queries
-- **Performance Metrics** - Execution time tracking per field and total query
+- **Persisted Queries** - Store and execute queries by hash; reduces bandwidth and enables server-side query allowlisting
+- **PersistedQueryService** - Hash-based query store with retrieval and registration APIs
+- **Schema Documentation Formatter** - Export schema as human-readable HTML or Markdown documentation
+- **CSV Output Formatter** - Stream flat query results as CSV for analytics pipelines
 
 ### Changed
-- Improved error messages with more context
-- Optimized type registry lookups
-- Enhanced field resolution performance
+- Promoted all beta APIs to stable; no further breaking changes planned for this major line
+- Improved XML doc coverage on all public types for IntelliSense completeness
 
 ### Fixed
-- Memory leak in subscription cleanup
-- Race condition in concurrent query execution
-- Cache invalidation on schema updates
+- Persisted query lookup returned stale entry after schema reload
+- CSV formatter emitted extra trailing newline on empty result sets
 
-## [1.1.0] - 2026-04-15
+## [0.9.0] - 2025-09-15
 
 ### Added
-- **DataLoader Support** - Batch data loading to prevent N+1 queries
-- **Query Complexity Analysis** - Analyze and limit query complexity
-- **Query Result Caching** - LRU cache with configurable TTL and size limits
-- **Custom Directives** - Support for custom GraphQL directives
-- **Subscription Management** - WebSocket-based real-time subscriptions
-- **Event Bus** - Pub/sub system for subscription events
+- **Rate Limiting Middleware** - Per-IP and per-token request throttling with configurable windows
+- **CLI Argument Parser** - Override `appsettings.json` configuration via command-line flags at startup
+- **ReflectionHelper** - Utility for scanning types and resolvers at startup to auto-register fields
+- **EnumHelper** - Bi-directional enum ↔ string conversion used in type-kind serialisation
 
 ### Changed
-- Refactored execution context to support custom data
-- Improved schema compilation and caching
-- Better error propagation in nested resolvers
+- `GraphQLEngineOptions` now exposes four preset profiles: `Default`, `Strict`, `Permissive`, `HighPerformance`
+- Logging middleware writes structured JSON entries with correlation IDs
 
 ### Fixed
-- DataLoader batch execution timing
-- Cache key collision detection
-- Subscription memory management
+- Race condition in `SubscriptionService` when two clients unsubscribed simultaneously
+- Incorrect HTTP 200 returned on partial errors; now returns 200 with `errors` array per spec
 
 ### Performance
-- 50x improvement for cached queries
-- Batch operations process 100+ items in single call
-- Schema compilation cache eliminates introspection overhead
+- Hot-path schema lookup now O(1) via pre-built dictionary instead of linear scan
 
-## [1.0.0] - 2026-03-01
+## [0.8.0] - 2025-08-04
 
 ### Added
-- **Core GraphQL Engine** - Full GraphQL execution engine for .NET
-- **Type System** - GraphQL type definitions and validation
-- **Query Parser** - Parse and validate GraphQL queries
-- **Schema Service** - Create and manage GraphQL schemas
-- **HTTP Endpoints** - POST /graphql, GET /graphql/schema, GET /health
-- **Middleware Pipeline** - Authentication, logging, rate limiting, error handling
-- **Configuration** - Flexible configuration via GraphQLEngineOptions
-- **Dependency Injection** - Full DI integration with Microsoft.Extensions
-- **Exception Handling** - Custom GraphQL exceptions with detailed information
-- **Repository Pattern** - Generic repository interface for data access
-- **In-Memory Repository** - Built-in in-memory repository implementation
+- **Schema Stitching** - Fetch and merge a remote GraphQL schema at startup via `SchemaStitchingConfig`
+- **ExternalApiIntegration** - Typed HTTP client for calling stitched upstream schemas with retry and timeout
+- **WebhookHandler** - Inbound webhook receiver that publishes events to the internal `EventBus`
+- **HttpClientFactory** - Centralised factory with connection pooling for all outbound HTTP calls
 
-### Features
-- Code-first schema definition
-- Type-safe query execution
-- Field-level error tracking
-- Custom error formatting
-- Performance metrics collection
-- Health check endpoint
-- Configurable complexity limits
-- Configurable query timeout
-- Support for query variables
-- Multi-schema support
+### Changed
+- `SchemaService.StitchSchemaAsync` now validates field type compatibility before merging
+- `SubscriptionConfig` value object updated with `HeartbeatIntervalSeconds` field
 
-### Documentation
-- Comprehensive README with examples
-- API reference documentation
-- Getting started guide
-- Architecture guide
-- Deployment guide
-- Troubleshooting section
-- Contributing guidelines
+### Fixed
+- Schema stitching silently ignored remote types whose names clashed with local types
+- `HttpClientFactory` leaked sockets when remote endpoint was unreachable
 
-## [0.9.0] - 2026-02-01 (Beta)
+## [0.7.0] - 2025-06-23
 
 ### Added
-- Beta release of dotnet-graphql-engine
-- Core GraphQL query execution
-- Basic schema support
-- HTTP endpoints
-- In-memory data storage
+- **Real-Time Subscriptions** - WebSocket-based subscriptions with `SubscriptionService` and `SubscriptionConnection`
+- **EventBus** - In-process pub/sub; subscribers receive typed payloads via `Func<object, Task>` handlers
+- **EventPublisher** - Thin wrapper over `EventBus` for DI-friendly injection into domain services
+- **HealthCheckBackgroundService** - Periodic self-check that writes status to the `/health` endpoint
+- **CacheMaintenanceBackgroundService** - Evicts expired LRU entries on a configurable schedule
 
-### Note
-- Public API subject to change
-- For evaluation purposes only
+### Changed
+- `GraphQLController` now upgrades WebSocket connections for subscription queries automatically
+- `ErrorHandlingMiddleware` catches `GraphQLException` and returns structured `errors` JSON
+
+### Fixed
+- Subscription handler leaked memory when client disconnected without sending `connection_terminate`
+- Background services did not observe `CancellationToken` on host shutdown
+
+## [0.6.0] - 2025-05-12
+
+### Added
+- **DistributedCacheService** - Pluggable cache backend with in-memory default and `IDistributedCache` adapter
+- **CacheKeyBuilder** - Deterministic cache key construction from query string and variable map
+- **CacheService** (GraphQL layer) - LRU query result cache with per-entry TTL and max-size eviction
+- **QueryAnalysisService** - Depth-first traversal computing `TotalComplexity`, `MaxDepth`, and `FieldCount`
+- `QueryComplexity` entity with `ComplexityLevel` enum (`LOW`, `MEDIUM`, `HIGH`, `CRITICAL`)
+
+### Changed
+- `GraphQLExecutionService` now checks complexity before executing and short-circuits with `GraphQLException` on breach
+- `GraphQLEngineOptions` adds `EnableCaching`, `CacheTtlSeconds`, and `CacheMaxSizeBytes` fields
+
+### Fixed
+- Query result was cached even when the execution produced errors
+- Complexity analyser double-counted inline fragments
+
+## [0.5.0] - 2025-04-07
+
+### Added
+- **DataLoaderService** - Batch-loading registry; resolvers call `LoadAsync` per key, batches are flushed automatically
+- `DataLoaderRequest` entity tracking batch-function name, key, and result promise
+- **CollectionExtensions** - `Chunk`, `DistinctBy`, and `ToHashSet` helpers for batch grouping logic
+- **TypeConverter** - Safe `Convert.ChangeType` wrapper used by DataLoader result mapping
+
+### Changed
+- `GraphQLExecutionService` flushes all registered DataLoader batches before returning execution context
+- `InMemoryRepository` upgraded to `ConcurrentDictionary` for thread-safe batch inserts
+
+### Fixed
+- DataLoader batch was flushed before all `LoadAsync` calls from a single resolver were enqueued
+- Duplicate keys in the same batch produced duplicate SQL parameters in downstream query
+
+## [0.4.0] - 2025-03-10
+
+### Added
+- **Authentication Middleware** - Validates `Authorization: Bearer <token>` header; injects claims into `ExecutionContext`
+- **ErrorFormattingService** - Converts internal exceptions to spec-compliant `{ message, locations, path, extensions }` objects
+- **GraphQLController** - ASP.NET Core minimal-API controller exposing `POST /graphql`
+- **SchemaController** - `GET /graphql/schema` returns SDL export of the active schema
+- **HealthCheckController** - `GET /health` returns uptime, version, and service status
+
+### Changed
+- `ExecutionContext` now carries `Headers`, `User`, and `Data` dictionaries for use in resolvers
+- `GraphQLEngineOptions` gains `IncludeDetailedErrorMessages` and `LogInternalErrors` flags
+
+### Fixed
+- Middleware pipeline swallowed `OperationCanceledException` without returning 408
+- `SchemaController` returned 404 when schema name contained uppercase letters
+
+## [0.3.0] - 2025-02-17
+
+### Added
+- **SchemaService** - Create named schemas, register types, export as SDL, and run introspection
+- **GraphQLSchema** / **GraphQLType** / **GraphQLField** entities forming the core type graph
+- **GraphQLQuery**, **GraphQLMutation**, **GraphQLSubscription** - Typed wrappers for operation documents
+- **DependencyInjection** - `AddGraphQLEngine(options)` extension wiring all services into the DI container
+- `GraphQLEngineOptions` with `MaxQueryComplexity`, `MaxQueryDepth`, `MaxQueryFields`, `QueryTimeoutMs`
+
+### Changed
+- `IRepository<T>` contract extended with `FindAsync(predicate)` for filtered reads
+- `InMemoryRepository` stores entities in a `ConcurrentDictionary` keyed by string ID
+
+### Fixed
+- Schema type registry allowed duplicate type names without error
+
+## [0.2.0] - 2025-01-27
+
+### Added
+- **GraphQLExecutionService** - Execute query documents against a registered schema; returns `ExecutionContext`
+- **ExecutionContext** - Tracks `ExecutionId`, `StartTime`, `Errors`, `Variables`, and resolved `Data`
+- **GraphQLException** - Domain exception carrying `Message`, `Code`, and optional `Extensions` dictionary
+- **ValidationHelper** - Null-check, range, and email validators used across the service layer
+- **StringExtensions** - `ToCamelCase`, `ToSnakeCase`, `Truncate`, `IsNullOrWhiteSpace` wrappers
+- **DateTimeExtensions** - UTC normalisation and ISO-8601 formatting helpers
+- **JsonHelper** - `Serialize` / `Deserialize` wrappers with consistent `JsonSerializerOptions`
+- **LoggingMiddleware** - Logs request method, path, status code, and elapsed time
+
+### Changed
+- Project structure reorganised into `src/Api`, `src/Domain`, `src/Services`, `src/Data`, `src/Common`
+- `.editorconfig` added enforcing 4-space indentation and UTF-8 for all C# files
+
+### Fixed
+- `ExecutionContext.Duration` returned negative value when `EndTime` was not set
+
+## [0.1.0] - 2025-01-06
+
+### Added
+- Initial project scaffold targeting .NET 10
+- `IRepository<T>` and `InMemoryRepository<T>` for generic in-memory data storage
+- `GraphQLConstants` with standard HTTP header names and content-type values
+- `PersistedQuery` entity for future persisted-query support
+- Solution file (`dotnet-graphql-engine.slnx`) with main project and test project
+- `Dockerfile` and `docker-compose.yml` for containerised local development
+- `Makefile` with `build`, `test`, `run`, and `docker-build` targets
+- `.github/workflows/build.yml` CI pipeline (restore → build → test)
+- `.github/workflows/codeql.yml` weekly static analysis
+- `.github/dependabot.yml` weekly NuGet and Actions update checks
+- MIT `LICENSE`, `CODE_OF_CONDUCT.md`, `CONTRIBUTING.md`, `SECURITY.md`
+- `appsettings.example.json` with annotated default configuration
 
 ---
-
-## Version History Details
-
-### v1.2.0 Release Notes
-
-**Focus:** Schema flexibility and type system enhancements
-
-Key improvements:
-- Full GraphQL type system implementation
-- Support for all GraphQL kinds (OBJECT, SCALAR, ENUM, UNION, INTERFACE)
-- Improved type registry with lazy loading
-- Better null handling with nullable reference types
-- Enhanced field argument support
-
-Migration notes:
-- No breaking changes from v1.1.0
-- Optional enhancement to use new type system features
-
-### v1.1.0 Release Notes
-
-**Focus:** Performance optimization and real-time features
-
-Highlights:
-- DataLoader reduces N+1 queries to single batch operation
-- Query complexity analysis prevents DoS attacks
-- Built-in caching provides 50-100x performance boost
-- Subscriptions enable real-time applications
-- Event system supports multiple subscribers
-
-Breaking changes: None
-
-### v1.0.0 Release Notes
-
-**Focus:** Core GraphQL functionality and production readiness
-
-Major components:
-- Complete GraphQL specification implementation
-- Enterprise-grade error handling
-- Flexible configuration system
-- Clean architecture with separation of concerns
-- Comprehensive documentation and examples
-
-## Upgrade Guide
-
-### From v0.9.0 to v1.0.0
-- Update package reference: `dotnet add package Sarmkadan.GraphQLEngine@1.0.0`
-- API is stable and backward compatible
-- No code changes required
-
-### From v1.0.0 to v1.1.0
-- DataLoader service added (optional)
-- Query complexity analysis added (optional)
-- Caching enabled by default - disable if needed:
-  ```csharp
-  options.EnableCaching = false;
-  ```
-
-### From v1.1.0 to v1.2.0
-- Full type system support (backward compatible)
-- Recommendation: Use new type system features for better type safety
-- No code changes required
-
-## Known Issues
-
-### v1.2.0
-- Schema introspection can be slow with >1000 types (use pagination)
-- WebSocket subscriptions limited to ~10,000 concurrent connections per instance
-
-### v1.1.0
-- Cache doesn't invalidate automatically on schema changes (call ClearAsync manually)
-- DataLoader batch functions must complete within QueryTimeoutMs
-
-### v1.0.0
-- Complex nested queries can consume significant memory (use complexity limits)
-
-## Security Updates
-
-### v1.2.0
-- Fixed potential DoS via extremely deep queries
-- Improved input validation
-- Enhanced error sanitization in production mode
-
-### v1.1.0
-- Added query complexity limits as DoS protection
-- Improved authentication middleware integration
-- Rate limiting middleware added
-
-### v1.0.0
-- Security best practices documentation
-- Sanitized error messages in production
-- Input validation on all endpoints
-
-## Deprecations
-
-None at this time. All public APIs are stable.
-
-## Future Roadmap
-
-### v1.3.0 (Planned Q3 2026)
-- GraphQL schema federation
-- Built-in GraphQL composition
-- Enhanced subscription features
-- Performance profiling tools
-
-### v1.4.0 (Planned Q4 2026)
-- GraphQL persisted queries
-- Advanced caching strategies
-- Multi-tenant support
-- gRPC support
-
-### v2.0.0 (Planned 2027)
-- Major refactoring for async/await throughout
-- GraphQL over WebSocket improvements
-- New execution engine with streaming
-- Breaking API changes for better design
 
 ## Contributors
 
 - Vladyslav Zaiets - Creator & Maintainer
-- Community contributors welcome - see CONTRIBUTING.md
+- Community contributors welcome — see CONTRIBUTING.md
 
 ## License
 
-MIT License - See LICENSE file for details
-
----
-
-For detailed information about each release, visit the GitHub releases page.
-For security vulnerabilities, contact: rutova2@gmail.com
+MIT License — See LICENSE file for details
