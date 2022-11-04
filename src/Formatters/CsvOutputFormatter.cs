@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -12,7 +13,7 @@ namespace GraphQLEngine.Formatters;
 /// Formats data as CSV (Comma-Separated Values) output
 /// Supports various CSV options and handles special characters
 /// </summary>
-public class CsvOutputFormatter
+sealed public class CsvOutputFormatter
 {
     private readonly CsvFormatterOptions _options;
 
@@ -26,7 +27,7 @@ public class CsvOutputFormatter
     /// </summary>
     public string Format<T>(IEnumerable<T> data) where T : class
     {
-        if (data == null)
+        if (data is null)
             return string.Empty;
 
         var items = data.ToList();
@@ -61,7 +62,7 @@ public class CsvOutputFormatter
     /// </summary>
     public string FormatRow<T>(T item) where T : class
     {
-        if (item == null)
+        if (item is null)
             return string.Empty;
 
         var properties = GetProperties<T>();
@@ -74,7 +75,7 @@ public class CsvOutputFormatter
     /// </summary>
     public string Format<T>(IEnumerable<T> data, params string[] columnNames) where T : class
     {
-        if (data == null || columnNames.Length == 0)
+        if (data is null || columnNames.Length == 0)
             return string.Empty;
 
         var items = data.ToList();
@@ -112,7 +113,7 @@ public class CsvOutputFormatter
     /// </summary>
     public string FormatDictionaries(IEnumerable<Dictionary<string, object?>> data)
     {
-        if (data == null)
+        if (data is null)
             return string.Empty;
 
         var items = data.ToList();
@@ -196,7 +197,7 @@ public class CsvOutputFormatter
             }
             else
             {
-                if (headers == null)
+                if (headers is null)
                     headers = Enumerable.Range(0, fields.Length).Select(x => $"Column{x}").ToArray();
 
                 var row = new Dictionary<string, string>();
@@ -216,7 +217,7 @@ public class CsvOutputFormatter
     /// </summary>
     private string EscapeField(object? value)
     {
-        if (value == null)
+        if (value is null)
             return "";
 
         var str = value.ToString() ?? "";
@@ -312,7 +313,7 @@ public class CsvOutputFormatter
 /// <summary>
 /// CSV formatting options
 /// </summary>
-public class CsvFormatterOptions
+sealed public class CsvFormatterOptions
 {
     public string Delimiter { get; set; } = ",";
     public string Quote { get; set; } = "\"";

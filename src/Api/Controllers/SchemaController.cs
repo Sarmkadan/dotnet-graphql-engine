@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -13,7 +14,7 @@ namespace GraphQLEngine.Api.Controllers;
 /// Schema management and introspection endpoint
 /// Allows inspection of schema structure and modifications
 /// </summary>
-public class SchemaController
+sealed public class SchemaController
 {
     private readonly SchemaService _schemaService;
     private readonly ILogger<SchemaController> logger;
@@ -143,7 +144,7 @@ public class SchemaController
 /// <summary>
 /// Response model for schema types listing
 /// </summary>
-public class SchemaTypesResponse
+sealed public class SchemaTypesResponse
 {
     public string SchemaName { get; set; } = string.Empty;
     public List<TypeInfoDto> Types { get; set; } = new();
@@ -152,7 +153,7 @@ public class SchemaTypesResponse
 /// <summary>
 /// Type information data transfer object
 /// </summary>
-public class TypeInfoDto
+sealed public class TypeInfoDto
 {
     public string Name { get; set; } = string.Empty;
     public string Kind { get; set; } = string.Empty;
@@ -164,7 +165,7 @@ public class TypeInfoDto
 /// <summary>
 /// Field information data transfer object
 /// </summary>
-public class FieldInfoDto
+sealed public class FieldInfoDto
 {
     public string Name { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
@@ -177,7 +178,7 @@ public class FieldInfoDto
 /// <summary>
 /// Argument information data transfer object
 /// </summary>
-public class ArgumentInfoDto
+sealed public class ArgumentInfoDto
 {
     public string Name { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
@@ -187,7 +188,7 @@ public class ArgumentInfoDto
 /// <summary>
 /// Schemas listing response
 /// </summary>
-public class SchemasListResponse
+sealed public class SchemasListResponse
 {
     public List<SchemaInfoDto> Schemas { get; set; } = new();
 }
@@ -195,7 +196,7 @@ public class SchemasListResponse
 /// <summary>
 /// Schema information data transfer object
 /// </summary>
-public class SchemaInfoDto
+sealed public class SchemaInfoDto
 {
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
@@ -207,7 +208,7 @@ public class SchemaInfoDto
 /// <summary>
 /// Query validation response
 /// </summary>
-public class QueryValidationResponse
+sealed public class QueryValidationResponse
 {
     public bool IsValid { get; set; }
     public string Query { get; set; } = string.Empty;

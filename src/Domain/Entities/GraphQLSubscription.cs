@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -8,7 +9,7 @@ namespace GraphQLEngine.Domain.Entities;
 /// <summary>
 /// Represents a GraphQL subscription operation
 /// </summary>
-public class GraphQLSubscription
+sealed public class GraphQLSubscription
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string Name { get; set; } = string.Empty;
@@ -87,7 +88,7 @@ public class GraphQLSubscription
     /// </summary>
     public void RecordUpdate(SubscriptionUpdate update)
     {
-        if (update == null) throw new ArgumentNullException(nameof(update));
+        if (update is null) throw new ArgumentNullException(nameof(update));
 
         _updates.Add(update);
         LastUpdatedAt = DateTime.UtcNow;
@@ -191,7 +192,7 @@ public class GraphQLSubscription
 /// <summary>
 /// Represents an update received from a subscription
 /// </summary>
-public class SubscriptionUpdate
+sealed public class SubscriptionUpdate
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string EventName { get; set; } = string.Empty;

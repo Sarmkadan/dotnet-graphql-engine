@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -8,7 +9,7 @@ namespace GraphQLEngine.Domain.Entities;
 /// <summary>
 /// Represents the complexity analysis of a GraphQL query
 /// </summary>
-public class QueryComplexity
+sealed public class QueryComplexity
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string QueryId { get; set; } = string.Empty;

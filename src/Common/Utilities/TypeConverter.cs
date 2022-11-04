@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -18,7 +19,7 @@ public static class TypeConverter
     /// </summary>
     public static T? Convert<T>(object? value)
     {
-        if (value == null)
+        if (value is null)
             return default;
 
         try
@@ -88,7 +89,7 @@ public static class TypeConverter
     /// </summary>
     public static object? Convert(object? value, Type targetType)
     {
-        if (value == null)
+        if (value is null)
             return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
 
         try
@@ -117,7 +118,7 @@ public static class TypeConverter
         try
         {
             result = Convert<T>(value);
-            return result != null || value == null;
+            return result is not null || value is null;
         }
         catch
         {
@@ -131,7 +132,7 @@ public static class TypeConverter
     /// </summary>
     private static bool ConvertToBoolean(object value)
     {
-        if (value == null)
+        if (value is null)
             return false;
 
         var strValue = value.ToString()?.ToLowerInvariant();
@@ -148,7 +149,7 @@ public static class TypeConverter
     /// </summary>
     public static bool CanConvert(Type from, Type to)
     {
-        if (from == null || to == null)
+        if (from is null || to is null)
             return false;
 
         var underlyingTarget = Nullable.GetUnderlyingType(to) ?? to;
@@ -174,7 +175,7 @@ public static class TypeConverter
     /// </summary>
     public static object? GetDefaultValue(Type type)
     {
-        if (type == null)
+        if (type is null)
             throw new ArgumentNullException(nameof(type));
 
         return type.IsValueType ? Activator.CreateInstance(type) : null;
@@ -185,7 +186,7 @@ public static class TypeConverter
     /// </summary>
     public static List<T?> ConvertList<T>(IEnumerable<object?>? values)
     {
-        if (values == null)
+        if (values is null)
             return new List<T?>();
 
         return values.Select(v => Convert<T>(v)).ToList();
@@ -196,7 +197,7 @@ public static class TypeConverter
     /// </summary>
     public static object? ToJsonCompatible(object? value)
     {
-        if (value == null)
+        if (value is null)
             return null;
 
         var type = value.GetType();

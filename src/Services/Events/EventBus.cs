@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -11,7 +12,7 @@ namespace GraphQLEngine.Services.Events;
 /// Event bus for pub/sub pattern
 /// Enables loosely coupled event publishing and subscription
 /// </summary>
-public class EventBus : IDisposable
+sealed public class EventBus : IDisposable
 {
     private readonly Dictionary<string, List<Delegate>> _subscriptions;
     private readonly ILogger<EventBus> _logger;
@@ -236,7 +237,7 @@ public abstract class Event
 /// <summary>
 /// Event log entry
 /// </summary>
-public class EventLog
+sealed public class EventLog
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string EventType { get; set; } = string.Empty;
@@ -247,7 +248,7 @@ public class EventLog
 /// <summary>
 /// Event bus statistics
 /// </summary>
-public class EventBusStatistics
+sealed public class EventBusStatistics
 {
     public int TotalSubscriptions { get; set; }
     public List<string> SubscribedEventTypes { get; set; } = new();
@@ -258,7 +259,7 @@ public class EventBusStatistics
 /// <summary>
 /// Query execution event
 /// </summary>
-public class QueryExecutedEvent : Event
+sealed public class QueryExecutedEvent : Event
 {
     public string QueryId { get; set; } = string.Empty;
     public string OperationName { get; set; } = string.Empty;
@@ -270,7 +271,7 @@ public class QueryExecutedEvent : Event
 /// <summary>
 /// Schema modification event
 /// </summary>
-public class SchemaModifiedEvent : Event
+sealed public class SchemaModifiedEvent : Event
 {
     public string SchemaName { get; set; } = string.Empty;
     public string ModificationType { get; set; } = string.Empty;
@@ -280,7 +281,7 @@ public class SchemaModifiedEvent : Event
 /// <summary>
 /// Cache event
 /// </summary>
-public class CacheEvent : Event
+sealed public class CacheEvent : Event
 {
     public string Key { get; set; } = string.Empty;
     public string Operation { get; set; } = string.Empty;

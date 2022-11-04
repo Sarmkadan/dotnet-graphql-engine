@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -17,7 +18,7 @@
 
 using Microsoft.Extensions.DependencyInjection;
 
-public class CachingPerformanceExample
+sealed public class CachingPerformanceExample
 {
     public static async Task Run(IServiceProvider serviceProvider)
     {
