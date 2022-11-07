@@ -141,7 +141,8 @@ sealed public class ErrorFormattingService
     }
 
     /// <summary>
-    /// Formats a general exception
+    /// Formats a general exception. AggregateExceptions are unwrapped to include
+    /// all inner exception details when detailed error messages are enabled.
     /// </summary>
     public Dictionary<string, object> FormatGeneralException(Exception ex)
     {
@@ -149,18 +150,42 @@ sealed public class ErrorFormattingService
 
         _logger.LogError(ex, "Unhandled exception");
 
+        // Unwrap AggregateException to get the meaningful inner exceptions
+        var effectiveException = ex is AggregateException agg && agg.InnerExceptions.Count == 1
+            ? agg.InnerExceptions[0]
+            : ex;
+
         var response = new Dictionary<string, object>
         {
             { "message", "An internal error occurred" },
             { "errorCode", "INTERNAL_ERROR" }
         };
 
-        // Add details for development
         if (_options.EnableDetailedErrorMessages)
         {
-            response["actualMessage"] = ex.Message;
-            response["exceptionType"] = ex.GetType().Name;
-            response["stacktrace"] = ex.StackTrace ?? string.Empty;
+            response["actualMessage"] = effectiveException.Message;
+            response["exceptionType"] = effectiveException.GetType().Name;
+            response["stacktrace"] = effectiveException.StackTrace ?? string.Empty;
+
+            // Include all inner exceptions for AggregateException
+            if (ex is AggregateException aggregate && aggregate.InnerExceptions.Count > 1)
+            {
+                response["innerErrors"] = aggregate.InnerExceptions
+                    .Select(inner => new Dictionary<string, string>
+                    {
+                        { "message", inner.Message },
+                        { "type", inner.GetType().Name }
+                    })
+                    .ToList();
+            }
+            else if (effectiveException.InnerException is not null)
+            {
+                response["innerError"] = new Dictionary<string, string>
+                {
+                    { "message", effectiveException.InnerException.Message },
+                    { "type", effectiveException.InnerException.GetType().Name }
+                };
+            }
         }
 
         return response;
