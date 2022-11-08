@@ -11,8 +11,21 @@ using ExecutionContext = GraphQLEngine.Domain.Entities.ExecutionContext;
 namespace GraphQLEngine.Services.GraphQL;
 
 /// <summary>
-/// Service for executing GraphQL queries and mutations
+/// Core execution engine for GraphQL queries and mutations. Resolves fields using
+/// registered resolver functions, tracks execution metrics, and manages error formatting.
 /// </summary>
+/// <remarks>
+/// <para>
+/// Resolvers are registered per field path (e.g. <c>"Query.users"</c>, <c>"User.orders"</c>)
+/// via <see cref="RegisterResolver"/>. During execution, the engine walks the query's selected
+/// fields, invokes the matching resolver for each, and assembles the response.
+/// </para>
+/// <para>
+/// Execution produces an <see cref="ExecutionContext"/> containing the result data, timing
+/// metrics, and any field-level errors. Use <see cref="QueryAnalysisService"/> to validate
+/// query complexity before execution.
+/// </para>
+/// </remarks>
 sealed public class GraphQLExecutionService
 {
     private readonly ILogger<GraphQLExecutionService> _logger;
