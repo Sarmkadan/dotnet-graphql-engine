@@ -71,16 +71,18 @@ sealed public class ErrorFormattingService
             { "errorCode", ex.ErrorCode ?? "UNKNOWN_ERROR" }
         };
 
-        // Add extensions
-        if (ex.Extensions.Count > 0)
-        {
-            response["extensions"] = ex.Extensions;
-        }
+        // Add extensions (merge stack trace into extensions if enabled)
+        var extensions = new Dictionary<string, object>(ex.Extensions);
 
-        // Add stack trace for development
         if (_options.EnableDetailedErrorMessages && !string.IsNullOrEmpty(ex.StackTrace))
         {
-            response["stacktrace"] = ex.StackTrace;
+            extensions["code"] = ex.ErrorCode ?? "INTERNAL_ERROR";
+            extensions["stacktrace"] = ex.StackTrace;
+        }
+
+        if (extensions.Count > 0)
+        {
+            response["extensions"] = extensions;
         }
 
         return response;
