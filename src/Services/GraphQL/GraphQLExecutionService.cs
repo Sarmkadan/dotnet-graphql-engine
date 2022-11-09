@@ -5,6 +5,7 @@
 // =============================================================================
 
 using GraphQLEngine.Domain.Entities;
+using GraphQLEngine.Services.DataLoader; // Added for DataLoaderService
 using Microsoft.Extensions.Logging;
 using ExecutionContext = GraphQLEngine.Domain.Entities.ExecutionContext;
 
@@ -16,11 +17,13 @@ namespace GraphQLEngine.Services.GraphQL;
 sealed public class GraphQLExecutionService
 {
     private readonly ILogger<GraphQLExecutionService> _logger;
+    private readonly DataLoaderService _dataLoaderService; // Injected DataLoaderService
     private readonly Dictionary<string, object> _resolvers = new();
 
-    public GraphQLExecutionService(ILogger<GraphQLExecutionService> logger)
+    public GraphQLExecutionService(ILogger<GraphQLExecutionService> logger, DataLoaderService dataLoaderService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _dataLoaderService = dataLoaderService ?? throw new ArgumentNullException(nameof(dataLoaderService));
     }
 
     /// <summary>
@@ -45,7 +48,7 @@ sealed public class GraphQLExecutionService
         if (query is null) throw new ArgumentNullException(nameof(query));
 
         var context = new ExecutionContext(query.Id);
-        context.RequestedFieldCount = query.SelectedFields.Count;
+        // context.RequestedFieldCount = query.SelectedFields.Count; // Removed: will be calculated by QueryAnalysisService
 
         try
         {
@@ -59,8 +62,15 @@ sealed public class GraphQLExecutionService
                 return context;
             }
 
-            // Parse and execute the query
-            var result = await ExecuteQueryInternalAsync(query, context);
+            // Parse the query string into a hierarchical structure
+            var rootSelections = ParseQuerySelections(query.QueryString);
+            query.SetRootSelectedFields(rootSelections); // Populate the GraphQLQuery with structured fields
+
+            // Now iterate through the structured fields for execution
+            await ExecuteFieldsRecursiveAsync(rootSelections, context);
+
+            // Ensure all data loader batches are flushed after all fields have been processed
+            await _dataLoaderService.FlushAllAsync(context.Id);
 
             context.Complete();
             _logger.LogInformation("Query execution completed: {QueryId}, Duration: {Duration}ms",
@@ -81,29 +91,12 @@ sealed public class GraphQLExecutionService
     /// </summary>
     private async Task<object?> ExecuteQueryInternalAsync(GraphQLQuery query, ExecutionContext context)
     {
-        var selections = ParseSelections(query.QueryString);
+        // Parse the query string into a hierarchical structure
+        var rootSelections = ParseQuerySelections(query.QueryString);
+        query.SetRootSelectedFields(rootSelections); // Populate the GraphQLQuery with structured fields
 
-        foreach (var field in selections)
-        {
-            try
-            {
-                var resolverKey = field;
-                if (_resolvers.TryGetValue(resolverKey, out var resolver))
-                {
-                    // Simulate resolver execution
-                    context.RecordResolverExecution(field);
-                    await Task.Delay(10); // Simulate async work
-                }
-                else
-                {
-                    context.AddError($"No resolver found for field: {field}", field);
-                }
-            }
-            catch (Exception ex)
-            {
-                context.AddError(ex.Message, field);
-            }
-        }
+        // Now iterate through the structured fields for execution
+        await ExecuteFieldsRecursiveAsync(rootSelections, context);
 
         return true;
     }

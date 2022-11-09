@@ -177,6 +177,25 @@ sealed public class DataLoaderService
     }
 
     /// <summary>
+    /// Executes all active data loader requests for a given execution context.
+    /// This ensures all keys are collected before batch functions are executed.
+    /// </summary>
+    public async Task FlushAllAsync(string executionContextId)
+    {
+        if (string.IsNullOrEmpty(executionContextId))
+            throw new ArgumentException("Execution context ID cannot be empty", nameof(executionContextId));
+
+        var requestsToFlush = _activeLoaders.Values
+            .Where(r => r.ExecutionContextId == executionContextId && r.State == DataLoaderState.Pending)
+            .ToList();
+
+        foreach (var request in requestsToFlush)
+        {
+            await ExecuteAsync(request.Id);
+        }
+    }
+
+    /// <summary>
     /// Clears all completed requests
     /// </summary>
     public int ClearCompletedRequests()
