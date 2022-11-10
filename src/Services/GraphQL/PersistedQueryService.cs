@@ -18,11 +18,14 @@ namespace GraphQLEngine.Services.GraphQL;
 /// the service stores it and future requests may send only the hash, saving bandwidth.
 /// An in-process hash index provides O(1) lookups; the repository is the durable store and
 /// the authoritative fallback for warm-start / multi-instance deployments.
+/// When <see cref="PersistedQueryOptions.AllowlistOnly"/> is enabled, ad-hoc query documents
+/// are rejected — only queries registered in advance are permitted.
 /// </summary>
 sealed public class PersistedQueryService
 {
     private readonly IRepository<PersistedQuery> _repository;
     private readonly ILogger<PersistedQueryService> _logger;
+    private readonly PersistedQueryOptions _options;
 
     // Fast hash→entity index; the repository remains source of truth
     private readonly ConcurrentDictionary<string, PersistedQuery> _hashIndex =
@@ -33,10 +36,12 @@ sealed public class PersistedQueryService
     /// </summary>
     public PersistedQueryService(
         IRepository<PersistedQuery> repository,
-        ILogger<PersistedQueryService> logger)
+        ILogger<PersistedQueryService> logger,
+        PersistedQueryOptions? options = null)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _options = options ?? new PersistedQueryOptions();
     }
 
     /// <summary>
@@ -218,5 +223,47 @@ sealed public class PersistedQueryService
     {
         cancellationToken.ThrowIfCancellationRequested();
         return await _repository.CountAsync();
+    }
+
+    /// <summary>
+    /// Determines whether a query document is allowed to execute.
+    /// When <see cref="PersistedQueryOptions.AllowlistOnly"/> is <c>false</c> (the default),
+    /// every query is allowed. When <c>true</c>, the document must already be registered as
+    /// a persisted query; otherwise execution is denied.
+    /// </summary>
+    /// <param name="queryString">The full GraphQL document submitted by the client.</param>
+    /// <param name="cancellationToken">Propagates cancellation to async operations.</param>
+    /// <returns>
+    /// <c>true</c> when the query is permitted to run; <c>false</c> when allowlist mode is
+    /// active and the document is not in the persisted-query store.
+    /// </returns>
+    public async Task<bool> IsAllowedAsync(
+        string queryString,
+        CancellationToken cancellationToken = default)
+    {
+        if (!_options.AllowlistOnly)
+            return true;
+
+        if (string.IsNullOrWhiteSpace(queryString))
+            return false;
+
+        var hash = PersistedQuery.ComputeHash(queryString);
+
+        if (_hashIndex.ContainsKey(hash))
+            return true;
+
+        cancellationToken.ThrowIfCancellationRequested();
+        var all = await _repository.GetAllAsync();
+        var found = all.Any(q =>
+            string.Equals(q.Hash, hash, StringComparison.OrdinalIgnoreCase));
+
+        if (!found)
+        {
+            _logger.LogWarning(
+                "Allowlist rejection — query with hash {Hash} is not a registered persisted query",
+                hash);
+        }
+
+        return found;
     }
 }

@@ -86,6 +86,14 @@ sealed public class PersistedQueryOptions
     public int MaxIndexSize { get; set; } = 10_000;
 
     /// <summary>
+    /// When <c>true</c>, only pre-registered persisted queries may be executed.
+    /// Any request that supplies an inline query document (rather than a recognised hash)
+    /// is rejected with a <c>QUERY_NOT_ALLOWED</c> error.
+    /// Defaults to <c>false</c>.
+    /// </summary>
+    public bool AllowlistOnly { get; set; } = false;
+
+    /// <summary>
     /// When <c>true</c>, a client that sends only a hash for an unknown query receives a
     /// <c>PERSISTED_QUERY_NOT_FOUND</c> error rather than a generic execution failure.
     /// Defaults to <c>true</c>.
