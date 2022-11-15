@@ -34,12 +34,17 @@ sealed public class QueryAnalysisService
 
         try
         {
+            // Use pre-parsed fields if available; otherwise parse the raw query string.
+            var fields = query.RootSelectedFields.Count > 0
+                ? query.RootSelectedFields
+                : ParseQueryStringToFields(query.QueryString);
+
             // Calculate max depth and field count from the structured query fields
-            analysis.MaxDepth = CalculateMaxDepth(query.RootSelectedFields);
-            analysis.FieldCount = CalculateFieldCount(query.RootSelectedFields);
+            analysis.MaxDepth = CalculateMaxDepth(fields);
+            analysis.FieldCount = CalculateFieldCount(fields);
 
             // Calculate complexity score using the hierarchical structure
-            CalculateComplexityScore(query.RootSelectedFields, analysis, 1);
+            CalculateComplexityScore(fields, analysis, 1);
 
             // Determine complexity level
             analysis.CalculateLevel();
@@ -117,6 +122,145 @@ sealed public class QueryAnalysisService
         }
 
         return fields.Count + fields.Sum(f => CalculateFieldCount(f.Fields));
+    }
+
+    // -------------------------------------------------------------------------
+    // Minimal recursive-descent parser used when RootSelectedFields is empty.
+    // Supports field names, aliases, arguments, directives, and inline fragments.
+    // -------------------------------------------------------------------------
+
+    private static IReadOnlyList<QueryField> ParseQueryStringToFields(string queryString)
+    {
+        if (string.IsNullOrWhiteSpace(queryString))
+            return Array.Empty<QueryField>();
+
+        var pos = 0;
+        SkipWs(queryString, ref pos);
+
+        // Skip optional operation keyword: query / mutation / subscription
+        if (pos < queryString.Length && char.IsLetter(queryString[pos]))
+        {
+            var keyword = ReadIdent(queryString, ref pos);
+            if (keyword is "query" or "mutation" or "subscription")
+            {
+                SkipWs(queryString, ref pos);
+                // Skip optional operation name
+                if (pos < queryString.Length && (char.IsLetter(queryString[pos]) || queryString[pos] == '_'))
+                {
+                    ReadIdent(queryString, ref pos);
+                    SkipWs(queryString, ref pos);
+                }
+                // Skip optional variable definitions
+                if (pos < queryString.Length && queryString[pos] == '(')
+                    SkipBalanced(queryString, ref pos, '(', ')');
+            }
+        }
+
+        if (pos >= queryString.Length || queryString[pos] != '{')
+            return Array.Empty<QueryField>();
+
+        pos++; // consume '{'
+        return ParseSelectionSet(queryString, ref pos);
+    }
+
+    private static IReadOnlyList<QueryField> ParseSelectionSet(string s, ref int pos)
+    {
+        var fields = new List<QueryField>();
+
+        while (pos < s.Length)
+        {
+            SkipWs(s, ref pos);
+            if (pos >= s.Length) break;
+
+            var ch = s[pos];
+            if (ch == '}') { pos++; break; }
+
+            // Skip line comments
+            if (ch == '#') { while (pos < s.Length && s[pos] != '\n') pos++; continue; }
+
+            // Inline fragment: ... on TypeName { ... }  or named fragment spread: ...FragName
+            if (pos + 2 < s.Length && ch == '.' && s[pos + 1] == '.' && s[pos + 2] == '.')
+            {
+                pos += 3;
+                SkipWs(s, ref pos);
+                if (pos + 1 < s.Length && s.Substring(pos, Math.Min(2, s.Length - pos)) == "on"
+                    && (pos + 2 >= s.Length || !char.IsLetterOrDigit(s[pos + 2])))
+                {
+                    pos += 2;
+                    SkipWs(s, ref pos);
+                    ReadIdent(s, ref pos); // type condition name
+                    SkipWs(s, ref pos);
+                    if (pos < s.Length && s[pos] == '{') { pos++; var ff = ParseSelectionSet(s, ref pos); foreach (var f in ff) fields.Add(f); }
+                }
+                else
+                {
+                    // Named fragment spread – just skip the name
+                    if (pos < s.Length && (char.IsLetter(s[pos]) || s[pos] == '_'))
+                        ReadIdent(s, ref pos);
+                }
+                continue;
+            }
+
+            if (!char.IsLetter(ch) && ch != '_') { pos++; continue; }
+
+            var nameOrAlias = ReadIdent(s, ref pos);
+            SkipWs(s, ref pos);
+
+            string fieldName;
+            if (pos < s.Length && s[pos] == ':')
+            {
+                pos++; SkipWs(s, ref pos);
+                fieldName = pos < s.Length ? ReadIdent(s, ref pos) : nameOrAlias;
+                SkipWs(s, ref pos);
+            }
+            else
+            {
+                fieldName = nameOrAlias;
+            }
+
+            // Skip arguments
+            if (pos < s.Length && s[pos] == '(') SkipBalanced(s, ref pos, '(', ')');
+            SkipWs(s, ref pos);
+
+            // Skip directives (@directive(args))
+            while (pos < s.Length && s[pos] == '@')
+            {
+                pos++; ReadIdent(s, ref pos); SkipWs(s, ref pos);
+                if (pos < s.Length && s[pos] == '(') SkipBalanced(s, ref pos, '(', ')');
+                SkipWs(s, ref pos);
+            }
+
+            IReadOnlyList<QueryField> nested = Array.Empty<QueryField>();
+            if (pos < s.Length && s[pos] == '{') { pos++; nested = ParseSelectionSet(s, ref pos); }
+
+            fields.Add(new QueryField(fieldName, fields: nested));
+        }
+
+        return fields.AsReadOnly();
+    }
+
+    private static string ReadIdent(string s, ref int pos)
+    {
+        var start = pos;
+        while (pos < s.Length && (char.IsLetterOrDigit(s[pos]) || s[pos] == '_')) pos++;
+        return s.Substring(start, pos - start);
+    }
+
+    private static void SkipWs(string s, ref int pos)
+    {
+        while (pos < s.Length && (char.IsWhiteSpace(s[pos]) || s[pos] == ',')) pos++;
+    }
+
+    private static void SkipBalanced(string s, ref int pos, char open, char close)
+    {
+        if (pos >= s.Length || s[pos] != open) return;
+        var depth = 0;
+        while (pos < s.Length)
+        {
+            if (s[pos] == open) depth++;
+            else if (s[pos] == close) { depth--; if (depth == 0) { pos++; return; } }
+            pos++;
+        }
     }
 
     /// <summary>

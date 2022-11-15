@@ -5,6 +5,7 @@
 // =============================================================================
 
 using System.Collections.Concurrent;
+using GraphQLEngine.Configuration;
 using GraphQLEngine.Data.Repositories;
 using GraphQLEngine.Domain.Entities;
 using GraphQLEngine.Exceptions;
