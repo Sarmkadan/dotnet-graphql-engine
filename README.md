@@ -1,11 +1,24 @@
-# dotnet-graphql-engine
+# .NET GraphQL Engine
 
-A production-grade, code-first GraphQL server for .NET.
+A production-grade, code-first GraphQL server for .NET applications.
 
 ![Build](https://github.com/sarmkadan/dotnet-graphql-engine/actions/workflows/build.yml/badge.svg)
 ![License](https://img.shields.io/github/license/sarmkadan/dotnet-graphql-engine)
 
 ## Installation
+
+### Prerequisites
+
+- .NET 9.0 SDK or later
+- Git (for source installation)
+
+### Option 1: Install as NuGet Package (Recommended)
+
+```bash
+dotnet add package dotnet-graphql-engine
+```
+
+### Option 2: Clone and Build from Source
 
 ```bash
 git clone https://github.com/sarmkadan/dotnet-graphql-engine.git
@@ -13,21 +26,82 @@ cd dotnet-graphql-engine
 dotnet build
 ```
 
+### Option 3: Use in Your Project
+
+Add the package to your `.csproj` file:
+
+```xml
+<PackageReference Include="dotnet-graphql-engine" Version="1.0.0" />
+```
+
 ## Quick Start
 
+Here's a complete example to get started with .NET GraphQL Engine:
+
 ```csharp
-// Define a User type
-var userType = new GraphQLType { Name = "User", ... };
+using Microsoft.Extensions.DependencyInjection;
+using GraphQLEngine.Configuration;
+using GraphQLEngine.Services.GraphQL;
+using GraphQLEngine.Services.Schema;
+
+// Setup services
+var services = new ServiceCollection();
+services.AddGraphQLEngine(options =>
+{
+    options.MaxQueryComplexity = 5000;
+    options.EnableCaching = true;
+});
+
+var serviceProvider = services.BuildServiceProvider();
 
 // Create schema
 var schemaService = serviceProvider.GetRequiredService<SchemaService>();
 var schema = schemaService.CreateSchema("MyAPI");
+
+// Define a User type
+var userType = new GraphQLType
+{
+    Name = "User",
+    Description = "A user in the system",
+    Kind = TypeKind.Object
+};
+
+userType.AddField(new GraphQLField
+{
+    Name = "id",
+    Type = "ID!",
+    Description = "The user's unique identifier"
+});
+
+userType.AddField(new GraphQLField
+{
+    Name = "name",
+    Type = "String!",
+    Description = "The user's name"
+});
+
+userType.AddField(new GraphQLField
+{
+    Name = "email",
+    Type = "String!",
+    Description = "The user's email address"
+});
+
 schemaService.AddType("MyAPI", userType);
 
+// Register a resolver for the user field
+var executionService = serviceProvider.GetRequiredService<GraphQLExecutionService>();
+executionService.RegisterResolver("user", async (context) =>
+{
+    // Your resolver logic here
+    return new { id = "1", name = "John Doe", email = "john@example.com" };
+});
+
 // Execute a query
-var executionService = serviceProvider.GetRequiredService<GraphQLEngine.Services.GraphQL.GraphQLExecutionService>();
-var query = new GraphQLQuery("{ user(id: \"1\") { id } }");
-var context = await executionService.ExecuteAsync(query);
+var query = new GraphQLQuery("{ user { id name email } }");
+var result = await executionService.ExecuteAsync(query);
+
+Console.WriteLine(result.Data);
 ```
 
 ## Configuration
@@ -38,9 +112,24 @@ Configure the engine via `GraphQLEngineOptions`:
 services.AddGraphQLEngine(options =>
 {
     options.MaxQueryComplexity = 5000;
+    options.MaxQueryDepth = 15;
     options.EnableCaching = true;
+    options.CacheTTLSeconds = 300;
+    options.CacheMaxSize = 1000;
+    options.EnableIntrospection = true;
+    options.EnableSubscriptions = true;
 });
 ```
+
+## Examples
+
+We provide several practical examples to help you get started with the .NET GraphQL Engine. You can find them in the `examples/` directory:
+
+- [BasicUsage.cs](examples/BasicUsage.cs) - Minimal setup and first call.
+- [AdvancedUsage.cs](examples/AdvancedUsage.cs) - Configuration, custom options, and error handling.
+- [IntegrationExample.cs](examples/IntegrationExample.cs) - Integrating into an ASP.NET Core project.
+
+For more complex scenarios, check out the existing files in the [examples/](examples/) directory.
 
 ## License
 
