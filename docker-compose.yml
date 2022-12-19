@@ -12,26 +12,33 @@ services:
       dockerfile: Dockerfile
     container_name: dotnet-graphql-engine
     ports:
-      - "5000:5000"
+      - "8080:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:5000
+      - ASPNETCORE_URLS=http://+:8080
       - GraphQL__MaxQueryComplexity=5000
-      - GraphQL__MaxQueryDepth=10
+      - GraphQL__MaxQueryDepth=15
+      - GraphQL__MaxQueryFields=200
       - GraphQL__EnableCaching=true
       - GraphQL__CacheTtlSeconds=300
+      - GraphQL__CacheMaxSizeBytes=104857600
       - GraphQL__EnableSubscriptions=true
+      - GraphQL__EnableSchemaStitching=false
+      - GraphQL__QueryTimeoutMs=30000
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 30s
     restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
     networks:
       - graphql-network
 
-  # Optional: Redis for distributed caching
+  # Redis for distributed caching and pub/sub (subscriptions)
   redis:
     image: redis:7-alpine
     container_name: graphql-redis
@@ -41,14 +48,14 @@ services:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 3s
-      retries: 3
+      retries: 5
     restart: unless-stopped
     networks:
       - graphql-network
     volumes:
       - redis-data:/data
 
-  # Optional: PostgreSQL for data persistence
+  # PostgreSQL for data persistence
   postgres:
     image: postgres:16-alpine
     container_name: graphql-postgres
@@ -78,7 +85,8 @@ volumes:
   postgres-data:
 
 # Usage:
-# docker-compose up -d              # Start all services
-# docker-compose down               # Stop all services
-# docker-compose logs -f            # Follow logs
-# docker-compose ps                 # Show running containers
+# docker compose up -d                    # Start all services
+# docker compose up graphql-engine        # Start engine only
+# docker compose down                     # Stop all services
+# docker compose logs -f graphql-engine   # Follow engine logs
+# docker compose ps                       # Show running containers
