@@ -3,7 +3,7 @@ services:
   app:
     build: .
     environment:
-      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_ENVIRONMENT=Development
     volumes:
       - ./:/app
     ports:
