@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -12,7 +13,7 @@ namespace GraphQLEngine.Formatters;
 /// Formats data as JSON output
 /// Supports various JSON formatting options and customizations
 /// </summary>
-public class JsonOutputFormatter
+sealed public class JsonOutputFormatter
 {
     private readonly JsonFormatterOptions _options;
 
@@ -26,7 +27,7 @@ public class JsonOutputFormatter
     /// </summary>
     public string Format(object? data)
     {
-        if (data == null)
+        if (data is null)
             return _options.PrettyPrint ? JsonHelper.Serialize(null, pretty: true) : "null";
 
         return _options.PrettyPrint
@@ -57,7 +58,7 @@ public class JsonOutputFormatter
             { "data", data }
         };
 
-        if (_options.IncludeMetadata && metadata != null)
+        if (_options.IncludeMetadata && metadata is not null)
         {
             result["metadata"] = metadata;
         }
@@ -180,7 +181,7 @@ public class JsonOutputFormatter
     /// </summary>
     public string FormatWithOptions(object? data, JsonSerializerOptions options)
     {
-        if (data == null)
+        if (data is null)
             return "null";
 
         return JsonSerializer.Serialize(data, options);
@@ -228,7 +229,7 @@ public class JsonOutputFormatter
 /// <summary>
 /// Options for JSON formatting
 /// </summary>
-public class JsonFormatterOptions
+sealed public class JsonFormatterOptions
 {
     public bool PrettyPrint { get; set; } = true;
     public bool IncludeMetadata { get; set; } = false;

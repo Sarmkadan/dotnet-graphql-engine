@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -139,7 +140,7 @@ app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
 app.Run();
 
 // Helper: Mock resolver dispatcher (simplified)
-public class SimpleResolver
+sealed public class SimpleResolver
 {
     private readonly List<dynamic> _users;
 

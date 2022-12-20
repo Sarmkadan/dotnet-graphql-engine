@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -12,7 +13,7 @@ namespace GraphQLEngine.Api.Middleware;
 /// Logging middleware that tracks and logs detailed request/response information
 /// Useful for debugging, monitoring, and audit trails
 /// </summary>
-public class LoggingMiddleware
+sealed public class LoggingMiddleware
 {
     private readonly ILogger<LoggingMiddleware> _logger;
     private readonly LoggingOptions _options;
@@ -51,7 +52,7 @@ public class LoggingMiddleware
         {
             _logger.LogDebug("Request Headers: {@Headers}", sanitizedHeaders);
 
-            if (queryParams != null && queryParams.Count > 0)
+            if (queryParams is not null && queryParams.Count > 0)
                 _logger.LogDebug("Request Query Parameters: {@QueryParams}", queryParams);
 
             if (_options.LogRequestBody && !string.IsNullOrEmpty(body) && body.Length < 10000)
@@ -197,7 +198,7 @@ public class LoggingMiddleware
 /// <summary>
 /// Logging configuration options
 /// </summary>
-public class LoggingOptions
+sealed public class LoggingOptions
 {
     public bool Enabled { get; set; } = true;
     public LogLevel LogLevel { get; set; } = LogLevel.Information;
@@ -213,7 +214,7 @@ public class LoggingOptions
 /// <summary>
 /// Request context for tracking requests through the pipeline
 /// </summary>
-public class RequestContext
+sealed public class RequestContext
 {
     public string RequestId { get; set; } = string.Empty;
     public DateTime StartTime { get; set; }
@@ -228,7 +229,7 @@ public class RequestContext
 /// <summary>
 /// Audit log entry for important operations
 /// </summary>
-public class AuditLogEntry
+sealed public class AuditLogEntry
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;

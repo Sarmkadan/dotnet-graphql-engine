@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -12,7 +13,7 @@ namespace GraphQLEngine.Api.Middleware;
 /// Rate limiting middleware that enforces request quotas
 /// Uses token bucket algorithm for fair rate limiting
 /// </summary>
-public class RateLimitingMiddleware
+sealed public class RateLimitingMiddleware
 {
     private readonly ILogger<RateLimitingMiddleware> _logger;
     private readonly RateLimitOptions _options;
@@ -194,7 +195,7 @@ public class RateLimitingMiddleware
 /// <summary>
 /// Rate limiting configuration options
 /// </summary>
-public class RateLimitOptions
+sealed public class RateLimitOptions
 {
     public bool Enabled { get; set; } = true;
     public int RequestsPerMinute { get; set; } = 100;
@@ -207,7 +208,7 @@ public class RateLimitOptions
 /// <summary>
 /// Result of a rate limit check
 /// </summary>
-public class RateLimitResult
+sealed public class RateLimitResult
 {
     public bool Allowed { get; set; }
     public string? ClientId { get; set; }
@@ -232,7 +233,7 @@ public class RateLimitResult
 /// <summary>
 /// Client quota information
 /// </summary>
-public class ClientQuotaInfo
+sealed public class ClientQuotaInfo
 {
     public string ClientId { get; set; } = string.Empty;
     public int TokensRemaining { get; set; }
@@ -248,7 +249,7 @@ public class ClientQuotaInfo
 /// <summary>
 /// Overall rate limiting statistics
 /// </summary>
-public class RateLimitStatistics
+sealed public class RateLimitStatistics
 {
     public int TotalClients { get; set; }
     public long TotalRequests { get; set; }
