@@ -6,6 +6,7 @@
 
 using GraphQLEngine.Domain.Entities;
 using Microsoft.Extensions.Logging;
+using System.Linq; // Added for LINQ extensions
 
 namespace GraphQLEngine.Services.QueryAnalysis;
 
@@ -33,14 +34,12 @@ sealed public class QueryAnalysisService
 
         try
         {
-            // Analyze query depth
-            analysis.MaxDepth = query.GetQueryDepth();
+            // Calculate max depth and field count from the structured query fields
+            analysis.MaxDepth = CalculateMaxDepth(query.RootSelectedFields);
+            analysis.FieldCount = CalculateFieldCount(query.RootSelectedFields);
 
-            // Analyze field count
-            analysis.FieldCount = query.SelectedFields.Count;
-
-            // Calculate initial complexity score
-            CalculateComplexityScore(query, analysis);
+            // Calculate complexity score using the hierarchical structure
+            CalculateComplexityScore(query.RootSelectedFields, analysis, 1);
 
             // Determine complexity level
             analysis.CalculateLevel();
@@ -71,18 +70,53 @@ sealed public class QueryAnalysisService
     }
 
     /// <summary>
-    /// Calculates the complexity score for a query
+    /// Recursively calculates the complexity score for a list of QueryFields.
     /// </summary>
-    private void CalculateComplexityScore(GraphQLQuery query, QueryComplexity analysis)
+    /// <param name="fields">The list of query fields to analyze.</param>
+    /// <param name="analysis">The QueryComplexity instance to update.</param>
+    /// <param name="depth">The current depth in the query tree.</param>
+    private void CalculateComplexityScore(IReadOnlyList<QueryField> fields, QueryComplexity analysis, int depth)
     {
-        var baseScore = 1;
-        var depthMultiplier = Math.Max(1, analysis.MaxDepth);
-        var fieldMultiplier = Math.Max(1, analysis.FieldCount);
+        foreach (var field in fields)
+        {
+            // Base complexity for each field
+            var fieldComplexity = 1; 
 
-        // Complexity calculation: base * depth * fields
-        var score = baseScore * depthMultiplier * fieldMultiplier;
+            // Record complexity for the current field
+            analysis.RecordFieldComplexity(field.Name, fieldComplexity);
 
-        analysis.RecordFieldComplexity("__base", score);
+            // Recursively calculate complexity for nested fields
+            if (field.Fields.Any())
+            {
+                CalculateComplexityScore(field.Fields, analysis, depth + 1);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Recursively calculates the maximum depth of the query.
+    /// </summary>
+    private int CalculateMaxDepth(IReadOnlyList<QueryField> fields, int currentDepth = 0)
+    {
+        if (!fields.Any())
+        {
+            return currentDepth;
+        }
+
+        return fields.Max(f => CalculateMaxDepth(f.Fields, currentDepth + 1));
+    }
+
+    /// <summary>
+    /// Recursively calculates the total number of selected fields.
+    /// </summary>
+    private int CalculateFieldCount(IReadOnlyList<QueryField> fields)
+    {
+        if (!fields.Any())
+        {
+            return 0;
+        }
+
+        return fields.Count + fields.Sum(f => CalculateFieldCount(f.Fields));
     }
 
     /// <summary>

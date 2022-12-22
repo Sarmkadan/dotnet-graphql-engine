@@ -27,6 +27,10 @@ sealed public class GraphQLQuery
     private readonly List<string> _selectedFields = new();
     public IReadOnlyList<string> SelectedFields => _selectedFields.AsReadOnly();
 
+    // New property to store the hierarchical representation of selected fields
+    private List<QueryField> _rootSelectedFields = new();
+    public IReadOnlyList<QueryField> RootSelectedFields => _rootSelectedFields.AsReadOnly();
+
     public GraphQLQuery()
     {
     }
@@ -93,7 +97,8 @@ sealed public class GraphQLQuery
     }
 
     /// <summary>
-    /// Adds a selected field name to the execution plan
+    /// Adds a selected field name to the execution plan (for simple flat lists)
+    /// This method is primarily for backward compatibility.
     /// </summary>
     public void AddSelectedField(string fieldName)
     {
@@ -101,6 +106,29 @@ sealed public class GraphQLQuery
 
         if (!_selectedFields.Contains(fieldName))
             _selectedFields.Add(fieldName);
+    }
+
+    /// <summary>
+    /// Sets the root selected fields with a hierarchical structure.
+    /// This will also update the flat SelectedFields list for backward compatibility.
+    /// </summary>
+    public void SetRootSelectedFields(IEnumerable<QueryField> fields)
+    {
+        _rootSelectedFields = fields?.ToList() ?? new List<QueryField>();
+        _selectedFields.Clear();
+        FlattenAndAddFields(_rootSelectedFields);
+    }
+
+    private void FlattenAndAddFields(IEnumerable<QueryField> fields)
+    {
+        foreach (var field in fields)
+        {
+            if (!_selectedFields.Contains(field.Name))
+            {
+                _selectedFields.Add(field.Name);
+            }
+            FlattenAndAddFields(field.Fields);
+        }
     }
 
     /// <summary>
