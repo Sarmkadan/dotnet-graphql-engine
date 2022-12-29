@@ -1,19 +1,15 @@
 #nullable enable
-using dotnet_graphql_engine;
-using dotnet_graphql_engine.Services.GraphQL;
-using dotnet_graphql_engine.Domain.Entities;
-using dotnet_graphql_engine.Services.Schema;
-using dotnet_graphql_engine.Services.DataLoader;
-using dotnet_graphql_engine.Services.Subscriptions;
-using dotnet_graphql_engine.Services.QueryAnalysis;
-using dotnet_graphql_engine.Services.Caching;
-using dotnet_graphql_engine.Services.BackgroundServices;
-using dotnet_graphql_engine.Services.Events;
-using dotnet_graphql_engine.Services.GraphQL.PersistedQueryService;
-using dotnet_graphql_engine.Services.GraphQL.CacheService;
-using dotnet_graphql_engine.Services.GraphQL.ErrorFormattingService;
-using dotnet_graphql_engine.Services.GraphQL.GraphQLExecutionService;
-using dotnet_graphql_engine.Services.GraphQL.PersistedQueryService;
+using GraphQLEngine;
+using GraphQLEngine.Configuration;
+using GraphQLEngine.Services.GraphQL;
+using GraphQLEngine.Domain.Entities;
+using GraphQLEngine.Services.Schema;
+using GraphQLEngine.Services.DataLoader;
+using GraphQLEngine.Services.Subscriptions;
+using GraphQLEngine.Services.QueryAnalysis;
+using GraphQLEngine.Services.Caching;
+using GraphQLEngine.Services.BackgroundServices;
+using GraphQLEngine.Services.Events;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -39,7 +35,7 @@ builder.Services.AddGraphQLEngine(options =>
     options.QueryTimeoutMs = 30000;
 
     // Caching settings
-    options.CacheTtlSeconds = 300;
+    options.CacheTTLSeconds = 300;
     options.CacheMaxSizeBytes = 104857600; // 100 MB
 
     // Federation settings

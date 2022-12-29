@@ -100,12 +100,46 @@ sealed public class GraphQLEngineOptions
     /// </summary>
     public bool EnablePerformanceMetrics { get; set; } = true;
 
+    // Federation options
+    /// <summary>
+    /// Enable GraphQL Federation support for cross-service entity resolution
+    /// </summary>
+    public bool EnableFederation { get; set; } = false;
+
+    /// <summary>
+    /// Endpoint used to discover and compose federated schemas
+    /// </summary>
+    public string FederationDiscoveryEndpoint { get; set; } = "/.well-known/federation";
+
+    /// <summary>
+    /// Timeout for federation discovery and entity resolution calls
+    /// </summary>
+    public TimeSpan FederationTimeout { get; set; } = TimeSpan.FromSeconds(30);
+
+    /// <summary>
+    /// Entity cache time-to-live in seconds (federation entity resolution)
+    /// </summary>
+    [Range(0, 86400)]
+    public int EntityCacheTtlSeconds { get; set; } = GraphQLConstants.DefaultCacheTTLSeconds;
+
+    /// <summary>
+    /// Maximum number of entries allowed in the entity cache (federation entity resolution)
+    /// </summary>
+    [Range(1, 1000000)]
+    public int EntityCacheMaxSize { get; set; } = GraphQLConstants.DefaultCacheMaxSize;
+
     // Caching options
     /// <summary>
     /// Cache time-to-live in seconds
     /// </summary>
     [Range(0, 86400)]
     public int CacheTTLSeconds { get; set; } = GraphQLConstants.DefaultCacheTTLSeconds;
+
+    /// <summary>
+    /// Maximum number of entries allowed in the cache
+    /// </summary>
+    [Range(1, 1000000)]
+    public int CacheMaxSize { get; set; } = GraphQLConstants.DefaultCacheMaxSize;
 
     /// <summary>
     /// Maximum cache size in bytes
@@ -245,7 +279,13 @@ sealed public class GraphQLEngineOptions
             EnableSchemaStitching = EnableSchemaStitching,
             EnableDetailedErrorMessages = EnableDetailedErrorMessages,
             EnablePerformanceMetrics = EnablePerformanceMetrics,
+            EnableFederation = EnableFederation,
+            FederationDiscoveryEndpoint = FederationDiscoveryEndpoint,
+            FederationTimeout = FederationTimeout,
+            EntityCacheTtlSeconds = EntityCacheTtlSeconds,
+            EntityCacheMaxSize = EntityCacheMaxSize,
             CacheTTLSeconds = CacheTTLSeconds,
+            CacheMaxSize = CacheMaxSize,
             CacheMaxSizeBytes = CacheMaxSizeBytes,
             MaxSubscriptionConnections = MaxSubscriptionConnections,
             SubscriptionTimeoutMs = SubscriptionTimeoutMs,
