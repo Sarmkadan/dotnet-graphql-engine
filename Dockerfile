@@ -6,6 +6,7 @@ COPY . ./
 RUN dotnet publish -c Release -o out
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine
+RUN apk add --no-cache curl
 RUN addgroup -g 1000 app && adduser -u 1001 -G app -s /bin/sh -D app
 USER app
 WORKDIR /app
