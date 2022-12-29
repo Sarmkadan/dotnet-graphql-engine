@@ -166,6 +166,32 @@ To build the Docker image manually:
 docker build -t dotnet-graphql-engine .
 ```
 
+## Performance Benchmarks
+
+We use [BenchmarkDotNet](https://benchmarkdotnet.org/) to measure and track performance metrics.
+
+### Running Benchmarks Locally
+
+```bash
+# Navigate to benchmarks directory
+cd benchmarks/dotnet-graphql-engine.Benchmarks
+
+# Run all benchmarks
+dotnet run -c Release -- --filter *
+
+# Run benchmarks with memory diagnostics
+dotnet run -c Release -- --filter * --memory
+```
+
+### Benchmark Categories
+- **Query Execution**: Simple, nested, and complex query performance
+- **Schema Operations**: Schema creation and type management  
+- **Resolver Registration**: Field resolver registration performance
+
+### CI Integration
+
+Benchmarks run automatically in CI to track performance over time. See `.github/workflows/benchmarks.yml` for details.
+
 ## License
 
 MIT License - Copyright (c) 2026 Vladyslav Zaiets
