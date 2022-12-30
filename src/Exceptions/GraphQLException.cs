@@ -81,7 +81,15 @@ sealed public class QueryComplexityException : GraphQLException
 }
 
 /// <summary>
-/// Exception thrown when validation fails
+/// Exception thrown during configuration parsing or validation
+/// </summary>
+sealed public class ConfigurationException : GraphQLException
+{
+    public ConfigurationException(string message) : base(message, "CONFIGURATION_ERROR") { }
+}
+
+/// <summary>
+/// Exception thrown during validation fails
 /// </summary>
 sealed public class ValidationException : GraphQLException
 {

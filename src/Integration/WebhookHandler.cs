@@ -37,6 +37,9 @@ sealed public class WebhookHandler : IDisposable
     /// </summary>
     public void RegisterEndpoint(string id, string url, string? secret = null)
     {
+        if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Endpoint ID cannot be empty", nameof(id));
+        if (string.IsNullOrWhiteSpace(url)) throw new ArgumentException("Webhook URL cannot be empty", nameof(url));
+
         var endpoint = new WebhookEndpoint
         {
             Id = id,

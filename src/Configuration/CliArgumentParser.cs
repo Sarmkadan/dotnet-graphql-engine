@@ -5,6 +5,7 @@
 // =============================================================================
 
 using Microsoft.Extensions.Logging;
+using GraphQLEngine.Exceptions;
 
 namespace GraphQLEngine.Configuration;
 
@@ -90,7 +91,7 @@ sealed public class CliArgumentParser
             }
             else
             {
-                throw new InvalidOperationException($"Option --{name} requires a value");
+                throw new ConfigurationException($"Option --{name} requires a value");
             }
         }
 
@@ -125,7 +126,7 @@ sealed public class CliArgumentParser
             }
             else
             {
-                throw new InvalidOperationException($"Option -{shortName} requires a value");
+                throw new ConfigurationException($"Option -{shortName} requires a value");
             }
         }
 
@@ -152,7 +153,7 @@ sealed public class CliArgumentParser
         {
             if (option.IsRequired && !args.Options.ContainsKey(option.Name))
             {
-                throw new InvalidOperationException($"Required option {option.Name} is missing");
+                throw new ConfigurationException($"Required option {option.Name} is missing");
             }
         }
     }

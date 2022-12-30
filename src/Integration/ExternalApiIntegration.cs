@@ -32,6 +32,10 @@ sealed public class ExternalApiIntegration : IDisposable
     /// </summary>
     public void RegisterEndpoint(string name, string baseUrl, ExternalApiEndpointConfig config)
     {
+        if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Endpoint name cannot be empty", nameof(name));
+        if (string.IsNullOrWhiteSpace(baseUrl)) throw new ArgumentException("Base URL cannot be empty", nameof(baseUrl));
+        if (config is null) throw new ArgumentNullException(nameof(config));
+
         var endpoint = new ExternalApiEndpoint
         {
             Name = name,
