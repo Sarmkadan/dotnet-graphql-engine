@@ -4,37 +4,74 @@ using System.Text.Json.Serialization;
 
 namespace benchmarks.dotnet_graphql_engine.Benchmarks
 {
-    public static class QueryExecutionBenchmarksJsonExtensions
-    {
-        private static readonly JsonSerializerOptions options = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = false
-        };
+	/// <summary>
+	/// Provides JSON serialization and deserialization extensions for <see cref="QueryExecutionBenchmarks"/>.
+	/// </summary>
+	public static class QueryExecutionBenchmarksJsonExtensions
+	{
+		private static readonly JsonSerializerOptions DefaultOptions = new JsonSerializerOptions
+		{
+			PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+			WriteIndented = false
+		};
 
-        public static string ToJson(this QueryExecutionBenchmarks value, bool indented = false)
-        {
-            options.WriteIndented = indented;
-            return JsonSerializer.Serialize(value, options);
-        }
+		/// <summary>
+		/// Serializes the <see cref="QueryExecutionBenchmarks"/> instance to a JSON string.
+		/// </summary>
+		/// <param name="value">The instance to serialize. Cannot be null.</param>
+		/// <param name="indented">Whether to format the JSON with indentation for readability.</param>
+		/// <returns>A JSON string representation of the instance.</returns>
+		/// <exception cref="ArgumentNullException"><paramref name="value"/> is null.</exception>
+		public static string ToJson(this QueryExecutionBenchmarks value, bool indented = false)
+		{
+			ArgumentNullException.ThrowIfNull(value);
 
-        public static QueryExecutionBenchmarks? FromJson(string json)
-        {
-            return JsonSerializer.Deserialize<QueryExecutionBenchmarks>(json, options);
-        }
+			var options = new JsonSerializerOptions(DefaultOptions)
+			{
+				WriteIndented = indented
+			};
 
-        public static bool TryFromJson(string json, out QueryExecutionBenchmarks? value)
-        {
-            try
-            {
-                value = JsonSerializer.Deserialize<QueryExecutionBenchmarks>(json, options);
-                return value != null;
-            }
-            catch (JsonException)
-            {
-                value = null;
-                return false;
-            }
-        }
-    }
+			return JsonSerializer.Serialize(value, options);
+		}
+
+		/// <summary>
+		/// Deserializes a JSON string to a <see cref="QueryExecutionBenchmarks"/> instance.
+		/// </summary>
+		/// <param name="json">The JSON string to deserialize. Cannot be null or empty.</param>
+		/// <returns>The deserialized instance, or null if the JSON represents a null value.</returns>
+		/// <exception cref="ArgumentException"><paramref name="json"/> is null or empty.</exception>
+		/// <exception cref="JsonException">The JSON is invalid or cannot be deserialized.</exception>
+		public static QueryExecutionBenchmarks? FromJson(string json)
+		{
+			ArgumentException.ThrowIfNullOrEmpty(json);
+
+			return JsonSerializer.Deserialize<QueryExecutionBenchmarks>(json, DefaultOptions);
+		}
+
+		/// <summary>
+		/// Attempts to deserialize a JSON string to a <see cref="QueryExecutionBenchmarks"/> instance.
+		/// </summary>
+		/// <param name="json">The JSON string to deserialize. Can be null or empty.</param>
+		/// <param name="value">Receives the deserialized instance if successful; otherwise, null.</param>
+		/// <returns>True if deserialization succeeded; otherwise, false.</returns>
+		public static bool TryFromJson(string json, out QueryExecutionBenchmarks? value)
+		{
+			value = null;
+
+			if (string.IsNullOrEmpty(json))
+			{
+				return false;
+			}
+
+			try
+			{
+				value = JsonSerializer.Deserialize<QueryExecutionBenchmarks>(json, DefaultOptions);
+				return value != null;
+			}
+			catch (JsonException)
+			{
+				return false;
+			}
+		}
+	}
 }
