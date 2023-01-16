@@ -1,40 +1,76 @@
+using System;
 using System.Text.Json;
 
-namespace dotnet_graphql_engine.Benchmarks
+namespace GraphQLEngine.Benchmarks
 {
-    public static class CachingBenchmarksJsonExtensions
-    {
-        private static readonly JsonSerializerOptions _options = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        };
+	/// <summary>
+	/// Provides JSON serialization and deserialization extensions for <see cref="CachingBenchmarks"/>
+	/// to enable caching benchmark configuration to be persisted or transmitted.
+	/// </summary>
+	public static class CachingBenchmarksJsonExtensions
+	{
+		private static readonly JsonSerializerOptions _options = new JsonSerializerOptions
+		{
+			PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+		};
 
-        public static string ToJson(this CachingBenchmarks value, bool indented = false)
-        {
-            var options = indented
-                ? new JsonSerializerOptions(_options) { WriteIndented = true }
-                : _options;
+		/// <summary>
+		/// Serializes the <see cref="CachingBenchmarks"/> instance to a JSON string.
+		/// </summary>
+		/// <param name="value">The value to serialize.</param>
+		/// <param name="indented">Whether to format the JSON with indentation for readability.</param>
+		/// <returns>A JSON string representation of the value.</returns>
+		/// <exception cref="ArgumentNullException"><paramref name="value"/> is null.</exception>
+		public static string ToJson(this CachingBenchmarks value, bool indented = false)
+		{
+			ArgumentNullException.ThrowIfNull(value);
 
-            return JsonSerializer.Serialize(value, options);
-        }
+			var options = indented
+				? new JsonSerializerOptions(_options) { WriteIndented = true }
+				: _options;
 
-        public static CachingBenchmarks? FromJson(string json)
-        {
-            return JsonSerializer.Deserialize<CachingBenchmarks>(json, _options);
-        }
+			return JsonSerializer.Serialize(value, options);
+		}
 
-        public static bool TryFromJson(string json, out CachingBenchmarks? value)
-        {
-            try
-            {
-                value = FromJson(json);
-                return true;
-            }
-            catch (JsonException)
-            {
-                value = null;
-                return false;
-            }
-        }
-    }
+		/// <summary>
+		/// Deserializes a JSON string to a <see cref="CachingBenchmarks"/> instance.
+		/// </summary>
+		/// <param name="json">The JSON string to deserialize.</param>
+		/// <returns>The deserialized instance, or null if the JSON is null or empty.</returns>
+		public static CachingBenchmarks? FromJson(string json)
+		{
+			if (string.IsNullOrWhiteSpace(json))
+			{
+				return null;
+			}
+
+			return JsonSerializer.Deserialize<CachingBenchmarks>(json, _options);
+		}
+
+		/// <summary>
+		/// Attempts to deserialize a JSON string to a <see cref="CachingBenchmarks"/> instance.
+		/// </summary>
+		/// <param name="json">The JSON string to deserialize.</param>
+		/// <param name="value">Receives the deserialized instance if successful.</param>
+		/// <returns>True if deserialization succeeded; otherwise, false.</returns>
+		public static bool TryFromJson(string json, out CachingBenchmarks? value)
+		{
+			value = null;
+
+			if (string.IsNullOrWhiteSpace(json))
+			{
+				return false;
+			}
+
+			try
+			{
+				value = JsonSerializer.Deserialize<CachingBenchmarks>(json, _options);
+				return true;
+			}
+			catch (JsonException)
+			{
+				return false;
+			}
+		}
+	}
 }
