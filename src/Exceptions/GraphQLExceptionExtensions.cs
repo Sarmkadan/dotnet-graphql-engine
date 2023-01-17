@@ -19,13 +19,11 @@ public static class GraphQLExceptionExtensions
     /// </summary>
     /// <param name="exception">The GraphQL exception</param>
     /// <param name="extensions">Dictionary of extension key-value pairs</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="exception"/> or <paramref name="extensions"/> is <see langword="null"/></exception>
     public static void AddExtensions(this GraphQLException exception, Dictionary<string, object> extensions)
     {
-        if (exception == null)
-            throw new ArgumentNullException(nameof(exception));
-
-        if (extensions == null)
-            throw new ArgumentNullException(nameof(extensions));
+        ArgumentNullException.ThrowIfNull(exception);
+        ArgumentNullException.ThrowIfNull(extensions);
 
         foreach (var kvp in extensions)
         {
@@ -38,19 +36,19 @@ public static class GraphQLExceptionExtensions
     /// </summary>
     /// <param name="exception">The GraphQL exception</param>
     /// <returns>JSON string representation of extensions, or empty string if no extensions</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="exception"/> is <see langword="null"/></exception>
     public static string SerializeExtensions(this GraphQLException exception)
     {
-        if (exception == null)
-            throw new ArgumentNullException(nameof(exception));
+        ArgumentNullException.ThrowIfNull(exception);
 
-        if (exception.Extensions == null || exception.Extensions.Count == 0)
+        if (exception.Extensions is not { Count: > 0 })
             return string.Empty;
 
         try
         {
             return JsonSerializer.Serialize(exception.Extensions);
         }
-        catch
+        catch (JsonException)
         {
             return string.Empty;
         }
@@ -62,11 +60,10 @@ public static class GraphQLExceptionExtensions
     /// <param name="exception">The GraphQL exception</param>
     /// <param name="defaultErrorCode">Default error code to return if ErrorCode is null</param>
     /// <returns>Error code or default value</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="exception"/> is <see langword="null"/></exception>
     public static string GetErrorCodeOrDefault(this GraphQLException exception, string defaultErrorCode = "UNKNOWN_ERROR")
     {
-        if (exception == null)
-            throw new ArgumentNullException(nameof(exception));
-
+        ArgumentNullException.ThrowIfNull(exception);
         return exception.ErrorCode ?? defaultErrorCode;
     }
 
@@ -76,10 +73,10 @@ public static class GraphQLExceptionExtensions
     /// <param name="exception">The original exception</param>
     /// <param name="contextMessage">Additional context to include</param>
     /// <returns>New GraphQLException with combined information</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="exception"/> is <see langword="null"/></exception>
     public static GraphQLException WithContext(this GraphQLException exception, string contextMessage)
     {
-        if (exception == null)
-            throw new ArgumentNullException(nameof(exception));
+        ArgumentNullException.ThrowIfNull(exception);
 
         if (string.IsNullOrEmpty(contextMessage))
             return exception;
@@ -108,13 +105,12 @@ public static class GraphQLExceptionExtensions
     /// <returns>Typed extension value or default</returns>
     public static T GetExtension<T>(this GraphQLException exception, string key, T defaultValue = default)
     {
-        if (exception == null || exception.Extensions == null)
+        if (exception is null || exception.Extensions is null)
             return defaultValue;
 
-        if (exception.Extensions.TryGetValue(key, out var value) && value is T typedValue)
-            return typedValue;
-
-        return defaultValue;
+        return exception.Extensions.TryGetValue(key, out var value) && value is T typedValue
+            ? typedValue
+            : defaultValue;
     }
 
     /// <summary>
@@ -122,13 +118,14 @@ public static class GraphQLExceptionExtensions
     /// </summary>
     /// <param name="exception">The GraphQL exception</param>
     /// <param name="errorCodePrefix">Prefix for the error code (e.g., "SCHEMA", "EXECUTION")</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="exception"/> is <see langword="null"/></exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="errorCodePrefix"/> is <see langword="null"/> or empty</exception>
     public static void AddFormattedErrorCode(this GraphQLException exception, string errorCodePrefix)
     {
-        if (exception == null)
-            throw new ArgumentNullException(nameof(exception));
+        ArgumentNullException.ThrowIfNull(exception);
 
-        if (string.IsNullOrEmpty(errorCodePrefix))
-            return;
+        if (string.IsNullOrWhiteSpace(errorCodePrefix))
+            throw new ArgumentException("Error code prefix cannot be null or whitespace.", nameof(errorCodePrefix));
 
         var formattedCode = $"{errorCodePrefix}_{exception.GetErrorCodeOrDefault()}";
         exception.AddExtension("errorCode", formattedCode);
