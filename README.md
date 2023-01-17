@@ -165,6 +165,63 @@ be supplied through external configuration sources.
 
 ---
 
+
+## QueryExecutionBenchmarks
+
+The `QueryExecutionBenchmarks` class provides performance benchmarks for GraphQL query execution using BenchmarkDotNet. It measures execution time and memory allocation for various query patterns including simple queries, nested queries, complex multi-field queries, large queries with deep nesting, introspection queries, and queries with arguments.
+
+This benchmark suite helps identify performance regressions and optimize query execution in the GraphQL engine.
+
+
+
+### Usage Example
+
+```csharp
+using BenchmarkDotNet.Running;
+using GraphQLEngine.Benchmarks;
+
+// Run all benchmarks
+var summary = BenchmarkRunner.Run<QueryExecutionBenchmarks>();
+
+// Or run specific benchmarks
+// BenchmarkRunner.Run<QueryExecutionBenchmarks>(config => config
+//     .AddJob(Job.Dry) // Dry run to verify benchmarks
+// );
+```
+
+### Example Benchmark Setup
+
+```csharp
+var benchmarks = new QueryExecutionBenchmarks();
+
+// Initialize the benchmark environment
+benchmarks.Setup();
+
+// Execute a simple query benchmark
+await benchmarks.SimpleQuery();
+
+// Execute a nested query benchmark
+await benchmarks.NestedQuery();
+
+// Execute a complex multi-field query benchmark
+await benchmarks.ComplexQuery();
+
+// Execute a large query with deep nesting benchmark
+await benchmarks.LargeQuery();
+
+// Execute an introspection query benchmark
+await benchmarks.IntrospectionQuery();
+
+// Execute multiple simple queries benchmark
+await benchmarks.MultipleSimpleQueries();
+
+// Execute a query with arguments benchmark
+await benchmarks.QueryWithArguments();
+
+// Cleanup resources
+benchmarks.Cleanup();
+```
+
 ## Quick Start
 
 ... *(rest of the original README continues unchanged)*
