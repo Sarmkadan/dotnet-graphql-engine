@@ -1,35 +1,38 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
-using BenchmarkDotNet.Running;
 using GraphQLEngine.Domain.Entities;
 using GraphQLEngine.Services.GraphQL;
 
 namespace GraphQLEngine.Benchmarks;
 
 /// <summary>
-/// Extension methods for QueryExecutionBenchmarks providing additional benchmarking utilities
+/// Extension methods for <see cref="QueryExecutionBenchmarks"/> providing additional benchmarking utilities.
 /// </summary>
 public static class QueryExecutionBenchmarksExtensions
 {
     /// <summary>
-    /// Executes a query with warmup iterations to ensure JIT compilation and caching effects are measured
+    /// Executes a query with warmup iterations to ensure JIT compilation and caching effects are measured.
     /// </summary>
-    /// <param name="benchmarks">The benchmarks instance</param>
-    /// <param name="query">The query to execute</param>
-    /// <param name="warmupIterations">Number of warmup iterations (default: 5)</param>
-    /// <param name="measureIterations">Number of measurement iterations (default: 10)</param>
-    /// <returns>Average execution time in milliseconds</returns>
-    public static async Task<double> ExecuteWithWarmupAsync(this QueryExecutionBenchmarks benchmarks, GraphQLQuery query, int warmupIterations = 5, int measureIterations = 10)
+    /// <param name="benchmarks">The benchmarks instance.</param>
+    /// <param name="query">The query to execute.</param>
+    /// <param name="warmupIterations">Number of warmup iterations (default: 5).</param>
+    /// <param name="measureIterations">Number of measurement iterations (default: 10).</param>
+    /// <exception cref="ArgumentNullException"><paramref name="benchmarks"/> or <paramref name="query"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="warmupIterations"/> or <paramref name="measureIterations"/> is less than 1.</exception>
+    /// <exception cref="InvalidOperationException">Warmup or measurement query execution fails.</exception>
+    /// <returns>Average execution time in milliseconds.</returns>
+    public static async Task<double> ExecuteWithWarmupAsync(
+        this QueryExecutionBenchmarks benchmarks,
+        GraphQLQuery query,
+        int warmupIterations = 5,
+        int measureIterations = 10)
     {
-        if (benchmarks == null)
-            throw new ArgumentNullException(nameof(benchmarks));
-        if (query == null)
-            throw new ArgumentNullException(nameof(query));
-        if (warmupIterations < 1)
-            throw new ArgumentOutOfRangeException(nameof(warmupIterations), "Must be at least 1");
-        if (measureIterations < 1)
-            throw new ArgumentOutOfRangeException(nameof(measureIterations), "Must be at least 1");
+        ArgumentNullException.ThrowIfNull(benchmarks);
+        ArgumentNullException.ThrowIfNull(query);
+        ArgumentOutOfRangeException.ThrowIfLessThan(warmupIterations, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(measureIterations, 1);
 
         var executionService = benchmarks.GetExecutionService();
         var executionTimes = new List<double>();
@@ -40,7 +43,8 @@ public static class QueryExecutionBenchmarksExtensions
             var warmupResult = await executionService.ExecuteAsync(query);
             if (warmupResult.HasErrors)
             {
-                throw new InvalidOperationException($"Warmup query execution failed: {string.Join(", ", warmupResult.Errors)}");
+                throw new InvalidOperationException(
+                    $"Warmup query execution failed: {string.Join(", ", warmupResult.Errors)}");
             }
         }
 
@@ -54,7 +58,8 @@ public static class QueryExecutionBenchmarksExtensions
 
             if (result.HasErrors)
             {
-                throw new InvalidOperationException($"Measurement query execution failed: {string.Join(", ", result.Errors)}");
+                throw new InvalidOperationException(
+                    $"Measurement query execution failed: {string.Join(", ", result.Errors)}");
             }
 
             totalTicks += (endTime - startTime).Ticks;
@@ -65,25 +70,26 @@ public static class QueryExecutionBenchmarksExtensions
     }
 
     /// <summary>
-    /// Executes multiple queries in parallel to test concurrent execution performance
+    /// Executes multiple queries in parallel to test concurrent execution performance.
     /// </summary>
-    /// <param name="benchmarks">The benchmarks instance</param>
-    /// <param name="queries">Collection of queries to execute in parallel</param>
-    /// <param name="degreeOfParallelism">Number of concurrent executions (default: Environment.ProcessorCount)</param>
-    /// <returns>Collection of execution results</returns>
-    public static async Task<IReadOnlyList<GraphQLExecutionResult>> ExecuteInParallelAsync(this QueryExecutionBenchmarks benchmarks, IReadOnlyCollection<GraphQLQuery> queries, int degreeOfParallelism = 0)
+    /// <param name="benchmarks">The benchmarks instance.</param>
+    /// <param name="queries">Collection of queries to execute in parallel.</param>
+    /// <param name="degreeOfParallelism">Number of concurrent executions (default: Environment.ProcessorCount).</param>
+    /// <exception cref="ArgumentNullException"><paramref name="benchmarks"/> or <paramref name="queries"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="queries"/> collection cannot be empty.</exception>
+    /// <returns>Collection of execution results.</returns>
+    public static async Task<IReadOnlyList<GraphQLExecutionResult>> ExecuteInParallelAsync(
+        this QueryExecutionBenchmarks benchmarks,
+        IReadOnlyCollection<GraphQLQuery> queries,
+        int degreeOfParallelism = 0)
     {
-        if (benchmarks == null)
-            throw new ArgumentNullException(nameof(benchmarks));
-        if (queries == null)
-            throw new ArgumentNullException(nameof(queries));
-        if (queries.Count == 0)
-            throw new ArgumentException("Queries collection cannot be empty", nameof(queries));
+        ArgumentNullException.ThrowIfNull(benchmarks);
+        ArgumentNullException.ThrowIfNull(queries);
+        ArgumentOutOfRangeException.ThrowIfZero(queries.Count);
 
-        if (degreeOfParallelism <= 0)
-        {
-            degreeOfParallelism = Environment.ProcessorCount;
-        }
+        degreeOfParallelism = degreeOfParallelism <= 0
+            ? Environment.ProcessorCount
+            : degreeOfParallelism;
 
         var executionService = benchmarks.GetExecutionService();
         var results = new List<GraphQLExecutionResult>(queries.Count);
@@ -115,20 +121,22 @@ public static class QueryExecutionBenchmarksExtensions
     }
 
     /// <summary>
-    /// Creates a custom schema specifically for benchmarking with specific complexity
+    /// Creates a custom schema specifically for benchmarking with specific complexity.
     /// </summary>
-    /// <param name="benchmarks">The benchmarks instance</param>
-    /// <param name="typeCount">Number of types to generate (default: 10)</param>
-    /// <param name="fieldCountPerType">Number of fields per type (default: 5)</param>
-    /// <returns>The created schema name</returns>
-    public static string CreateBenchmarkSchema(this QueryExecutionBenchmarks benchmarks, int typeCount = 10, int fieldCountPerType = 5)
+    /// <param name="benchmarks">The benchmarks instance.</param>
+    /// <param name="typeCount">Number of types to generate (default: 10).</param>
+    /// <param name="fieldCountPerType">Number of fields per type (default: 5).</param>
+    /// <exception cref="ArgumentNullException"><paramref name="benchmarks"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="typeCount"/> or <paramref name="fieldCountPerType"/> is less than 1.</exception>
+    /// <returns>The created schema name.</returns>
+    public static string CreateBenchmarkSchema(
+        this QueryExecutionBenchmarks benchmarks,
+        int typeCount = 10,
+        int fieldCountPerType = 5)
     {
-        if (benchmarks == null)
-            throw new ArgumentNullException(nameof(benchmarks));
-        if (typeCount < 1)
-            throw new ArgumentOutOfRangeException(nameof(typeCount), "Must be at least 1");
-        if (fieldCountPerType < 1)
-            throw new ArgumentOutOfRangeException(nameof(fieldCountPerType), "Must be at least 1");
+        ArgumentNullException.ThrowIfNull(benchmarks);
+        ArgumentOutOfRangeException.ThrowIfLessThan(typeCount, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(fieldCountPerType, 1);
 
         var schemaName = $"BenchmarkSchema_{Guid.NewGuid()}";
         var schemaService = benchmarks.GetSchemaService();
@@ -183,27 +191,32 @@ public static class QueryExecutionBenchmarksExtensions
         for (int i = 0; i < typeCount; i++)
         {
             var typeName = $"Type{i + 1}";
-            executionService.RegisterResolver($"{typeName.ToLower()}", async (ExecutionContext ctx) => new { id = "1", name = typeName });
+            executionService.RegisterResolver(
+                $"{typeName.ToLowerInvariant()}",
+                async (ExecutionContext ctx) => new { id = "1", name = typeName });
         }
 
         return schemaName;
     }
 
     /// <summary>
-    /// Measures memory allocation during query execution
+    /// Measures memory allocation during query execution.
     /// </summary>
-    /// <param name="benchmarks">The benchmarks instance</param>
-    /// <param name="query">The query to execute</param>
-    /// <param name="iterations">Number of iterations to measure (default: 100)</param>
-    /// <returns>Average memory allocated per iteration in bytes</returns>
-    public static async Task<long> MeasureMemoryAllocationAsync(this QueryExecutionBenchmarks benchmarks, GraphQLQuery query, int iterations = 100)
+    /// <param name="benchmarks">The benchmarks instance.</param>
+    /// <param name="query">The query to execute.</param>
+    /// <param name="iterations">Number of iterations to measure (default: 100).</param>
+    /// <exception cref="ArgumentNullException"><paramref name="benchmarks"/> or <paramref name="query"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="iterations"/> is less than 1.</exception>
+    /// <exception cref="InvalidOperationException">Memory measurement query failed.</exception>
+    /// <returns>Average memory allocated per iteration in bytes.</returns>
+    public static async Task<long> MeasureMemoryAllocationAsync(
+        this QueryExecutionBenchmarks benchmarks,
+        GraphQLQuery query,
+        int iterations = 100)
     {
-        if (benchmarks == null)
-            throw new ArgumentNullException(nameof(benchmarks));
-        if (query == null)
-            throw new ArgumentNullException(nameof(query));
-        if (iterations < 1)
-            throw new ArgumentOutOfRangeException(nameof(iterations), "Must be at least 1");
+        ArgumentNullException.ThrowIfNull(benchmarks);
+        ArgumentNullException.ThrowIfNull(query);
+        ArgumentOutOfRangeException.ThrowIfLessThan(iterations, 1);
 
         var executionService = benchmarks.GetExecutionService();
         var gcBeforeCollections = GC.CollectionCount(0) + GC.CollectionCount(1) + GC.CollectionCount(2);
@@ -214,7 +227,8 @@ public static class QueryExecutionBenchmarksExtensions
             var result = await executionService.ExecuteAsync(query);
             if (result.HasErrors)
             {
-                throw new InvalidOperationException($"Memory measurement query failed: {string.Join(", ", result.Errors)}");
+                throw new InvalidOperationException(
+                    $"Memory measurement query failed: {string.Join(", ", result.Errors)}");
             }
         }
 
@@ -237,13 +251,29 @@ public static class QueryExecutionBenchmarksExtensions
 
     private static SchemaService GetSchemaService(this QueryExecutionBenchmarks benchmarks)
     {
-        var field = typeof(QueryExecutionBenchmarks).GetField("_schemaService", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        return (SchemaService)field?.GetValue(benchmarks)!;
+        ArgumentNullException.ThrowIfNull(benchmarks);
+
+        const string fieldName = "_schemaService";
+        var field = typeof(QueryExecutionBenchmarks).GetField(
+            fieldName,
+            BindingFlags.NonPublic | BindingFlags.Instance);
+
+        return field?.GetValue(benchmarks) as SchemaService
+            ?? throw new InvalidOperationException(
+                $"Failed to retrieve {fieldName} from {nameof(QueryExecutionBenchmarks)}");
     }
 
     private static GraphQLExecutionService GetExecutionService(this QueryExecutionBenchmarks benchmarks)
     {
-        var field = typeof(QueryExecutionBenchmarks).GetField("_executionService", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        return (GraphQLExecutionService)field?.GetValue(benchmarks)!;
+        ArgumentNullException.ThrowIfNull(benchmarks);
+
+        const string fieldName = "_executionService";
+        var field = typeof(QueryExecutionBenchmarks).GetField(
+            fieldName,
+            BindingFlags.NonPublic | BindingFlags.Instance);
+
+        return field?.GetValue(benchmarks) as GraphQLExecutionService
+            ?? throw new InvalidOperationException(
+                $"Failed to retrieve {fieldName} from {nameof(QueryExecutionBenchmarks)}");
     }
 }
