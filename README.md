@@ -331,6 +331,102 @@ var loaderException = new DataLoaderException(
 throw loaderException;
 ```
 
+## CollectionExtensions
+
+The `CollectionExtensions` class provides a comprehensive set of extension methods for working with collections and enumerables in .NET. It includes utilities for checking collection state, safe item access, batching, filtering, transformation, and statistical operations, reducing boilerplate code and improving code readability.
+
+
+### Usage Example
+
+```csharp
+using GraphQLEngine.Common.Utilities;
+
+// Sample data
+var users = new List<User> {
+    new User { Id = 1, Name = "Alice", Age = 30 },
+    new User { Id = 2, Name = "Bob", Age = 25 },
+    new User { Id = 3, Name = "Charlie", Age = 30 }
+};
+
+// Check if collection is null or empty
+if (users.IsNullOrEmpty())
+{
+    Console.WriteLine("No users found");
+}
+
+// Check if collection has items
+if (users.HasItems())
+{
+    Console.WriteLine($"Found {users.Count} users");
+}
+
+// Get first item or null instead of throwing
+var firstUser = users.FirstOrNull();
+
+// Safely add items to a collection
+var newUsers = new List<User>();
+newUsers.AddIfNotNull(new User { Id = 4, Name = "Diana", Age = 28 });
+
+// Add multiple items to a collection
+var moreUsers = new List<User> { new User { Id = 5, Name = "Eve", Age = 22 } };
+newUsers.AddRange(moreUsers);
+
+// Remove multiple items from a collection
+newUsers.RemoveRange(new[] { users[0], users[1] });
+
+// Split a collection into batches
+var userBatches = users.Batch(2);
+foreach (var batch in userBatches)
+{
+    Console.WriteLine($"Batch with {batch.Count} users");
+}
+
+// Get distinct items by a key selector
+var uniqueAges = users.DistinctBy(u => u.Age);
+
+// Find index of an item
+var index = users.IndexOf(users.First(u => u.Name == "Bob"));
+
+// Execute action for each item
+users.ForEach(u => Console.WriteLine(u.Name));
+
+// Execute action with index
+users.ForEachWithIndex((user, idx) => Console.WriteLine($"User {idx}: {user.Name}"));
+
+// Check if all items match a value
+var allAdults = users.All(new User { Age = 18 }); // false
+
+// Combine multiple collections
+var combined = users.Combine(new[] { new User { Id = 6, Name = "Frank", Age = 27 } });
+
+// Get random item
+var randomUser = users.Random();
+
+// Shuffle collection
+var shuffledUsers = users.Shuffle();
+
+// Count items by key
+var ageCounts = users.CountBy(u => u.Age);
+// {30: 2, 25: 1}
+
+// Convert to dictionary with default value
+var userDict = users.ToDictionary(u => u.Id, "default");
+
+// Sort by multiple keys
+var sortedUsers = users.OrderByMany(u => u.Age, u => u.Name);
+
+// Flatten nested collections
+var nestedLists = new List<List<User>> {
+    new List<User> { users[0], users[1] },
+    new List<User> { users[2] }
+};
+var flattened = nestedLists.Flatten();
+
+// Get median value
+var ages = new List<int> { 22, 25, 27, 28, 30, 30 };
+var medianAge = ages.Median(); // 27
+```
+
 ## Quick Start
 
 ... *(rest of the original README continues unchanged)*
