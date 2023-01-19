@@ -222,6 +222,57 @@ await benchmarks.QueryWithArguments();
 benchmarks.Cleanup();
 ```
 
+## QueryField
+
+The `QueryField` class represents a selected field in a GraphQL query, including its nested selections and arguments. It's used internally for query parsing, execution, and complexity analysis. Each `QueryField` instance captures the field name, optional alias, type condition (for inline fragments), arguments, and nested fields.
+
+### Usage Example
+
+```csharp
+using GraphQLEngine.Domain.Entities;
+
+// Create a simple field with an alias
+var userField = new QueryField(
+    name: "user",
+    alias: "currentUser"
+);
+
+// Create a field with arguments
+var postsField = new QueryField(
+    name: "posts",
+    arguments: new[] { new QueryArgument("first", 10), new QueryArgument("orderBy", "DATE_DESC") }
+);
+
+// Create a field with nested selections
+var nestedField = new QueryField(
+    name: "user",
+    fields: new[] {
+        new QueryField(name: "id"),
+        new QueryField(name: "name"),
+        new QueryField(name: "email"),
+        new QueryField(
+            name: "posts",
+            arguments: new[] { new QueryArgument("first", 5) },
+            fields: new[] {
+                new QueryField(name: "id"),
+                new QueryField(name: "title"),
+                new QueryField(name: "publishedDate")
+            }
+        )
+    }
+);
+
+// Create an inline fragment field
+var inlineFragmentField = new QueryField(
+    name: "node",
+    typeCondition: "User",
+    fields: new[] {
+        new QueryField(name: "id"),
+        new QueryField(name: "name")
+    }
+);
+```
+
 ## GraphQLException
 
 The `GraphQLException` class serves as the base exception type for all GraphQL engine operations. It provides standardized error handling with support for custom error codes and extensible metadata through the `Extensions` dictionary. This exception hierarchy enables consistent error reporting across the entire GraphQL API surface.
