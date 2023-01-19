@@ -1,37 +1,28 @@
 // ... rest of the original README content ...
 
-## StringExtensions
+## DateTimeExtensions
 
-The `StringExtensions` class provides a set of utility methods for working with strings. It includes methods for converting strings to different case formats, truncating strings, checking if a string is a valid GraphQL name, normalizing whitespace, and escaping GraphQL strings.
+The `DateTimeExtensions` class provides a set of utility methods for working with dates and times. It includes methods for converting between different date and time formats, calculating time intervals, and checking if a date or time is within a certain range.
 
 ### Usage Example
 
 ```csharp
 using GraphQLEngine.Common.Utilities;
 
-// Create a sample string
-var input = "Hello World";
+// Get the current date and time
+var now = DateTime.Now;
 
-// Convert to camel case
-var camelCase = input.ToCamelCase(); // "helloWorld"
+// Convert to Unix timestamp
+var unixTimestamp = now.ToUnixTimestamp(); // 1643723400
 
-// Convert to Pascal case
-var pascalCase = input.ToPascalCase(); // "HelloWorld"
+// Parse an ISO 8601 date string
+var parsedDate = DateTime.ParseISO8601("2022-02-01T12:00:00Z"); // 2022-02-01 12:00:00
 
-// Convert to snake case
-var snakeCase = input.ToSnakeCase(); // "hello_world"
+// Check if the current date is today
+var isToday = now.IsToday(); // true
 
-// Truncate the string to 10 characters
-var truncated = input.Truncate(10); // "Hello Wo"
-
-// Check if the string is a valid GraphQL name
-var isValidName = input.IsValidGraphQLName(); // true
-
-// Normalize whitespace
-var normalized = input.NormalizeWhitespace(); // "Hello World"
-
-// Escape a GraphQL string
-var escaped = input.EscapeGraphQLString(); // "Hello World"
+// Check if the current date is within the past 7 days
+var isWithinPastDays = now.IsWithinPastDays(7); // true
 ```
 
 // ... rest of the original README content ...
