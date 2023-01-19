@@ -73,4 +73,84 @@ var hasDisplayAttr = EnumHelper.HasAttribute<UserRole, DisplayAttribute>(UserRol
 var underlyingValue = EnumHelper.GetUnderlyingValue(UserRole.Admin); // 3
 ```
 
+## JsonHelper
+
+The `JsonHelper` class provides a comprehensive set of utilities for JSON serialization and deserialization in .NET applications. It offers flexible methods for converting objects to JSON strings, parsing JSON into strongly-typed objects, working with dictionaries, and performing various JSON operations like merging, validation, and path-based value extraction.
+
+### Usage Example
+
+```csharp
+using GraphQLEngine.Common.Utilities;
+using System.Text.Json;
+
+// Define a sample data model
+public class User
+{
+    public string? Name { get; set; }
+    public int Age { get; set; }
+    public List<string>? Roles { get; set; }
+}
+
+// Create and serialize an object
+var user = new User
+{
+    Name = "Alice Johnson",
+    Age = 32,
+    Roles = new List<string> { "admin", "user" }
+};
+
+// Serialize with default options (camelCase, no indentation)
+var json = JsonHelper.Serialize(user);
+// Output: {"name":"Alice Johnson","age":32,"roles":["admin","user"]}
+
+// Serialize with pretty printing
+var prettyJson = JsonHelper.Serialize(user, pretty: true);
+// Output: {
+//   "name": "Alice Johnson",
+//   "age": 32,
+//   "roles": [
+//     "admin",
+//     "user"
+//   ]
+// }
+
+// Deserialize back to object
+var deserializedUser = JsonHelper.Deserialize<User>(json);
+Console.WriteLine(deserializedUser?.Name); // Alice Johnson
+
+// Convert object to dictionary
+var userDict = JsonHelper.ToDict(user);
+Console.WriteLine(userDict?["name"]); // Alice Johnson
+
+// Create dictionary from JSON
+var jsonDict = JsonHelper.DeserializeToDictionary("{\"status\":\"active\",\"count\":5}");
+Console.WriteLine(jsonDict?["status"]); // active
+
+// Merge multiple objects
+var merged = JsonHelper.Merge(
+    new { id = 1, name = "First" },
+    new { status = "active", priority = 10 }
+);
+// Output: {"id":1,"name":"First","status":"active","priority":10}
+
+// Check if JSON is valid
+var isValid = JsonHelper.IsValidJson(json); // true
+
+// Get value by path
+var nameValue = JsonHelper.GetValueByPath(json, "name"); // "Alice Johnson"
+
+// Remove null values from JSON
+var jsonWithNulls = "{\"name\":\"Bob\",\"age\":null,\"active\":true}";
+var cleanedJson = JsonHelper.RemoveNulls(jsonWithNulls);
+// Output: {"name":"Bob","active":true}
+
+// Use custom serialization options
+var customOptions = new JsonSerializerOptions
+{
+    WriteIndented = true,
+    PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+};
+var customJson = JsonHelper.Serialize(user, customOptions);
+```
+
 // ... rest of the original README content ...
