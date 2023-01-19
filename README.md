@@ -37,4 +37,19 @@ var jsonCompatible = TypeConverter.ToJsonCompatible("Hello, World!");
 // Returns: "Hello, World!"
 ```
 
+## ValidationHelper
+
+The `ValidationHelper` class provides a set of static methods for validating common input values such as query strings, type names, field names, emails, URLs, IDs, complexity scores, and depth levels. These helpers return a boolean indicating whether the supplied value meets the expected format or constraints.
+
+### Usage Example
+
+```csharp
+using GraphQLEngine.Common.Utilities;
+
+bool emailOk = ValidationHelper.ValidateEmail("user@example.com");
+bool urlOk = ValidationHelper.ValidateUrl("https://example.com");
+bool idOk = ValidationHelper.ValidateId("12345");
+Console.WriteLine($"Email valid: {emailOk}, URL valid: {urlOk}, ID valid: {idOk}");
+```
+
 // ... rest of the original README content ...
