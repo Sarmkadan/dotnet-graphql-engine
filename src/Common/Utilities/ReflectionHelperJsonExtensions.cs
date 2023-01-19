@@ -3,7 +3,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using System.Text.Json;
 
@@ -27,16 +27,13 @@ public static class ReflectionHelperJsonExtensions
     /// <param name="type">The Type to serialize</param>
     /// <param name="indented">Whether to format the JSON with indentation</param>
     /// <returns>A JSON string representation of the type information</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="type"/> is <see langword="null"/></exception>
     public static string ToJson(this Type type, bool indented = false)
     {
-        if (type is null)
-            throw new ArgumentNullException(nameof(type));
+        ArgumentNullException.ThrowIfNull(type);
 
         var options = indented
-            ? new JsonSerializerOptions(_jsonSerializerOptions)
-            {
-                WriteIndented = true
-            }
+            ? new JsonSerializerOptions(_jsonSerializerOptions) { WriteIndented = true }
             : _jsonSerializerOptions;
 
         var typeInfo = new TypeInfo
@@ -56,9 +53,12 @@ public static class ReflectionHelperJsonExtensions
     /// </summary>
     /// <param name="json">The JSON string to deserialize</param>
     /// <returns>A Type instance if deserialization succeeded; otherwise null</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="json"/> is <see langword="null"/></exception>
     public static Type? FromJson(string json)
     {
-        if (string.IsNullOrEmpty(json))
+        ArgumentNullException.ThrowIfNull(json);
+
+        if (string.IsNullOrWhiteSpace(json))
             return null;
 
         try
@@ -80,11 +80,14 @@ public static class ReflectionHelperJsonExtensions
     /// <param name="json">The JSON string to deserialize</param>
     /// <param name="type">Outputs the deserialized Type if successful</param>
     /// <returns>True if deserialization succeeded; otherwise, false</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="json"/> is <see langword="null"/></exception>
     public static bool TryFromJson(string json, out Type? type)
     {
         type = default;
 
-        if (string.IsNullOrEmpty(json))
+        ArgumentNullException.ThrowIfNull(json);
+
+        if (string.IsNullOrWhiteSpace(json))
             return false;
 
         try
