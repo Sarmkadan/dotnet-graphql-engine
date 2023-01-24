@@ -2,7 +2,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 namespace GraphQLEngine.Common.Utilities;
 
@@ -14,18 +14,23 @@ public static class StringExtensions
     /// <summary>
     /// Converts a string to camelCase
     /// </summary>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="input"/> is null.</exception>
     public static string ToCamelCase(this string input)
     {
-        if (string.IsNullOrEmpty(input)) return input;
+        ArgumentNullException.ThrowIfNull(input);
+
+        if (string.IsNullOrEmpty(input))
+            return input;
 
         var words = input.Split('_', '-', ' ');
-        if (words.Length == 0) return input;
+        if (words.Length == 0)
+            return input;
 
         var result = words[0].ToLowerInvariant();
         for (int i = 1; i < words.Length; i++)
         {
             if (!string.IsNullOrEmpty(words[i]))
-                result += char.ToUpper(words[i][0]) + words[i].Substring(1).ToLowerInvariant();
+                result += char.ToUpperInvariant(words[i][0]) + words[i].Substring(1).ToLowerInvariant();
         }
 
         return result;
@@ -34,9 +39,13 @@ public static class StringExtensions
     /// <summary>
     /// Converts a string to PascalCase
     /// </summary>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="input"/> is null.</exception>
     public static string ToPascalCase(this string input)
     {
-        if (string.IsNullOrEmpty(input)) return input;
+        ArgumentNullException.ThrowIfNull(input);
+
+        if (string.IsNullOrEmpty(input))
+            return input;
 
         var words = input.Split('_', '-', ' ');
         var result = string.Empty;
@@ -44,7 +53,7 @@ public static class StringExtensions
         foreach (var word in words)
         {
             if (!string.IsNullOrEmpty(word))
-                result += char.ToUpper(word[0]) + word.Substring(1).ToLowerInvariant();
+                result += char.ToUpperInvariant(word[0]) + word.Substring(1).ToLowerInvariant();
         }
 
         return result;
@@ -53,9 +62,13 @@ public static class StringExtensions
     /// <summary>
     /// Converts a string to snake_case
     /// </summary>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="input"/> is null.</exception>
     public static string ToSnakeCase(this string input)
     {
-        if (string.IsNullOrEmpty(input)) return input;
+        ArgumentNullException.ThrowIfNull(input);
+
+        if (string.IsNullOrEmpty(input))
+            return input;
 
         var result = string.Empty;
         foreach (var c in input)
@@ -71,9 +84,22 @@ public static class StringExtensions
     /// <summary>
     /// Truncates a string to a maximum length
     /// </summary>
-    public static string Truncate(this string input, int maxLength, string suffix = "...")
+    /// <param name="input">The input string to truncate.</param>
+    /// <param name="maxLength">The maximum length of the resulting string.</param>
+    /// <param name="suffix">The suffix to append when truncating. Defaults to "...".</param>
+    /// <returns>The truncated string, or the original string if it's shorter than maxLength.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="suffix"/> is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="maxLength"/> is less than 0.</exception>
+    public static string? Truncate(this string? input, int maxLength, string suffix = "...")
     {
-        if (input is null || input.Length <= maxLength) return input;
+        ArgumentNullException.ThrowIfNull(suffix);
+        ArgumentOutOfRangeException.ThrowIfNegative(maxLength);
+
+        if (input is null || input.Length <= maxLength)
+            return input;
+
+        if (maxLength < suffix.Length)
+            return suffix.Substring(0, maxLength);
 
         return input.Substring(0, maxLength - suffix.Length) + suffix;
     }
@@ -81,17 +107,23 @@ public static class StringExtensions
     /// <summary>
     /// Checks if a string is a valid GraphQL name
     /// </summary>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="input"/> is null.</exception>
     public static bool IsValidGraphQLName(this string input)
     {
-        if (string.IsNullOrEmpty(input)) return false;
+        ArgumentNullException.ThrowIfNull(input);
+
+        if (string.IsNullOrEmpty(input))
+            return false;
 
         // GraphQL names must start with a letter or underscore
-        if (!char.IsLetter(input[0]) && input[0] != '_') return false;
+        if (!char.IsLetter(input[0]) && input[0] != '_')
+            return false;
 
         // Subsequent characters can be letters, digits, or underscores
-        foreach (var c in input.Substring(1))
+        for (int i = 1; i < input.Length; i++)
         {
-            if (!char.IsLetterOrDigit(c) && c != '_') return false;
+            if (!char.IsLetterOrDigit(input[i]) && input[i] != '_')
+                return false;
         }
 
         return true;
@@ -100,9 +132,13 @@ public static class StringExtensions
     /// <summary>
     /// Normalizes whitespace in a string
     /// </summary>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="input"/> is null.</exception>
     public static string NormalizeWhitespace(this string input)
     {
-        if (string.IsNullOrEmpty(input)) return input;
+        ArgumentNullException.ThrowIfNull(input);
+
+        if (string.IsNullOrEmpty(input))
+            return input;
 
         return System.Text.RegularExpressions.Regex.Replace(input.Trim(), @"\s+", " ");
     }
@@ -110,9 +146,13 @@ public static class StringExtensions
     /// <summary>
     /// Escapes GraphQL query string for safe transmission
     /// </summary>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="input"/> is null.</exception>
     public static string EscapeGraphQLString(this string input)
     {
-        if (string.IsNullOrEmpty(input)) return input;
+        ArgumentNullException.ThrowIfNull(input);
+
+        if (string.IsNullOrEmpty(input))
+            return input;
 
         return input
             .Replace("\"", "\\\"")
