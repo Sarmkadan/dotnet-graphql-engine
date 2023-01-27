@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace dotnet-graphql-engine.Benchmarks
 {
-    public static class QueryExecutionBenchmarksJsonExtensionsJsonExtensions
+    public static class QueryExecutionBenchmarksJsonExtensions
     {
         private static readonly JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
         {
