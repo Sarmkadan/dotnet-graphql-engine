@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace GraphQLEngine.Hosting;
 
@@ -16,12 +15,10 @@ public static class GraphQLHttpRequestValidation
     /// </summary>
     /// <param name="value">The request to validate.</param>
     /// <returns>An empty list if valid; otherwise, a list of validation messages.</returns>
-    public static IReadOnlyList<string> Validate(this GraphQLHttpRequest value)
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
+    public static IReadOnlyList<string> Validate(this GraphQLHttpRequest? value)
     {
-        if (value is null)
-        {
-            return new[] { "Request cannot be null." };
-        }
+        ArgumentNullException.ThrowIfNull(value);
 
         var errors = new List<string>();
 
@@ -77,24 +74,22 @@ public static class GraphQLHttpRequestValidation
     /// </summary>
     /// <param name="value">The request to check.</param>
     /// <returns>True if the request is valid; otherwise, false.</returns>
-    public static bool IsValid(this GraphQLHttpRequest value)
-    {
-        return value.Validate().Count == 0;
-    }
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
+    public static bool IsValid(this GraphQLHttpRequest? value) => value?.Validate().Count == 0;
 
     /// <summary>
     /// Ensures that a GraphQL HTTP request is valid, throwing an exception if not.
     /// </summary>
     /// <param name="value">The request to validate.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown when the request is invalid.</exception>
-    public static void EnsureValid(this GraphQLHttpRequest value)
+    public static void EnsureValid(this GraphQLHttpRequest? value)
     {
         var errors = value.Validate();
 
         if (errors.Count > 0)
         {
-            throw new ArgumentException(
-                $"GraphQL HTTP request is invalid. Problems: {string.Join(" ", errors)}");
+            throw new ArgumentException($"GraphQL HTTP request is invalid. Problems: {string.Join(" ", errors)}");
         }
     }
 }
