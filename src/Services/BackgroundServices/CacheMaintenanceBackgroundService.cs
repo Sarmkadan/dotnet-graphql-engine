@@ -170,11 +170,29 @@ sealed public class CacheMaintenanceBackgroundService : IDisposable
         {
             var count = 0;
 
-            // Preload common cache entries
-            if (_options.WarmCommonPatterns)
+            // Refresh the TTL of configured hot keys so they survive between
+            // maintenance cycles instead of expiring under load
+            if (_options.WarmCommonPatterns && _options.WarmupKeys.Count > 0)
             {
-                // Common patterns would be loaded based on application configuration
-                // This is a placeholder for the warming logic
+                var extension = TimeSpan.FromMinutes(_options.WarmupTtlMinutes);
+                foreach (var key in _options.WarmupKeys)
+                {
+                    if (!_cacheService.Exists(key))
+                        continue;
+
+                    var remaining = _cacheService.GetTimeToLive(key);
+                    if (remaining is null || remaining < extension)
+                    {
+                        _cacheService.SetExpiration(key, extension);
+                        count++;
+                    }
+                }
+
+                _logger.LogDebug("Cache warming refreshed {Count} of {Total} configured keys",
+                    count, _options.WarmupKeys.Count);
+            }
+            else
+            {
                 _logger.LogDebug("Cache warming skipped (no patterns configured)");
             }
 
@@ -207,8 +225,12 @@ sealed public class CacheMaintenanceBackgroundService : IDisposable
     {
         try
         {
-            // Check if any cached data has become stale
-            // This would involve comparing timestamps or other criteria
+            // Evict entries matching the configured invalidation patterns
+            var invalidated = 0;
+            foreach (var pattern in _options.InvalidationPatterns)
+            {
+                invalidated += _cacheService.RemovePattern(pattern);
+            }
 
             log.Tasks["InvalidationCheck"] = new MaintenanceTaskResult
             {
@@ -216,11 +238,11 @@ sealed public class CacheMaintenanceBackgroundService : IDisposable
                 Success = true,
                 Details = new Dictionary<string, object>
                 {
-                    { "invalidatedEntries", 0 }
+                    { "invalidatedEntries", invalidated }
                 }
             };
 
-            _logger.LogDebug("Invalidation check completed");
+            _logger.LogDebug("Invalidation check completed: {Count} entries evicted", invalidated);
         }
         catch (Exception ex)
         {
@@ -292,4 +314,7 @@ sealed public class CacheMaintenanceOptions
     public bool EnableInvalidationCheck { get; set; } = true;
     public bool WarmCommonPatterns { get; set; } = false;
     public int MaxLogsToKeep { get; set; } = 50;
+    public List<string> WarmupKeys { get; set; } = new();
+    public int WarmupTtlMinutes { get; set; } = 60;
+    public List<string> InvalidationPatterns { get; set; } = new();
 }
