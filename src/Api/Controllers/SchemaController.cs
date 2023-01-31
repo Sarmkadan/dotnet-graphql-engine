@@ -57,9 +57,14 @@ sealed public class SchemaController
             Types = new List<TypeInfoDto>()
         };
 
-        // Would retrieve types from schema service
-        // This is a simplified implementation
+        var schema = _schemaService.GetSchema(schemaName);
+        if (schema is null)
+        {
+            logger.LogWarning("Schema {SchemaName} not found", schemaName);
+            return response;
+        }
 
+        response.Types.AddRange(schema.Types.Values.Select(MapType));
         return response;
     }
 
@@ -70,24 +75,43 @@ sealed public class SchemaController
     {
         logger.LogInformation("Retrieving type {TypeName} from schema {SchemaName}", typeName, schemaName);
 
-        try
+        var schema = _schemaService.GetSchema(schemaName);
+        var type = schema?.GetType(typeName);
+        if (type is null)
         {
-            // Build type information from schema
-            var typeInfo = new TypeInfoDto
-            {
-                Name = typeName,
-                Kind = "Object",
-                Description = $"Type {typeName}",
-                Fields = new List<FieldInfoDto>()
-            };
-
-            return typeInfo;
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error retrieving type information");
+            logger.LogWarning("Type {TypeName} not found in schema {SchemaName}", typeName, schemaName);
             return null;
         }
+
+        return MapType(type);
+    }
+
+    /// <summary>
+    /// Maps a domain type to its transfer object representation
+    /// </summary>
+    private static TypeInfoDto MapType(Domain.Entities.GraphQLType type)
+    {
+        return new TypeInfoDto
+        {
+            Name = type.Name,
+            Kind = type.Kind.ToString(),
+            Description = type.Description,
+            PossibleTypes = type.Implements.ToList(),
+            Fields = type.Fields.Select(f => new FieldInfoDto
+            {
+                Name = f.Name,
+                Type = f.ReturnType,
+                Description = f.Description,
+                IsDeprecated = f.IsDeprecated,
+                DeprecationReason = f.DeprecationReason,
+                Arguments = f.Arguments.Values.Select(a => new ArgumentInfoDto
+                {
+                    Name = a.Name,
+                    Type = a.Type,
+                    DefaultValue = a.DefaultValue?.ToString()
+                }).ToList()
+            }).ToList()
+        };
     }
 
     /// <summary>
@@ -99,10 +123,16 @@ sealed public class SchemaController
 
         var response = new SchemasListResponse
         {
-            Schemas = new List<SchemaInfoDto>()
+            Schemas = _schemaService.GetAllSchemas().Select(s => new SchemaInfoDto
+            {
+                Name = s.Name,
+                Description = s.Description,
+                CreatedAt = s.CreatedAt,
+                ModifiedAt = s.UpdatedAt,
+                TypeCount = s.Types.Count
+            }).ToList()
         };
 
-        // Would query schema repository
         logger.LogInformation("Found {Count} schemas", response.Schemas.Count);
 
         return response;
@@ -128,6 +158,47 @@ sealed public class SchemaController
             {
                 response.IsValid = false;
                 response.Errors.Add("Query cannot be empty");
+                return response;
+            }
+
+            if (_schemaService.GetSchema(schemaName) is null)
+            {
+                response.IsValid = false;
+                response.Errors.Add($"Schema '{schemaName}' does not exist");
+            }
+
+            var braceDepth = 0;
+            var parenDepth = 0;
+            foreach (var c in query)
+            {
+                switch (c)
+                {
+                    case '{': braceDepth++; break;
+                    case '}': braceDepth--; break;
+                    case '(': parenDepth++; break;
+                    case ')': parenDepth--; break;
+                }
+
+                if (braceDepth < 0 || parenDepth < 0)
+                    break;
+            }
+
+            if (braceDepth != 0)
+            {
+                response.IsValid = false;
+                response.Errors.Add("Unbalanced braces in query");
+            }
+
+            if (parenDepth != 0)
+            {
+                response.IsValid = false;
+                response.Errors.Add("Unbalanced parentheses in query");
+            }
+
+            if (!query.Contains('{'))
+            {
+                response.IsValid = false;
+                response.Errors.Add("Query must contain a selection set");
             }
         }
         catch (Exception ex)
