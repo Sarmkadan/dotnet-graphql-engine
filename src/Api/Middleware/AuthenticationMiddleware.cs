@@ -6,7 +6,9 @@
 
 using Microsoft.Extensions.Logging;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 
 namespace GraphQLEngine.Api.Middleware;
 
@@ -91,7 +93,15 @@ sealed public class AuthenticationMiddleware
                 if (ValidateApiKey(apiKey))
                 {
                     _logger.LogWarning("Request authenticated with query parameter API key (less secure)");
-                    return new AuthenticationResult { Success = true };
+                    return new AuthenticationResult
+                    {
+                        Success = true,
+                        Principal = new ClaimsPrincipal(new ClaimsIdentity(new[]
+                        {
+                            new Claim(ClaimTypes.NameIdentifier, apiKey),
+                            new Claim("auth_type", "api_key")
+                        }))
+                    };
                 }
             }
 
@@ -127,41 +137,177 @@ sealed public class AuthenticationMiddleware
     }
 
     /// <summary>
-    /// Validates a JWT or similar token
+    /// Validates a JWT: structural check, signature verification (when a secret is
+    /// configured), issuer/audience match and expiration
     /// </summary>
     private bool ValidateToken(string token)
     {
         if (string.IsNullOrWhiteSpace(token))
             return false;
 
-        // Simplified token validation (should use JWT library in production)
+        var parts = token.Split('.');
+        if (parts.Length != 3)
+            return false;
+
+        var payload = DecodeJwtPart(parts[1]);
+        if (payload is null)
+            return false;
+
         try
         {
-            var parts = token.Split('.');
-            return parts.Length == 3; // Basic JWT structure check
+            using var doc = JsonDocument.Parse(payload);
+            var root = doc.RootElement;
+
+            // Expiration check ("exp" is seconds since Unix epoch)
+            if (root.TryGetProperty("exp", out var exp) && exp.TryGetInt64(out var expSeconds))
+            {
+                if (DateTimeOffset.FromUnixTimeSeconds(expSeconds) <= DateTimeOffset.UtcNow)
+                {
+                    _logger.LogWarning("Token rejected: expired");
+                    return false;
+                }
+            }
+
+            // Not-before check
+            if (root.TryGetProperty("nbf", out var nbf) && nbf.TryGetInt64(out var nbfSeconds))
+            {
+                if (DateTimeOffset.FromUnixTimeSeconds(nbfSeconds) > DateTimeOffset.UtcNow)
+                {
+                    _logger.LogWarning("Token rejected: not yet valid");
+                    return false;
+                }
+            }
+
+            // Issuer / audience checks when configured
+            if (!string.IsNullOrEmpty(_options.JwtIssuer))
+            {
+                if (!root.TryGetProperty("iss", out var iss) ||
+                    !string.Equals(iss.GetString(), _options.JwtIssuer, StringComparison.Ordinal))
+                {
+                    _logger.LogWarning("Token rejected: issuer mismatch");
+                    return false;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(_options.JwtAudience))
+            {
+                if (!root.TryGetProperty("aud", out var aud) ||
+                    !string.Equals(aud.GetString(), _options.JwtAudience, StringComparison.Ordinal))
+                {
+                    _logger.LogWarning("Token rejected: audience mismatch");
+                    return false;
+                }
+            }
         }
-        catch
+        catch (JsonException)
         {
             return false;
         }
+
+        // HMAC-SHA256 signature verification when a secret is configured
+        if (!string.IsNullOrEmpty(_options.JwtSecret))
+        {
+            using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(_options.JwtSecret));
+            var signedData = Encoding.ASCII.GetBytes($"{parts[0]}.{parts[1]}");
+            var expected = hmac.ComputeHash(signedData);
+
+            var actual = Base64UrlDecode(parts[2]);
+            if (actual is null || !CryptographicOperations.FixedTimeEquals(expected, actual))
+            {
+                _logger.LogWarning("Token rejected: signature verification failed");
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /// <summary>
-    /// Extracts user ID from the token
+    /// Extracts the user ID from the JWT payload ("sub", "nameid" or "user_id" claim)
     /// </summary>
-    private string ExtractUserId(string token)
+    private static string ExtractUserId(string token)
     {
-        // Simplified extraction (would parse JWT in production)
+        var parts = token.Split('.');
+        if (parts.Length != 3)
+            return "unknown_user";
+
+        var payload = DecodeJwtPart(parts[1]);
+        if (payload is null)
+            return "unknown_user";
+
+        try
+        {
+            using var doc = JsonDocument.Parse(payload);
+            foreach (var claim in new[] { "sub", "nameid", "user_id" })
+            {
+                if (doc.RootElement.TryGetProperty(claim, out var value))
+                {
+                    var id = value.ValueKind == JsonValueKind.String
+                        ? value.GetString()
+                        : value.GetRawText();
+                    if (!string.IsNullOrWhiteSpace(id))
+                        return id;
+                }
+            }
+        }
+        catch (JsonException)
+        {
+            // Fall through to the default
+        }
+
         return "unknown_user";
     }
 
     /// <summary>
-    /// Initializes the API keys dictionary
-    /// In production, this would load from configuration or secure storage
+    /// Decodes a base64url-encoded JWT segment into a UTF-8 string
+    /// </summary>
+    private static string? DecodeJwtPart(string part)
+    {
+        var bytes = Base64UrlDecode(part);
+        return bytes is null ? null : Encoding.UTF8.GetString(bytes);
+    }
+
+    private static byte[]? Base64UrlDecode(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return null;
+
+        var base64 = input.Replace('-', '+').Replace('_', '/');
+        base64 = (base64.Length % 4) switch
+        {
+            2 => base64 + "==",
+            3 => base64 + "=",
+            1 => null!,
+            _ => base64
+        };
+
+        if (base64 is null)
+            return null;
+
+        try
+        {
+            return Convert.FromBase64String(base64);
+        }
+        catch (FormatException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Initializes the API keys dictionary from the configured options,
+    /// falling back to development keys when none are configured
     /// </summary>
     private void InitializeApiKeys()
     {
-        // Add some default keys for development
+        if (_options.ApiKeys.Count > 0)
+        {
+            foreach (var (key, description) in _options.ApiKeys)
+                _apiKeys[key] = description;
+            return;
+        }
+
+        // Development fallback keys used only when no keys are configured
         _apiKeys["dev-key-123"] = "Development API Key";
         _apiKeys["test-key-456"] = "Test API Key";
     }
@@ -179,6 +325,7 @@ sealed public class AuthenticationOptions
     public string? JwtSecret { get; set; }
     public string? JwtIssuer { get; set; }
     public string? JwtAudience { get; set; }
+    public Dictionary<string, string> ApiKeys { get; set; } = new();
 }
 
 /// <summary>

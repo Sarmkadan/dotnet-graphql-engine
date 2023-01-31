@@ -6,6 +6,7 @@
 
 using GraphQLEngine.Services.GraphQL;
 using Microsoft.Extensions.Logging;
+using System.Globalization;
 
 namespace GraphQLEngine.Api.Controllers;
 
@@ -71,8 +72,9 @@ sealed public class HealthCheckController
                 },
                 Metrics = new ServiceMetricsDto
                 {
-                    TotalQueries = stats.ContainsKey("TotalQueries")
-                        ? int.Parse(stats["TotalQueries"].ToString() ?? "0")
+                    TotalQueries = stats.TryGetValue("TotalQueries", out var totalQueries)
+                        && totalQueries is IConvertible convertible
+                        ? Convert.ToInt32(convertible, CultureInfo.InvariantCulture)
                         : 0,
                     AverageExecutionTime = 0,
                     ErrorRate = 0.0f,
