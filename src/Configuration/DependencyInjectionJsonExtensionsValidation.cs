@@ -13,46 +13,59 @@ namespace GraphQLEngine.Configuration;
 public static class DependencyInjectionJsonExtensionsValidation
 {
     /// <summary>
-    /// Validates a <see cref="DependencyInjectionJsonExtensions"/> instance.
+    /// Validates extensions methods of <see cref="DependencyInjectionJsonExtensions"/> for invalid usage.
     /// </summary>
-    /// <param name="value">The <see cref="DependencyInjectionJsonExtensions"/> instance to validate.</param>
-    /// <returns>A list of human-readable problems with the instance.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is <see langword="null"/>.</exception>
-    public static IReadOnlyList<string> Validate(this DependencyInjectionJsonExtensions? value)
+    /// <returns>A list of human-readable problems with the extensions methods.</returns>
+    public static IReadOnlyList<string> Validate()
     {
-        ArgumentNullException.ThrowIfNull(value);
-
         var problems = new List<string>();
 
-        // No validation logic needed here as DependencyInjectionJsonExtensions is a static class
-        // and does not have any instance state. However, we can validate its methods.
+        // Validate ToJson methods
+        ValidateToJson(problems);
+
+        // Validate FromJson methods
+        ValidateFromJson(problems);
+
+        // Validate TryFromJson methods
+        ValidateTryFromJson(problems);
 
         return problems.AsReadOnly();
     }
 
-    /// <summary>
-    /// Checks if a <see cref="DependencyInjectionJsonExtensions"/> instance is valid.
-    /// </summary>
-    /// <param name="value">The <see cref="DependencyInjectionJsonExtensions"/> instance to check.</param>
-    /// <returns><see langword="true"/> if the instance is valid; otherwise, <see langword="false"/>.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is <see langword="null"/>.</exception>
-    public static bool IsValid(this DependencyInjectionJsonExtensions? value)
+    private static void ValidateToJson(List<string> problems)
     {
-        return Validate(value).Count == 0;
+        // No validation rules currently needed for ToJson methods.
+    }
+
+    private static void ValidateFromJson(List<string> problems)
+    {
+        // FromJson methods return null for null or whitespace input; this is valid.
+    }
+
+    private static void ValidateTryFromJson(List<string> problems)
+    {
+        // TryFromJson methods return false for null or whitespace input; this is valid.
     }
 
     /// <summary>
-    /// Ensures a <see cref="DependencyInjectionJsonExtensions"/> instance is valid.
+    /// Checks if extensions methods of <see cref="DependencyInjectionJsonExtensions"/> are valid.
     /// </summary>
-    /// <param name="value">The <see cref="DependencyInjectionJsonExtensions"/> instance to ensure.</param>
-    /// <exception cref="ArgumentException">Thrown when the instance is not valid.</exception>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is <see langword="null"/>.</exception>
-    public static void EnsureValid(this DependencyInjectionJsonExtensions? value)
+    /// <returns><see langword="true"/> if the extensions methods are valid; otherwise, <see langword="false"/>.</returns>
+    public static bool IsValid()
     {
-        var problems = Validate(value);
+        return Validate().Count == 0;
+    }
+
+    /// <summary>
+    /// Ensures extensions methods of <see cref="DependencyInjectionJsonExtensions"/> are valid.
+    /// </summary>
+    /// <exception cref="ArgumentException">Thrown when extensions methods are not valid.</exception>
+    public static void EnsureValid()
+    {
+        var problems = Validate();
         if (problems.Count > 0)
         {
-            throw new ArgumentException($"Invalid DependencyInjectionJsonExtensions instance: {string.Join(", ", problems)}", nameof(value));
+            throw new ArgumentException($"Invalid usage of DependencyInjectionJsonExtensions: {string.Join(", ", problems)}");
         }
     }
 }
