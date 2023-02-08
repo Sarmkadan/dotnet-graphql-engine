@@ -27,13 +27,13 @@ public static class PersistedQueryExtensionsJsonExtensions
     };
 
     /// <summary>
-    /// Serializes a <see cref="PersistedQueryExtensions"/> instance to a JSON string.
+    /// Serializes a <see cref="PersistedQueryOptions"/> instance to a JSON string.
     /// </summary>
-    /// <param name="value">The <see cref="PersistedQueryExtensions"/> to serialize.</param>
+    /// <param name="value">The <see cref="PersistedQueryOptions"/> to serialize.</param>
     /// <param name="indented">Whether to format the JSON with indentation.</param>
-    /// <returns>A JSON string representation of the <see cref="PersistedQueryExtensions"/>.</returns>
+    /// <returns>A JSON string representation of the <see cref="PersistedQueryOptions"/>.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
-    public static string ToJson(this PersistedQueryExtensions value, bool indented = false)
+    public static string ToJson(this PersistedQueryOptions value, bool indented = false)
     {
         ArgumentNullException.ThrowIfNull(value);
 
@@ -46,32 +46,32 @@ public static class PersistedQueryExtensionsJsonExtensions
     }
 
     /// <summary>
-    /// Deserializes a JSON string to a <see cref="PersistedQueryExtensions"/> instance.
+    /// Deserializes a JSON string to a <see cref="PersistedQueryOptions"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>A <see cref="PersistedQueryExtensions"/> instance.</returns>
+    /// <returns>A <see cref="PersistedQueryOptions"/> instance.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
     /// <exception cref="JsonException">Thrown when JSON deserialization fails.</exception>
-    public static PersistedQueryExtensions? FromJson(string json)
+    public static PersistedQueryOptions? FromJson(string json)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
 
-        return JsonSerializer.Deserialize<PersistedQueryExtensions>(json, JsonSerializerOptions);
+        return JsonSerializer.Deserialize<PersistedQueryOptions>(json, JsonSerializerOptions);
     }
 
     /// <summary>
-    /// Tries to deserialize a JSON string to a <see cref="PersistedQueryExtensions"/> instance.
+    /// Tries to deserialize a JSON string to a <see cref="PersistedQueryOptions"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <param name="value">The deserialized <see cref="PersistedQueryExtensions"/> if successful.</param>
+    /// <param name="value">The deserialized <see cref="PersistedQueryOptions"/> if successful.</param>
     /// <returns>True if deserialization succeeded; otherwise false.</returns>
-    public static bool TryFromJson(string json, out PersistedQueryExtensions? value)
+    public static bool TryFromJson(string json, out PersistedQueryOptions? value)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
 
         try
         {
-            value = JsonSerializer.Deserialize<PersistedQueryExtensions>(json, JsonSerializerOptions);
+            value = JsonSerializer.Deserialize<PersistedQueryOptions>(json, JsonSerializerOptions);
             return value is not null;
         }
         catch (JsonException)
