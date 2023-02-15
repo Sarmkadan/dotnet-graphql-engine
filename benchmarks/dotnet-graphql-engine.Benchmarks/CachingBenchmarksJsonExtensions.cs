@@ -17,10 +17,10 @@ namespace GraphQLEngine.Benchmarks
 		/// <summary>
 		/// Serializes the <see cref="CachingBenchmarks"/> instance to a JSON string.
 		/// </summary>
-		/// <param name="value">The value to serialize.</param>
+		/// <param name="value">The <see cref="CachingBenchmarks"/> instance to serialize.</param>
 		/// <param name="indented">Whether to format the JSON with indentation for readability.</param>
-		/// <returns>A JSON string representation of the value.</returns>
-		/// <exception cref="ArgumentNullException"><paramref name="value"/> is null.</exception>
+		/// <returns>A JSON string representation of the <see cref="CachingBenchmarks"/> instance.</returns>
+		/// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
 		public static string ToJson(this CachingBenchmarks value, bool indented = false)
 		{
 			ArgumentNullException.ThrowIfNull(value);
@@ -36,7 +36,7 @@ namespace GraphQLEngine.Benchmarks
 		/// Deserializes a JSON string to a <see cref="CachingBenchmarks"/> instance.
 		/// </summary>
 		/// <param name="json">The JSON string to deserialize.</param>
-		/// <returns>The deserialized instance, or null if the JSON is null or empty.</returns>
+		/// <returns>The deserialized <see cref="CachingBenchmarks"/> instance, or null if the JSON is null or empty.</returns>
 		public static CachingBenchmarks? FromJson(string json)
 		{
 			if (string.IsNullOrWhiteSpace(json))
@@ -51,7 +51,7 @@ namespace GraphQLEngine.Benchmarks
 		/// Attempts to deserialize a JSON string to a <see cref="CachingBenchmarks"/> instance.
 		/// </summary>
 		/// <param name="json">The JSON string to deserialize.</param>
-		/// <param name="value">Receives the deserialized instance if successful.</param>
+		/// <param name="value">Receives the deserialized <see cref="CachingBenchmarks"/> instance if successful.</param>
 		/// <returns>True if deserialization succeeded; otherwise, false.</returns>
 		public static bool TryFromJson(string json, out CachingBenchmarks? value)
 		{
