@@ -7,13 +7,16 @@ namespace benchmarks.dotnet_graphql_engine.Benchmarks
 	/// <summary>
 	/// Provides JSON serialization and deserialization extensions for <see cref="QueryExecutionBenchmarks"/>.
 	/// </summary>
+	/// <remarks>
+	/// Uses <see cref="JsonSerializerOptions"/> with camelCase property naming and no indentation by default.
+	/// </remarks>
 	public static class QueryExecutionBenchmarksJsonExtensions
 	{
 		private static readonly JsonSerializerOptions DefaultOptions = new JsonSerializerOptions
 		{
 			PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
 			WriteIndented = false
-		};
+		 };
 
 		/// <summary>
 		/// Serializes the <see cref="QueryExecutionBenchmarks"/> instance to a JSON string.
@@ -54,6 +57,9 @@ namespace benchmarks.dotnet_graphql_engine.Benchmarks
 		/// <param name="json">The JSON string to deserialize. Can be null or empty.</param>
 		/// <param name="value">Receives the deserialized instance if successful; otherwise, null.</param>
 		/// <returns>True if deserialization succeeded; otherwise, false.</returns>
+		/// <remarks>
+		/// Does not throw for invalid JSON format. Returns false and sets <paramref name="value"/> to null.
+		/// </remarks>
 		public static bool TryFromJson(string json, out QueryExecutionBenchmarks? value)
 		{
 			value = null;
