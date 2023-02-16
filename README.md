@@ -1,111 +1,38 @@
 // ... rest of the original README content ...
 
-## Event
+## GraphQLExceptionExtensions
 
-The `Event` class represents a specific event that can be published and subscribed to within the event bus. It provides metadata about the event, including its ID, timestamp, source, and data.
-
-### Usage Example
-
-```csharp
-using GraphQLEngine.Services.Events;
-
-// Create an event with metadata
-var event = new Event
-{
-    Id = "my-event-id",
-    Timestamp = DateTime.UtcNow,
-    Source = "MySource",
-    Metadata = new Dictionary<string, object>
-    {
-        ["key"] = "value"
-    },
-    Data = new object[] { 1, 2, 3 }
-};
-
-// Publish the event
-var eventBus = new EventBus();
-eventBus.Publish(event);
-```
-
-## GraphQLHttpRequest
-
-The `GraphQLHttpRequest` class provides a set of utility methods for configuring and validating GraphQL requests. It allows you to specify the query, operation name, and variables for a GraphQL request.
+The `GraphQLExceptionExtensions` class provides a set of utility methods for working with `GraphQLException` instances. It allows you to easily add extensions, serialize extensions to JSON, and retrieve error codes.
 
 ### Usage Example
 
 ```csharp
-using GraphQLEngine.Configuration;
+using GraphQLEngine.Exceptions;
 
-// Create a GraphQL request with query and variables
-var request = new GraphQLHttpRequest
+// Create a GraphQL exception
+var exception = new GraphQLException("Something went wrong");
+
+// Add extensions to the exception
+exception.AddExtensions(new Dictionary<string, object>
 {
-    Query = "query { hello }",
-    Variables = new Dictionary<string, object?>
-    {
-        ["name"] = "John Doe"
-    }
-};
-
-// Map the GraphQL request to an endpoint route
-var endpoint = request.MapGraphQL();
-```
-
-## DependencyInjection
-
-The `DependencyInjection` class provides extension methods for configuring dependency injection in .NET applications using the GraphQL engine. It registers all required services, repositories, and configuration options with the service collection, enabling easy integration into ASP.NET Core applications or other .NET host environments.
-
-### Usage Example
-
-```csharp
-using GraphQLEngine.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-
-// Basic setup - registers all GraphQL engine services with default configuration
-var services = new ServiceCollection();
-services.AddGraphQLEngine();
-
-// Configure GraphQL engine options
-services.AddGraphQLEngine(options =>
-{
-    options.MaxQueryComplexity = 5000;
-    options.MaxQueryDepth = 10;
-    options.QueryTimeoutMs = 30000;
-    options.EnableDetailedErrorMessages = true;
-    options.EnableIntrospection = true;
+    ["errorCode"] = "MY_ERROR_CODE",
+    ["additionalInfo"] = "More information about the error"
 });
 
-// Build service provider
-var serviceProvider = services.BuildServiceProvider();
+// Serialize the exception extensions to JSON
+var extensionsJson = exception.SerializeExtensions();
 
-// Use the configured services
-var executionService = serviceProvider.GetRequiredService<GraphQLExecutionService>();
-```
+// Get the error code or a default value
+var errorCode = exception.GetErrorCodeOrDefault("UNKNOWN_ERROR");
 
-### Predefined Configuration Profiles
+// Create a new exception with additional context
+var newException = exception.WithContext("Additional context information");
 
-```csharp
-// Strict configuration with conservative limits
-services.AddGraphQLEngineStrict();
+// Retrieve a typed extension value
+var errorCodeValue = exception.GetExtension<string>("errorCode");
 
-// Permissive configuration with higher limits for development/testing
-services.AddGraphQLEnginePermissive();
-
-// Default configuration (same as AddGraphQLEngine())
-service.AddGraphQLEngineDefault();
-```
-
-### Testing Support
-
-```csharp
-// Create a preconfigured service provider for unit tests
-var testServiceProvider = DependencyInjection.CreateTestServiceProvider(options =>
-{
-    options.MaxQueryComplexity = 1000;
-    options.EnableDetailedErrorMessages = false;
-});
-
-// Use in tests
-var executionService = testServiceProvider.GetRequiredService<GraphQLExecutionService>();
+// Add a formatted error code extension
+exception.AddFormattedErrorCode("MY_PREFIX");
 ```
 
 // ... rest of the original README content ...
