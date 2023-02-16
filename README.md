@@ -90,4 +90,82 @@ The JSON produced contains the following fields, which correspond to the public 
 These helpers are useful when you need to persist type metadata (e.g., in a cache or configuration file) and later reconstruct the exact `System.Type` at runtime.
 
 
+## TypeConverterJsonExtensions
+
+`TypeConverterJsonExtensions` provides JSON serialization and deserialization utilities that leverage `TypeConverter` for converting between .NET objects and JSON representations. It supports both generic and non-generic scenarios, allowing you to serialize any object to JSON and deserialize it back to its original type or a specified target type.
+
+
+### Usage Example
+
+```csharp
+using System;
+using GraphQLEngine.Common.Utilities;
+
+class Program
+{
+  static void Main()
+  {
+    // Example 1: Serialize and deserialize a simple object
+    var person = new { Name = "Alice", Age = 30, IsActive = true };
+    
+    // Serialize to JSON string
+    string json = person.ToJson();
+    Console.WriteLine("Serialized JSON:");
+    Console.WriteLine(json);
+    // Output: {"name":"Alice","age":30,"isActive":true}
+    
+    // Deserialize back to the same anonymous type
+    var deserialized = new { Name = "", Age = 0, IsActive = false }.FromJson(json);
+    Console.WriteLine($"Deserialized: {deserialized?.Name}, {deserialized?.Age}");
+    
+    // Example 2: Serialize and deserialize with indentation
+    string indentedJson = person.ToJson(indented: true);
+    Console.WriteLine("Indented JSON:");
+    Console.WriteLine(indentedJson);
+    
+    // Example 3: Deserialize to a specific type
+    string userJson = "{\"username\":\"bob\",\"email\":\"bob@example.com\",\"isPremium\":true}";
+    var user = TypeConverterJsonExtensions.FromJson<User>(userJson);
+    Console.WriteLine($"User: {user?.Username}, Premium: {user?.IsPremium}");
+    
+    // Example 4: Try pattern for safe deserialization
+    if (TypeConverterJsonExtensions.TryFromJson(userJson, out User? safeUser))
+    {
+      Console.WriteLine("Successfully deserialized user with TryFromJson");
+    }
+    
+    // Example 5: Deserialize to a specific target type
+    string dataJson = "\"2024-01-15\"";
+    var dateValue = TypeConverterJsonExtensions.FromJson(dataJson, typeof(DateTime));
+    Console.WriteLine($"Parsed date: {dateValue}");
+    
+    // Example 6: Try pattern with target type
+    if (TypeConverterJsonExtensions.TryFromJson(dataJson, typeof(DateTime), out var tryDate))
+    {
+      Console.WriteLine("Successfully parsed date with TryFromJson");
+    }
+  }
+}
+
+// Simple POCO for example
+class User
+{
+  public string? Username { get; set; }
+  public string? Email { get; set; }
+  public bool IsPremium { get; set; }
+}
+```
+
+The `TypeConverterJsonExtensions` class is particularly useful when you need to:
+
+- Serialize complex .NET objects to JSON while preserving type information
+- Deserialize JSON back to strongly-typed objects using .NET's type conversion system
+- Handle both generic and non-generic scenarios with the same API
+- Safely attempt deserialization without throwing exceptions on failure
+
+
+The methods support both camelCase and indented formatting options for JSON output, making them suitable for both API responses and debugging scenarios.
+
+
+
 // ... rest of the original README content ...
