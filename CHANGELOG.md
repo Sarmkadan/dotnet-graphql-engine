@@ -5,6 +5,26 @@ All notable changes to dotnet-graphql-engine are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-03-15
+
+### Added
+- Multi-stage Dockerfile (build -> publish -> runtime) with optimized layer caching and non-root user
+- Docker Compose v2 configuration with health-check dependencies and production-ready defaults
+- Migration guide (`docs/MIGRATION_v2.md`) covering all breaking changes and step-by-step upgrade instructions
+
+### Changed
+- **BREAKING:** Default listening port changed from 5000 to 8080 (ASP.NET Core 10 container convention)
+- **BREAKING:** `MaxQueryDepth` default raised from 10 to 15
+- **BREAKING:** `MaxQueryFields` default raised from 100 to 200
+- **BREAKING:** `QueryTimeoutMs` default raised from 10000 to 30000
+- **BREAKING:** `CacheMaxSizeBytes` default raised from 50 MB to 100 MB
+- Dockerfile health check `start-period` reduced from 40s to 30s for faster orchestration feedback
+- Docker Compose `graphql-engine` service now waits for Redis health before starting
+
+### Fixed
+- Docker image included build artifacts and test assemblies in the final layer, inflating image size
+- Health check curl was not installed in the runtime stage on minimal base images
+
 ## [1.0.0] - 2025-10-27
 
 ### Added
