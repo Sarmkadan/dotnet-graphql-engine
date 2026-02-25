@@ -1,0 +1,84 @@
+# =============================================================================
+# Author: Vladyslav Zaiets | https://sarmkadan.com
+# CTO & Software Architect
+# =============================================================================
+
+version: '3.8'
+
+services:
+  graphql-engine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dotnet-graphql-engine
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5000
+      - GraphQL__MaxQueryComplexity=5000
+      - GraphQL__MaxQueryDepth=10
+      - GraphQL__EnableCaching=true
+      - GraphQL__CacheTtlSeconds=300
+      - GraphQL__EnableSubscriptions=true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - graphql-network
+
+  # Optional: Redis for distributed caching
+  redis:
+    image: redis:7-alpine
+    container_name: graphql-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - graphql-network
+    volumes:
+      - redis-data:/data
+
+  # Optional: PostgreSQL for data persistence
+  postgres:
+    image: postgres:16-alpine
+    container_name: graphql-postgres
+    environment:
+      POSTGRES_DB: graphql_db
+      POSTGRES_USER: graphql
+      POSTGRES_PASSWORD: changeme
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U graphql"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - graphql-network
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+networks:
+  graphql-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+  postgres-data:
+
+# Usage:
+# docker-compose up -d              # Start all services
+# docker-compose down               # Stop all services
+# docker-compose logs -f            # Follow logs
+# docker-compose ps                 # Show running containers
