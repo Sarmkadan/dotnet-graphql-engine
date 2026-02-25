@@ -3,45 +3,71 @@
 # CTO & Software Architect
 # =============================================================================
 
-# Multi-stage build for optimized image size
+# Multi-stage build for dotnet-graphql-engine v2.0
 
-# Stage 1: Build
+# ---------------------------------------------------------------------------
+# Stage 1: Restore & Build
+# ---------------------------------------------------------------------------
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS builder
 WORKDIR /src
 
-# Copy project file
+# Copy project files first for layer caching
 COPY ["dotnet-graphql-engine.csproj", "./"]
+COPY ["dotnet-graphql-engine.slnx", "./"]
+COPY ["tests/dotnet-graphql-engine.Tests/dotnet-graphql-engine.Tests.csproj", "./tests/dotnet-graphql-engine.Tests/"]
 RUN dotnet restore "dotnet-graphql-engine.csproj"
 
-# Copy source code
+# Copy everything and build
 COPY . .
-RUN dotnet build -c Release -o /app/build
+RUN dotnet build -c Release --no-restore
 
-# Publish
-RUN dotnet publish -c Release -o /app/publish
+# Run tests
+RUN dotnet test tests/dotnet-graphql-engine.Tests \
+    -c Release \
+    --no-build \
+    --logger "console;verbosity=minimal"
 
-# Stage 2: Runtime
+# ---------------------------------------------------------------------------
+# Stage 2: Publish
+# ---------------------------------------------------------------------------
+FROM builder AS publish
+RUN dotnet publish "dotnet-graphql-engine.csproj" \
+    -c Release \
+    --no-build \
+    -o /app/publish \
+    /p:UseAppHost=false
+
+# ---------------------------------------------------------------------------
+# Stage 3: Runtime
+# ---------------------------------------------------------------------------
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
 # Install curl for health checks
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy published application
-COPY --from=builder /app/publish .
+# Copy published output
+COPY --from=publish /app/publish .
 
-# Create non-root user for security
-RUN useradd -m -u 1001 graphql && chown -R graphql:graphql /app
+# Create non-root user
+RUN useradd -m -u 1001 graphql \
+    && chown -R graphql:graphql /app
 USER graphql
 
-# Expose port
-EXPOSE 5000
-ENV ASPNETCORE_URLS=http://+:5000
+# Port configuration - v2.0 uses 8080
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:5000/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
 
-# Entry point
+# Metadata
+LABEL maintainer="Vladyslav Zaiets <https://sarmkadan.com>"
+LABEL description="dotnet-graphql-engine - Code-first GraphQL server for .NET"
+LABEL version="2.0.0"
+
 ENTRYPOINT ["dotnet", "dotnet-graphql-engine.dll"]
