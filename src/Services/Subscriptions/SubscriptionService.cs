@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -12,7 +13,7 @@ namespace GraphQLEngine.Services.Subscriptions;
 /// <summary>
 /// Service for managing GraphQL subscriptions
 /// </summary>
-public class SubscriptionService
+sealed public class SubscriptionService
 {
     private readonly ILogger<SubscriptionService> _logger;
     private readonly SubscriptionConfig _config;
@@ -184,7 +185,7 @@ public class SubscriptionService
 /// <summary>
 /// Represents a subscription connection
 /// </summary>
-public class SubscriptionConnection
+sealed public class SubscriptionConnection
 {
     public string ClientId { get; set; } = string.Empty;
     public string? SubscriptionQuery { get; set; }
@@ -196,7 +197,7 @@ public class SubscriptionConnection
 /// <summary>
 /// Represents a subscription update event
 /// </summary>
-public class SubscriptionUpdate
+sealed public class SubscriptionUpdate
 {
     public string EventName { get; set; } = string.Empty;
     public Dictionary<string, object> Data { get; set; } = new();
@@ -217,7 +218,7 @@ public enum SubscriptionState
 /// <summary>
 /// Async event handler for subscription updates
 /// </summary>
-public class AsyncEventHandler<T>
+sealed public class AsyncEventHandler<T>
 {
     private readonly Func<T, Task> _handler;
 

@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -9,7 +10,7 @@ using Xunit;
 
 namespace GraphQLEngine.Tests.Common.Utilities;
 
-public class StringExtensionsTests
+sealed public class StringExtensionsTests
 {
     [Fact]
     public void ToCamelCase_WithUnderscoreDelimitedWords_ReturnsCamelCase()

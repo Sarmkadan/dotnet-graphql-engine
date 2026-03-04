@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -8,7 +9,7 @@ namespace GraphQLEngine.Domain.Entities;
 /// <summary>
 /// Represents a parsed GraphQL query ready for execution
 /// </summary>
-public class GraphQLQuery
+sealed public class GraphQLQuery
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string QueryString { get; set; } = string.Empty;

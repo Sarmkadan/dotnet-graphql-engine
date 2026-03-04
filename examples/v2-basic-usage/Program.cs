@@ -1,3 +1,4 @@
+#nullable enable
 using dotnet_graphql_engine;
 using dotnet_graphql_engine.Services.GraphQL;
 using dotnet_graphql_engine.Domain.Entities;

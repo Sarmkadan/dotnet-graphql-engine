@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -8,7 +9,7 @@ namespace GraphQLEngine.Domain.ValueObjects;
 /// <summary>
 /// Configuration for GraphQL schema stitching
 /// </summary>
-public class SchemaStitchingConfig
+sealed public class SchemaStitchingConfig
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string Name { get; set; } = string.Empty;
@@ -37,7 +38,7 @@ public class SchemaStitchingConfig
     /// </summary>
     public void AddRemoteSchema(RemoteSchema schema)
     {
-        if (schema == null) throw new ArgumentNullException(nameof(schema));
+        if (schema is null) throw new ArgumentNullException(nameof(schema));
 
         if (_remoteSchemas.Any(s => s.Name == schema.Name))
             throw new InvalidOperationException($"Remote schema '{schema.Name}' already exists");
@@ -51,7 +52,7 @@ public class SchemaStitchingConfig
     public bool RemoveRemoteSchema(string schemaName)
     {
         var schema = _remoteSchemas.FirstOrDefault(s => s.Name == schemaName);
-        if (schema == null) return false;
+        if (schema is null) return false;
 
         _remoteSchemas.Remove(schema);
         return true;
@@ -112,7 +113,7 @@ public class SchemaStitchingConfig
 /// <summary>
 /// Represents a remote GraphQL schema to be stitched
 /// </summary>
-public class RemoteSchema
+sealed public class RemoteSchema
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string Name { get; set; } = string.Empty;

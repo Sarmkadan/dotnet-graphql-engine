@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -8,7 +9,7 @@ namespace GraphQLEngine.Domain.Entities;
 /// <summary>
 /// Represents a GraphQL type definition with metadata and field information
 /// </summary>
-public class GraphQLType
+sealed public class GraphQLType
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string Name { get; set; } = string.Empty;
@@ -41,7 +42,7 @@ public class GraphQLType
     /// </summary>
     public void AddField(GraphQLField field)
     {
-        if (field == null) throw new ArgumentNullException(nameof(field));
+        if (field is null) throw new ArgumentNullException(nameof(field));
 
         if (_fields.Any(f => f.Name == field.Name))
             throw new InvalidOperationException($"Field '{field.Name}' already exists in type '{Name}'");
@@ -57,7 +58,7 @@ public class GraphQLType
         if (string.IsNullOrEmpty(fieldName)) return false;
 
         var field = _fields.FirstOrDefault(f => f.Name == fieldName);
-        if (field == null) return false;
+        if (field is null) return false;
 
         _fields.Remove(field);
         return true;
