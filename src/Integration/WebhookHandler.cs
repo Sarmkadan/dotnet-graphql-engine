@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -11,7 +12,7 @@ namespace GraphQLEngine.Integration;
 /// Webhook handler for sending and managing webhooks
 /// Supports retry logic, deduplication, and rate limiting
 /// </summary>
-public class WebhookHandler : IDisposable
+sealed public class WebhookHandler : IDisposable
 {
     private readonly HttpClientFactory _httpClientFactory;
     private readonly ILogger<WebhookHandler> _logger;
@@ -231,7 +232,7 @@ public class WebhookHandler : IDisposable
 /// <summary>
 /// Webhook endpoint configuration
 /// </summary>
-public class WebhookEndpoint
+sealed public class WebhookEndpoint
 {
     public string Id { get; set; } = string.Empty;
     public string Url { get; set; } = string.Empty;
@@ -244,7 +245,7 @@ public class WebhookEndpoint
 /// <summary>
 /// Webhook delivery record
 /// </summary>
-public class WebhookDelivery
+sealed public class WebhookDelivery
 {
     public string EndpointId { get; set; } = string.Empty;
     public string EventType { get; set; } = string.Empty;
@@ -257,7 +258,7 @@ public class WebhookDelivery
 /// <summary>
 /// Webhook handler options
 /// </summary>
-public class WebhookOptions
+sealed public class WebhookOptions
 {
     public bool Enabled { get; set; } = true;
     public int MaxRetries { get; set; } = 3;
@@ -268,7 +269,7 @@ public class WebhookOptions
 /// <summary>
 /// Webhook statistics
 /// </summary>
-public class WebhookStatistics
+sealed public class WebhookStatistics
 {
     public int TotalEndpoints { get; set; }
     public int ActiveEndpoints { get; set; }

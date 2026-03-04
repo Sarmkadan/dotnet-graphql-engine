@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -8,7 +9,7 @@ namespace GraphQLEngine.Domain.Entities;
 /// <summary>
 /// Represents a single field within a GraphQL type
 /// </summary>
-public class GraphQLField
+sealed public class GraphQLField
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string Name { get; set; } = string.Empty;
@@ -41,7 +42,7 @@ public class GraphQLField
     /// </summary>
     public void AddArgument(GraphQLArgument argument)
     {
-        if (argument == null) throw new ArgumentNullException(nameof(argument));
+        if (argument is null) throw new ArgumentNullException(nameof(argument));
 
         if (_arguments.ContainsKey(argument.Name))
             throw new InvalidOperationException($"Argument '{argument.Name}' already exists");
@@ -136,7 +137,7 @@ public class GraphQLField
 /// <summary>
 /// Represents a field argument in GraphQL
 /// </summary>
-public class GraphQLArgument
+sealed public class GraphQLArgument
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string Name { get; set; } = string.Empty;

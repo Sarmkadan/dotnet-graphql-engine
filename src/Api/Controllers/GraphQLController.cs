@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -17,7 +18,7 @@ namespace GraphQLEngine.Api.Controllers;
 /// Main GraphQL query and mutation endpoint controller
 /// Handles incoming GraphQL requests and returns formatted responses
 /// </summary>
-public class GraphQLController
+sealed public class GraphQLController
 {
     private readonly GraphQLExecutionService _executionService;
     private readonly SchemaService _schemaService;
@@ -59,7 +60,7 @@ public class GraphQLController
                 query.OperationName = request.OperationName;
 
             // Add variables if provided
-            if (request.Variables != null)
+            if (request.Variables is not null)
             {
                 foreach (var variable in request.Variables)
                     query.SetVariable(variable.Key, variable.Value);
@@ -118,7 +119,7 @@ public class GraphQLController
     /// </summary>
     public async Task<List<GraphQLResponse>> ExecuteBatchAsync(List<GraphQLRequest> requests)
     {
-        if (requests == null || requests.Count == 0)
+        if (requests is null || requests.Count == 0)
             throw new ArgumentException("Requests batch cannot be empty", nameof(requests));
 
         if (requests.Count > 10)
@@ -154,7 +155,7 @@ public class GraphQLController
 /// <summary>
 /// Represents an incoming GraphQL request
 /// </summary>
-public class GraphQLRequest
+sealed public class GraphQLRequest
 {
     public string Query { get; set; } = string.Empty;
     public string? OperationName { get; set; }
@@ -165,7 +166,7 @@ public class GraphQLRequest
 /// <summary>
 /// Represents a GraphQL execution response
 /// </summary>
-public class GraphQLResponse
+sealed public class GraphQLResponse
 {
     public object? Data { get; set; }
     public List<GraphQLError> Errors { get; set; } = new();
@@ -177,7 +178,7 @@ public class GraphQLResponse
 /// <summary>
 /// Represents an error in GraphQL execution
 /// </summary>
-public class GraphQLError
+sealed public class GraphQLError
 {
     public string Message { get; set; } = string.Empty;
     public string? Code { get; set; }

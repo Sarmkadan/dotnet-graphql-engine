@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -74,7 +75,7 @@ public static class EnumHelper
     public static string? GetDisplayName<T>(T value) where T : Enum
     {
         var field = value.GetType().GetField(value.ToString());
-        if (field == null)
+        if (field is null)
             return value.ToString();
 
         var attr = field.GetCustomAttribute<System.ComponentModel.DataAnnotations.DisplayAttribute>();
@@ -87,7 +88,7 @@ public static class EnumHelper
     public static string? GetDescription<T>(T value) where T : Enum
     {
         var field = value.GetType().GetField(value.ToString());
-        if (field == null)
+        if (field is null)
             return null;
 
         var attr = field.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>();
@@ -100,7 +101,7 @@ public static class EnumHelper
     public static bool HasAttribute<T, TAttr>(T value) where T : Enum where TAttr : Attribute
     {
         var field = value.GetType().GetField(value.ToString());
-        return field?.GetCustomAttribute<TAttr>() != null;
+        return field?.GetCustomAttribute<TAttr>() is not null;
     }
 
     /// <summary>
@@ -109,7 +110,7 @@ public static class EnumHelper
     public static List<TAttr> GetAttributes<T, TAttr>(T value) where T : Enum where TAttr : Attribute
     {
         var field = value.GetType().GetField(value.ToString());
-        if (field == null)
+        if (field is null)
             return new List<TAttr>();
 
         return field.GetCustomAttributes(typeof(TAttr), false).Cast<TAttr>().ToList();
@@ -164,7 +165,7 @@ public static class EnumHelper
     /// </summary>
     public static bool IsFlagsEnum<T>() where T : Enum
     {
-        return typeof(T).GetCustomAttribute<FlagsAttribute>() != null;
+        return typeof(T).GetCustomAttribute<FlagsAttribute>() is not null;
     }
 
     /// <summary>
@@ -172,7 +173,7 @@ public static class EnumHelper
     /// </summary>
     public static T CombineFlags<T>(params T[] values) where T : Enum
     {
-        if (values == null || values.Length == 0)
+        if (values is null || values.Length == 0)
             return default!;
 
         if (!IsFlagsEnum<T>())

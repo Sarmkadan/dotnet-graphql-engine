@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -8,7 +9,7 @@ namespace GraphQLEngine.Domain.Entities;
 /// <summary>
 /// Represents the execution context for a GraphQL operation
 /// </summary>
-public class ExecutionContext
+sealed public class ExecutionContext
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string QueryId { get; set; } = string.Empty;
@@ -77,7 +78,7 @@ public class ExecutionContext
     /// </summary>
     public void AddError(ExecutionError error)
     {
-        if (error == null) throw new ArgumentNullException(nameof(error));
+        if (error is null) throw new ArgumentNullException(nameof(error));
 
         _errors.Add(error);
         State = ExecutionState.Failed;
@@ -160,7 +161,7 @@ public class ExecutionContext
 /// <summary>
 /// Represents an error that occurred during execution
 /// </summary>
-public class ExecutionError
+sealed public class ExecutionError
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string Message { get; set; } = string.Empty;

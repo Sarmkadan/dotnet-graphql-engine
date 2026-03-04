@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -12,7 +13,7 @@ namespace GraphQLEngine.Services.Caching;
 /// Builder for generating cache keys from GraphQL queries and contexts
 /// Ensures consistent and collision-free key generation
 /// </summary>
-public class CacheKeyBuilder
+sealed public class CacheKeyBuilder
 {
     private const string QueryPrefix = "gql:query:";
     private const string SchemaPrefix = "gql:schema:";
@@ -36,7 +37,7 @@ public class CacheKeyBuilder
         var key = $"{QueryPrefix}{schemaName}:{hash}";
 
         // Add variable hash if present
-        if (variables != null && variables.Count > 0)
+        if (variables is not null && variables.Count > 0)
         {
             var variablesHash = HashVariables(variables);
             key = $"{key}:vars:{variablesHash}";
@@ -108,7 +109,7 @@ public class CacheKeyBuilder
     /// </summary>
     public static string BuildPatternKey(string prefix, string? pattern = null)
     {
-        if (pattern == null)
+        if (pattern is null)
             return $"^{prefix}.*";
 
         return $"^{prefix}{System.Text.RegularExpressions.Regex.Escape(pattern)}.*";

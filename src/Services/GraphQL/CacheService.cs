@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -11,7 +12,7 @@ namespace GraphQLEngine.Services.GraphQL;
 /// <summary>
 /// Service for caching query results and schema definitions
 /// </summary>
-public class CacheService
+sealed public class CacheService
 {
     private readonly ILogger<CacheService> _logger;
     private readonly GraphQLEngineOptions _options;
@@ -58,7 +59,7 @@ public class CacheService
     public void Set(string key, object value)
     {
         if (string.IsNullOrEmpty(key)) return;
-        if (value == null) return;
+        if (value is null) return;
         if (!_options.EnableCaching) return;
 
         lock (_lockObject)

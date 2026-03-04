@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -11,7 +12,7 @@ namespace GraphQLEngine.Integration;
 /// Factory for creating and managing HTTP client instances
 /// Provides singleton pattern and connection pooling
 /// </summary>
-public class HttpClientFactory : IDisposable
+sealed public class HttpClientFactory : IDisposable
 {
     private readonly ILogger<HttpClientFactory> _logger;
     private readonly Dictionary<string, HttpClient> _clients;
@@ -177,7 +178,7 @@ public class HttpClientFactory : IDisposable
         };
 
         // Add default headers
-        if (_options.DefaultHeaders != null)
+        if (_options.DefaultHeaders is not null)
         {
             foreach (var header in _options.DefaultHeaders)
                 client.DefaultRequestHeaders.Add(header.Key, header.Value);
@@ -234,7 +235,7 @@ public class HttpClientFactory : IDisposable
 /// <summary>
 /// HTTP client factory options
 /// </summary>
-public class HttpClientFactoryOptions
+sealed public class HttpClientFactoryOptions
 {
     public TimeSpan RequestTimeout { get; set; } = TimeSpan.FromSeconds(30);
     public bool AllowAutoRedirect { get; set; } = true;
@@ -250,7 +251,7 @@ public class HttpClientFactoryOptions
 /// <summary>
 /// HTTP client factory statistics
 /// </summary>
-public class HttpClientFactoryStatistics
+sealed public class HttpClientFactoryStatistics
 {
     public int ClientCount { get; set; }
     public List<string> ClientNames { get; set; } = new();

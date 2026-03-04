@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -9,7 +10,7 @@ namespace GraphQLEngine.Data.Repositories;
 /// In-memory repository implementation for development and testing
 /// </summary>
 /// <typeparam name="T">Entity type with Id property</typeparam>
-public class InMemoryRepository<T> : IRepository<T> where T : class
+sealed public class InMemoryRepository<T> : IRepository<T> where T : class
 {
     private readonly Dictionary<string, T> _store = new();
     private readonly object _lockObject = new();
@@ -35,11 +36,11 @@ public class InMemoryRepository<T> : IRepository<T> where T : class
 
     public async Task<T> AddAsync(T entity)
     {
-        if (entity == null) throw new ArgumentNullException(nameof(entity));
+        if (entity is null) throw new ArgumentNullException(nameof(entity));
 
         // Extract ID from entity (assumes entity has Id property via reflection)
         var idProp = entity.GetType().GetProperty("Id");
-        if (idProp == null)
+        if (idProp is null)
             throw new InvalidOperationException("Entity must have an Id property");
 
         var id = idProp.GetValue(entity)?.ToString();
@@ -58,10 +59,10 @@ public class InMemoryRepository<T> : IRepository<T> where T : class
 
     public async Task<T> UpdateAsync(T entity)
     {
-        if (entity == null) throw new ArgumentNullException(nameof(entity));
+        if (entity is null) throw new ArgumentNullException(nameof(entity));
 
         var idProp = entity.GetType().GetProperty("Id");
-        if (idProp == null)
+        if (idProp is null)
             throw new InvalidOperationException("Entity must have an Id property");
 
         var id = idProp.GetValue(entity)?.ToString();
@@ -122,7 +123,7 @@ public class InMemoryRepository<T> : IRepository<T> where T : class
     /// </summary>
     public async Task<IEnumerable<T>> FindAsync(Func<T, bool> predicate)
     {
-        if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+        if (predicate is null) throw new ArgumentNullException(nameof(predicate));
 
         lock (_lockObject)
         {

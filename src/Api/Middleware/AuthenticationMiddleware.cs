@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -13,7 +14,7 @@ namespace GraphQLEngine.Api.Middleware;
 /// Authentication middleware that validates incoming requests
 /// Supports API key and Bearer token authentication
 /// </summary>
-public class AuthenticationMiddleware
+sealed public class AuthenticationMiddleware
 {
     private readonly ILogger<AuthenticationMiddleware> _logger;
     private readonly AuthenticationOptions _options;
@@ -169,7 +170,7 @@ public class AuthenticationMiddleware
 /// <summary>
 /// Authentication configuration options
 /// </summary>
-public class AuthenticationOptions
+sealed public class AuthenticationOptions
 {
     public bool RequireAuthentication { get; set; } = true;
     public bool AllowQueryParameterAuth { get; set; } = false;
@@ -183,7 +184,7 @@ public class AuthenticationOptions
 /// <summary>
 /// Result of an authentication attempt
 /// </summary>
-public class AuthenticationResult
+sealed public class AuthenticationResult
 {
     public bool Success { get; set; }
     public ClaimsPrincipal? Principal { get; set; }
@@ -194,7 +195,7 @@ public class AuthenticationResult
 /// <summary>
 /// Authenticated context information
 /// </summary>
-public class AuthenticationContext
+sealed public class AuthenticationContext
 {
     public bool IsAuthenticated { get; set; }
     public ClaimsPrincipal? Principal { get; set; }
