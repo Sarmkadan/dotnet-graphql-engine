@@ -1,0 +1,100 @@
+# Diagnostic and build logs
+bin/
+obj/
+.vs/
+.vscode/
+*.sln.iml
+*.user
+*.userosscache
+*.sln.docstates
+.vs/
+.vscode/settings.json
+.vscode/launch.json
+.vscode/extensions.json
+
+# NuGet
+*.nupkg
+*.snupkg
+*.dll
+*.exe
+*.pdb
+
+# Rider
+.idea/
+.idea/**
+*.sln.iml
+
+# Local environment variables
+.env
+.env.local
+appsettings.local.json
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+
+# Test results
+TestResults/
+.coverage
+*.trx
+coverage.xml
+OpenCover/
+
+# IDE
+.DS_Store
+.AppleDouble
+.LSOverride
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.logs
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Docker
+docker-compose.local.yml
+
+# NPM/Yarn (if used for web frontend)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Artifacts
+dist/
+out/
+publish/
+packages/
+
+# Code coverage
+lcov-report/
+coverage/
+.nyc_output/
+
+# Memory dumps
+*.stackdump
+*.dmp
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
