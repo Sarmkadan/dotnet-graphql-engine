@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <PackageId>Zaiets.dotnet.graphql.engine</PackageId>
+    <Version>1.0.0</Version>
+    <Title>dotnet-graphql-engine</Title>
+    <Description>Code-first GraphQL server for .NET - schema stitching, DataLoader, subscriptions, query complexity analysis</Description>
+    <Authors>Vladyslav Zaiets</Authors>
+    <PackageTags>graphql dotnet schema-stitching dataloader subscriptions complexity</PackageTags>
+    <PackageProjectUrl>https://github.com/sarmkadan/dotnet-graphql-engine</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/sarmkadan/dotnet-graphql-engine</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="examples/**/*.cs" />
+    <Compile Remove="tests/**/*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.0" />
+    <PackageReference Include="System.Collections.Concurrent" Version="4.3.0" />
+    <PackageReference Include="System.Reflection" Version="4.3.0" />
+  </ItemGroup>
+
+</Project>
