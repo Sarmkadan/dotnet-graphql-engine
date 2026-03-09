@@ -98,12 +98,22 @@ sealed public class DataLoaderService
             // Execute the batch function
             var results = await batchFunc(request.Keys.ToList());
 
-            // Map results to keys
+            // Map results to keys - ensure all keys get a result to prevent N+1 queries
             if (results is not null)
             {
                 for (int i = 0; i < request.Keys.Count && i < results.Count; i++)
                 {
                     request.SetResult(request.Keys[i], results[i]);
+                }
+            }
+
+            // Hotfix: Ensure all keys have a result (even if null) to prevent N+1 queries
+            // in nested resolvers when batch function doesn't flush all keys
+            foreach (var key in request.Keys)
+            {
+                if (!request.Results.ContainsKey(key))
+                {
+                    request.SetResult(key, null);
                 }
             }
 
