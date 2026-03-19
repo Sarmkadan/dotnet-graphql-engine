@@ -9,7 +9,7 @@ namespace GraphQLEngine.Exceptions;
 /// <summary>
 /// Base exception for GraphQL engine operations
 /// </summary>
-sealed public class GraphQLException : Exception
+public class GraphQLException : Exception
 {
     public string? ErrorCode { get; set; }
     public Dictionary<string, object> Extensions { get; set; } = new();
