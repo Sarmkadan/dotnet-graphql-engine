@@ -109,45 +109,421 @@ sealed public class GraphQLExecutionService
     }
 
     /// <summary>
-    /// Parses field selections from query string
+    /// Internal query execution logic
     /// </summary>
-    private List<string> ParseSelections(string queryString)
+    private async Task<object?> ExecuteQueryInternalAsync(GraphQLQuery query, ExecutionContext context)
     {
-        var fields = new List<string>();
-        var inBraces = false;
-        var currentField = string.Empty;
+        // Parse the query string into a hierarchical structure
+        var rootSelections = ParseQuerySelections(query.QueryString);
+        query.SetRootSelectedFields(rootSelections); // Populate the GraphQLQuery with structured fields
 
-        foreach (var c in queryString)
+        // Now iterate through the structured fields for execution
+        await ExecuteFieldsRecursiveAsync(rootSelections, context);
+
+        return true;
+    }
+
+    /// <summary>
+    /// Recursively executes fields based on the structured QueryField list.
+    /// This is a simplified simulation for demonstration.
+    /// </summary>
+    private async Task ExecuteFieldsRecursiveAsync(IEnumerable<QueryField> fields, ExecutionContext context)
+    {
+        foreach (var field in fields)
         {
-            if (c == '{')
+            try
             {
-                inBraces = true;
-                continue;
-            }
+                var resolverKey = field.Name; // Use field name for resolver lookup
+                if (_resolvers.TryGetValue(resolverKey, out var resolver))
+                {
+                    // Simulate resolver execution
+                    context.RecordResolverExecution(field.Name);
+                    await Task.Delay(10); // Simulate async work
+                }
+                else
+                {
+                    context.AddError($"No resolver found for field: {field.Name}", field.Name);
+                }
 
-            if (c == '}')
-            {
-                if (!string.IsNullOrWhiteSpace(currentField))
-                    fields.Add(currentField.Trim());
-                inBraces = false;
-                currentField = string.Empty;
-                continue;
+                // Recursively execute nested fields
+                if (field.Fields.Any())
+                {
+                    await ExecuteFieldsRecursiveAsync(field.Fields, context);
+                }
             }
+            catch (Exception ex)
+            {
+                context.AddError(ex.Message, field.Name);
+            }
+        }
+    }
 
-            if (inBraces && (c == ' ' || c == '\n' || c == '\r' || c == ','))
+    /// <summary>
+    /// Parses field selections from query string into a hierarchical QueryField structure.
+    /// This is a basic implementation to support nested fields, aliases, and inline fragments.
+    /// It does not fully support arguments, variables, or named fragments.
+    /// </summary>
+    private IReadOnlyList<QueryField> ParseQuerySelections(string queryString)
+    {
+        var fields = new List<QueryField>();
+        var tokenizer = new QueryTokenizer(queryString);
+
+        // Remove the outer query/mutation/subscription wrapper if present,
+        // to get to the main selection set.
+        var tokens = tokenizer.Tokenize().ToList();
+        var startIndex = 0;
+        var openBraceCount = 0;
+
+        for (int i = 0; i < tokens.Count; i++)
+        {
+            if (tokens[i].Type == QueryTokenType.OpenBrace)
             {
-                if (!string.IsNullOrWhiteSpace(currentField))
-                    fields.Add(currentField.Trim());
-                currentField = string.Empty;
-            }
-            else if (inBraces)
-            {
-                currentField += c;
+                openBraceCount++;
+                if (openBraceCount == 1) // First outer brace of the selection set
+                {
+                    startIndex = i + 1;
+                    break;
+                }
             }
         }
 
-        return fields.Distinct().ToList();
+        if (startIndex == 0 && tokens.Any()) // No outer operation or root selection set
+        {
+            // Assume it's a direct selection set if no operation name and no outer braces
+            // e.g. { user { id } }
+            startIndex = tokens.FindIndex(t => t.Type == QueryTokenType.OpenBrace) + 1;
+        }
+
+        if (startIndex > 0 && startIndex < tokens.Count)
+        {
+            try
+            {
+                var parser = new QueryParser(tokens.Skip(startIndex).ToList());
+                fields.AddRange(parser.ParseSelection());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error parsing query selections: {QueryString}", queryString);
+                // Optionally add error to context or throw a specific parsing exception
+            }
+        }
+        
+        return fields.AsReadOnly();
     }
+
+    // --- Helper classes for parsing ---
+
+    private enum QueryTokenType
+    {
+        Name,
+        Alias,
+        Colon,
+        OpenBrace,
+        CloseBrace,
+        OpenParen,
+        CloseParen,
+        Spread, // ...
+        On,     // on keyword for inline fragments
+        String,
+        Number,
+        Boolean,
+        Null,
+        Comma,
+        Whitespace,
+        Unknown
+    }
+
+    private class QueryToken
+    {
+        public QueryTokenType Type { get; }
+        public string Value { get; }
+
+        public QueryToken(QueryTokenType type, string value)
+        {
+            Type = type;
+            Value = value;
+        }
+
+        public override string ToString() => $"[{Type}] {Value}";
+    }
+
+    private class QueryTokenizer
+    {
+        private readonly string _query;
+        private int _position;
+
+        public QueryTokenizer(string query)
+        {
+            _query = query;
+            _position = 0;
+        }
+
+        public IEnumerable<QueryToken> Tokenize()
+        {
+            while (_position < _query.Length)
+            {
+                if (char.IsWhiteSpace(_query[_position]))
+                {
+                    yield return ReadWhitespace();
+                    continue;
+                }
+
+                switch (_query[_position])
+                {
+                    case '{':
+                        yield return new QueryToken(QueryTokenType.OpenBrace, "{");
+                        _position++;
+                        break;
+                    case '}':
+                        yield return new QueryToken(QueryTokenType.CloseBrace, "}");
+                        _position++;
+                        break;
+                    case '(':
+                        yield return new QueryToken(QueryTokenType.OpenParen, "(");
+                        _position++;
+                        break;
+                    case ')':
+                        yield return new QueryToken(QueryTokenType.CloseParen, ")");
+                        _position++;
+                        break;
+                    case ':':
+                        yield return new QueryToken(QueryTokenType.Colon, ":");
+                        _position++;
+                        break;
+                    case ',':
+                        yield return new QueryToken(QueryTokenType.Comma, ",");
+                        _position++;
+                        break;
+                    case '.':
+                        if (_position + 2 < _query.Length && _query[_position + 1] == '.' && _query[_position + 2] == '.')
+                        {
+                            yield return new QueryToken(QueryTokenType.Spread, "...");
+                            _position += 3;
+                        }
+                        else
+                        {
+                            yield return ReadName(); // Or handle as part of a number, or error
+                        }
+                        break;
+                    case '"':
+                        yield return ReadString();
+                        break;
+                    default:
+                        if (char.IsLetter(_query[_position]) || _query[_position] == '_')
+                        {
+                            var nameToken = ReadName();
+                            if (nameToken.Value.Equals("on", StringComparison.OrdinalIgnoreCase))
+                            {
+                                yield return new QueryToken(QueryTokenType.On, "on");
+                            }
+                            else if (nameToken.Value.Equals("true", StringComparison.OrdinalIgnoreCase) ||
+                                     nameToken.Value.Equals("false", StringComparison.OrdinalIgnoreCase))
+                            {
+                                yield return new QueryToken(QueryTokenType.Boolean, nameToken.Value);
+                            }
+                            else if (nameToken.Value.Equals("null", StringComparison.OrdinalIgnoreCase))
+                            {
+                                yield return new QueryToken(QueryTokenType.Null, nameToken.Value);
+                            }
+                            else
+                            {
+                                yield return nameToken;
+                            }
+                        }
+                        else if (char.IsDigit(_query[_position]) || _query[_position] == '-')
+                        {
+                            yield return ReadNumber();
+                        }
+                        else
+                        {
+                            yield return new QueryToken(QueryTokenType.Unknown, _query[_position].ToString());
+                            _position++;
+                        }
+                        break;
+                }
+            }
+        }
+
+        private QueryToken ReadWhitespace()
+        {
+            var start = _position;
+            while (_position < _query.Length && char.IsWhiteSpace(_query[_position]))
+            {
+                _position++;
+            }
+            return new QueryToken(QueryTokenType.Whitespace, _query.Substring(start, _position - start));
+        }
+
+        private QueryToken ReadName()
+        {
+            var start = _position;
+            while (_position < _query.Length && (char.IsLetterOrDigit(_query[_position]) || _query[_position] == '_'))
+            {
+                _position++;
+            }
+            return new QueryToken(QueryTokenType.Name, _query.Substring(start, _position - start));
+        }
+
+        private QueryToken ReadString()
+        {
+            var start = _position;
+            _position++; // Skip opening quote
+            while (_position < _query.Length && _query[_position] != '"')
+            {
+                if (_query[_position] == '\\' && _position + 1 < _query.Length)
+                {
+                    _position++; // Skip escaped character
+                }
+                _position++;
+            }
+            _position++; // Skip closing quote
+            return new QueryToken(QueryTokenType.String, _query.Substring(start, _position - start));
+        }
+
+        private QueryToken ReadNumber()
+        {
+            var start = _position;
+            while (_position < _query.Length && (char.IsDigit(_query[_position]) || _query[_position] == '-' || _query[_position] == '.'))
+            {
+                _position++;
+            }
+            return new QueryToken(QueryTokenType.Number, _query.Substring(start, _position - start));
+        }
+    }
+
+    private class QueryParser
+    {
+        private readonly List<QueryToken> _tokens;
+        private int _position;
+
+        public QueryParser(List<QueryToken> tokens)
+        {
+            _tokens = tokens.Where(t => t.Type != QueryTokenType.Whitespace && t.Type != QueryTokenType.Comma).ToList();
+            _position = 0;
+        }
+
+        private QueryToken Peek(int offset = 0)
+        {
+            if (_position + offset >= _tokens.Count)
+            {
+                return new QueryToken(QueryTokenType.Unknown, string.Empty);
+            }
+            return _tokens[_position + offset];
+        }
+
+        private QueryToken Consume()
+        {
+            if (_position >= _tokens.Count)
+            {
+                throw new InvalidOperationException("Unexpected end of query during parsing.");
+            }
+            return _tokens[_position++];
+        }
+
+        private void Expect(QueryTokenType type, string errorMessage)
+        {
+            var token = Consume();
+            if (token.Type != type)
+            {
+                throw new InvalidOperationException(errorMessage + $" Got {token.Type} '{token.Value}'");
+            }
+        }
+
+        public IReadOnlyList<QueryField> ParseSelection()
+        {
+            var fields = new List<QueryField>();
+
+            // If we are called with a leading '{', consume it.
+            // This allows ParseSelection to be called for root selection sets
+            // or nested ones.
+            if (Peek().Type == QueryTokenType.OpenBrace)
+            {
+                Consume(); // {
+            }
+
+            while (_position < _tokens.Count && Peek().Type != QueryTokenType.CloseBrace)
+            {
+                // Handle inline fragments: ... on TypeName { selection }
+                if (Peek().Type == QueryTokenType.Spread)
+                {
+                    Consume(); // ...
+                    Expect(QueryTokenType.On, "Expected 'on' keyword for inline fragment.");
+                    var typeCondition = Consume(); // TypeName
+                    if (typeCondition.Type != QueryTokenType.Name)
+                    {
+                        throw new InvalidOperationException($"Expected type name for inline fragment, got {typeCondition.Type}");
+                    }
+                    Expect(QueryTokenType.OpenBrace, "Expected '{' to open inline fragment selection set.");
+                    var fragmentFields = ParseSelection(); // Recursively parse fragment selections
+                    fields.Add(new QueryField(
+                        name: "...", // Special name for fragment
+                        typeCondition: typeCondition.Value,
+                        fields: fragmentFields
+                    ));
+                }
+                else // Regular field or aliased field
+                {
+                    var aliasOrName = Consume();
+                    if (aliasOrName.Type != QueryTokenType.Name)
+                    {
+                        throw new InvalidOperationException($"Expected field name or alias, got {aliasOrName.Type}");
+                    }
+
+                    string fieldName;
+                    string? alias = null;
+
+                    if (Peek().Type == QueryTokenType.Colon) // Aliased field: alias: name { ... }
+                    {
+                        Consume(); // :
+                        fieldName = Consume().Value;
+                        alias = aliasOrName.Value;
+                        if (fieldName == null)
+                        {
+                            throw new InvalidOperationException("Expected field name after alias.");
+                        }
+                    }
+                    else // Regular field: name { ... }
+                    {
+                        fieldName = aliasOrName.Value;
+                    }
+
+                    // Skip arguments for now (if present, e.g., field(arg: "value"))
+                    if (Peek().Type == QueryTokenType.OpenParen)
+                    {
+                        int parenCount = 0;
+                        while (_position < _tokens.Count)
+                        {
+                            var token = Consume();
+                            if (token.Type == QueryTokenType.OpenParen) parenCount++;
+                            if (token.Type == QueryTokenType.CloseParen) parenCount--;
+                            if (parenCount == 0 && token.Type == QueryTokenType.CloseParen) break;
+                        }
+                    }
+                    
+                    var nestedFields = new List<QueryField>();
+                    if (Peek().Type == QueryTokenType.OpenBrace)
+                    {
+                        nestedFields.AddRange(ParseSelection()); // Recursively parse nested selections
+                    }
+
+                    fields.Add(new QueryField(
+                        name: fieldName,
+                        alias: alias,
+                        fields: nestedFields
+                    ));
+                }
+            }
+
+            if (Peek().Type == QueryTokenType.CloseBrace)
+            {
+                Consume(); // }
+                break;
+            }
+        }
+            
+        return fields.AsReadOnly();
+    }
+}
 
     /// <summary>
     /// Gets execution statistics
