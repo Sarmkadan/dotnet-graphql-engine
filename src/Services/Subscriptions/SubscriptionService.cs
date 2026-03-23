@@ -86,7 +86,7 @@ sealed public class SubscriptionService
     /// Subscribes to updates for a specific event
     /// </summary>
     public void Subscribe(string clientId, string eventName,
-        Func<SubscriptionUpdate, Task> handler)
+        Func<SubscriptionUpdate, Task> handler, string? filterExpression = null) // Added filterExpression
     {
         if (string.IsNullOrEmpty(clientId))
             throw new ArgumentException("Client ID cannot be empty", nameof(clientId));
@@ -97,13 +97,20 @@ sealed public class SubscriptionService
         var connection = GetConnection(clientId) ??
             throw new InvalidOperationException($"Connection for client {clientId} not found");
 
+        // If a filter expression is provided, create and assign a filter
+        if (!string.IsNullOrEmpty(filterExpression))
+        {
+            connection.Filter = new SubscriptionFilter($"filter_{clientId}_{eventName}", filterExpression);
+        }
+
         var key = $"{clientId}:{eventName}";
         var eventHandler = new AsyncEventHandler<SubscriptionUpdate>(handler);
 
         _handlers.TryAdd(key, eventHandler);
         connection.State = SubscriptionState.Active;
 
-        _logger.LogInformation("Client subscribed to event: {ClientId} -> {EventName}", clientId, eventName);
+        _logger.LogInformation("Client subscribed to event: {ClientId} -> {EventName} with filter: {Filter}",
+            clientId, eventName, filterExpression ?? "None");
     }
 
     /// <summary>
@@ -122,17 +129,27 @@ sealed public class SubscriptionService
         };
 
         var tasks = new List<Task>();
+        var subscribersCount = 0;
 
-        foreach (var handler in _handlers.Where(h => h.Key.EndsWith($":{eventName}")))
+        foreach (var handlerEntry in _handlers.Where(h => h.Key.EndsWith($":{eventName}")))
         {
-            tasks.Add(handler.Value.InvokeAsync(update));
+            var clientId = handlerEntry.Key.Split(':')[0];
+            if (_connections.TryGetValue(clientId, out var connection))
+            {
+                // Evaluate filter if present
+                if (connection.Filter == null || connection.Filter.Evaluate(update.Data))
+                {
+                    tasks.Add(handlerEntry.Value.InvokeAsync(update));
+                    subscribersCount++;
+                }
+            }
         }
 
         try
         {
             await Task.WhenAll(tasks);
-            _logger.LogInformation("Update published to {Count} subscribers: {EventName}",
-                tasks.Count, eventName);
+            _logger.LogInformation("Update published to {Count} filtered subscribers: {EventName}",
+                subscribersCount, eventName);
         }
         catch (Exception ex)
         {
@@ -192,6 +209,7 @@ sealed public class SubscriptionConnection
     public SubscriptionState State { get; set; } = SubscriptionState.Pending;
     public DateTime ConnectedAt { get; set; } = DateTime.UtcNow;
     public DateTime LastHeartbeat { get; set; } = DateTime.UtcNow;
+    public SubscriptionFilter? Filter { get; set; } // New: Per-connection filter
 }
 
 /// <summary>

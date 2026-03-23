@@ -4,6 +4,8 @@
 // CTO & Software Architect
 // =============================================================================
 
+using System.Linq; // Added for LINQ extensions
+
 namespace GraphQLEngine.Domain.ValueObjects;
 
 /// <summary>
@@ -98,17 +100,67 @@ sealed public class SubscriptionFilter
 
     /// <summary>
     /// Evaluates the filter against a subscription update
+    /// Supports simple key=value or nested.key=value expressions.
     /// </summary>
     public bool Evaluate(Dictionary<string, object> updateData)
     {
         if (!IsActive) return true;
         if (string.IsNullOrEmpty(Expression)) return Type == FilterType.Include;
 
-        // Simple key presence check for demonstration
-        var keys = Expression.Split(',').Select(k => k.Trim()).ToList();
-        var matches = keys.All(k => updateData.ContainsKey(k));
+        var parts = Expression.Split('=', 2); // Split only on the first '='
+        if (parts.Length != 2)
+        {
+            // Invalid expression format, default to no filter (pass if Include, fail if Exclude)
+            return Type == FilterType.Include;
+        }
+
+        var propertyPath = parts[0].Trim();
+        var expectedValueString = parts[1].Trim();
+
+        object? actualValue = GetValueByPath(updateData, propertyPath);
+
+        bool matches = false;
+        if (actualValue != null)
+        {
+            // Simple string comparison for now.
+            // More complex scenarios (e.g., numbers, booleans, case-insensitivity) would require
+            // type conversion and more sophisticated comparison logic.
+            matches = actualValue.ToString()?.Equals(expectedValueString, StringComparison.OrdinalIgnoreCase) ?? false;
+        } else if (expectedValueString.Equals("null", StringComparison.OrdinalIgnoreCase)) {
+            matches = actualValue == null;
+        }
+
 
         return Type == FilterType.Include ? matches : !matches;
+    }
+
+    /// <summary>
+    /// Helper to get a value from a dictionary by a dot-separated path (e.g., "product.id")
+    /// </summary>
+    private object? GetValueByPath(Dictionary<string, object> data, string path)
+    {
+        var pathParts = path.Split('.');
+        object? currentValue = data;
+
+        foreach (var part in pathParts)
+        {
+            if (currentValue is Dictionary<string, object> dict)
+            {
+                if (dict.TryGetValue(part, out var value))
+                {
+                    currentValue = value;
+                }
+                else
+                {
+                    return null; // Path not found
+                }
+            }
+            else
+            {
+                return null; // Not a dictionary, cannot traverse further
+            }
+        }
+        return currentValue;
     }
 }
 
