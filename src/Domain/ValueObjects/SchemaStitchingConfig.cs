@@ -7,6 +7,31 @@
 namespace GraphQLEngine.Domain.ValueObjects;
 
 /// <summary>
+/// Determines how the stitching engine resolves type-name collisions across remote schemas.
+/// </summary>
+public enum ConflictResolutionStrategy
+{
+    /// <summary>
+    /// The first schema that defines a type wins; subsequent schemas' definitions are ignored.
+    /// This is the default behaviour.
+    /// </summary>
+    FirstWins,
+
+    /// <summary>
+    /// Fields from all remote schemas that share the same type name are merged into a single
+    /// unified type. If two schemas define the same field name with different signatures the
+    /// field from the first schema takes precedence.
+    /// </summary>
+    MergeFields,
+
+    /// <summary>
+    /// Each remote schema's types are automatically prefixed using the schema's
+    /// <see cref="RemoteSchema.TypePrefix"/> to avoid collisions entirely.
+    /// </summary>
+    PrefixTypes
+}
+
+/// <summary>
 /// Configuration for GraphQL schema stitching
 /// </summary>
 sealed public class SchemaStitchingConfig
@@ -23,6 +48,13 @@ sealed public class SchemaStitchingConfig
 
     private readonly Dictionary<string, string> _typeMapping = new();
     public IReadOnlyDictionary<string, string> TypeMapping => _typeMapping.AsReadOnly();
+
+    /// <summary>
+    /// Strategy to apply when two or more remote schemas define a type with the same name.
+    /// Defaults to <see cref="ConflictResolutionStrategy.FirstWins"/>.
+    /// </summary>
+    public ConflictResolutionStrategy ConflictResolution { get; set; } =
+        ConflictResolutionStrategy.FirstWins;
 
     public SchemaStitchingConfig()
     {
@@ -121,6 +153,16 @@ sealed public class RemoteSchema
     public bool RequiresAuthentication { get; set; } = false;
     public string? AuthHeader { get; set; }
 
+    /// <summary>
+    /// Optional prefix to prepend to every type name imported from this remote schema.
+    /// Used with <see cref="ConflictResolutionStrategy.PrefixTypes"/> to disambiguate types
+    /// that share the same name across multiple remote schemas.
+    /// For example, a prefix of <c>"SchemaA_"</c> renames remote type <c>User</c> to
+    /// <c>SchemaA_User</c> in the stitched schema.
+    /// Leave empty (the default) when no prefixing is desired.
+    /// </summary>
+    public string TypePrefix { get; set; } = string.Empty;
+
     public RemoteSchema()
     {
     }
@@ -141,6 +183,22 @@ sealed public class RemoteSchema
 
         RequiresAuthentication = true;
         AuthHeader = header;
+    }
+
+    /// <summary>
+    /// Returns the stitched-schema type name for a type originating from this remote schema.
+    /// When <see cref="TypePrefix"/> is set, the prefix is prepended; otherwise the original
+    /// type name is returned unchanged.
+    /// </summary>
+    /// <param name="remoteTypeName">The type name as declared in the remote schema.</param>
+    public string GetPrefixedTypeName(string remoteTypeName)
+    {
+        if (string.IsNullOrEmpty(remoteTypeName))
+            throw new ArgumentException("Remote type name cannot be empty", nameof(remoteTypeName));
+
+        return string.IsNullOrEmpty(TypePrefix)
+            ? remoteTypeName
+            : $"{TypePrefix}{remoteTypeName}";
     }
 
     /// <summary>
