@@ -102,21 +102,6 @@ sealed public class GraphQLExecutionService
     }
 
     /// <summary>
-    /// Internal query execution logic
-    /// </summary>
-    private async Task<object?> ExecuteQueryInternalAsync(GraphQLQuery query, ExecutionContext context)
-    {
-        // Parse the query string into a hierarchical structure
-        var rootSelections = ParseQuerySelections(query.QueryString);
-        query.SetRootSelectedFields(rootSelections); // Populate the GraphQLQuery with structured fields
-
-        // Now iterate through the structured fields for execution
-        await ExecuteFieldsRecursiveAsync(rootSelections, context);
-
-        return true;
-    }
-
-    /// <summary>
     /// Recursively executes fields based on the structured QueryField list.
     /// This is a simplified simulation for demonstration.
     /// </summary>
@@ -135,7 +120,8 @@ sealed public class GraphQLExecutionService
                 }
                 else
                 {
-                    context.AddError($"No resolver found for field: {field.Name}", field.Name);
+                    // No resolver registered – field resolves to null (standard GraphQL behaviour)
+                    _logger.LogDebug("No resolver registered for field '{FieldName}'; returning null", field.Name);
                 }
 
                 // Recursively execute nested fields
@@ -510,13 +496,11 @@ sealed public class GraphQLExecutionService
             if (Peek().Type == QueryTokenType.CloseBrace)
             {
                 Consume(); // }
-                break;
             }
+
+            return fields.AsReadOnly();
         }
-            
-        return fields.AsReadOnly();
     }
-}
 
     /// <summary>
     /// Gets execution statistics
