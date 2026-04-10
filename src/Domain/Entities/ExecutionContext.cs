@@ -119,22 +119,25 @@ sealed public class ExecutionContext
     }
 
     /// <summary>
-    /// Marks the execution as completed
+    /// Marks the execution as completed. Errors may still be present (partial failures
+    /// are normal in GraphQL – the response carries both data and errors).
     /// </summary>
     public void Complete()
     {
         CompletedAt = DateTime.UtcNow;
         DurationMs = (long)(CompletedAt.Value - StartedAt).TotalMilliseconds;
-        State = _errors.Count == 0 ? ExecutionState.Completed : ExecutionState.Failed;
+        State = ExecutionState.Completed;
     }
 
     /// <summary>
-    /// Marks the execution as failed
+    /// Marks the execution as failed due to a catastrophic / unrecoverable error.
     /// </summary>
     public void Fail(string reason)
     {
         AddError(reason);
-        Complete();
+        CompletedAt = DateTime.UtcNow;
+        DurationMs = (long)(CompletedAt.Value - StartedAt).TotalMilliseconds;
+        State = ExecutionState.Failed;
     }
 
     /// <summary>
