@@ -109,6 +109,18 @@ trim_trailing_whitespace = false
 [*.sh]
 end_of_line = lf
 
+dotnet_diagnostic.IDE0055.severity = suggestion
+
+# Expression-bodied members
+csharp_style_expression_bodied_methods = when_on_single_line:suggestion
+csharp_style_expression_bodied_properties = true:suggestion
+csharp_style_expression_bodied_constructors = false:suggestion
+
+# Null checking
+dotnet_style_coalesce_expression = true:suggestion
+dotnet_style_null_propagation = true:suggestion
+dotnet_style_prefer_is_null_check_over_reference_equality_method = true:suggestion
+
 # PowerShell scripts
 [*.ps1]
 end_of_line = crlf
