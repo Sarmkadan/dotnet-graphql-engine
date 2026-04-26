@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -11,7 +12,7 @@ namespace GraphQLEngine.Configuration;
 /// Parses command-line arguments for the GraphQL engine
 /// Supports long and short options with validation
 /// </summary>
-public class CliArgumentParser
+sealed public class CliArgumentParser
 {
     private readonly ILogger<CliArgumentParser> _logger;
     private readonly Dictionary<string, CliOption> _options;
@@ -80,7 +81,7 @@ public class CliArgumentParser
 
         var option = _options[name];
 
-        if (option.RequiresValue && value == null)
+        if (option.RequiresValue && value is null)
         {
             if (index + 1 < args.Length && !args[index + 1].StartsWith("-"))
             {
@@ -106,7 +107,7 @@ public class CliArgumentParser
     {
         var longName = FindLongOptionName(shortName);
 
-        if (longName == null)
+        if (longName is null)
         {
             _logger.LogWarning("Unknown short option: -{ShortName}", shortName);
             return index + 1;
@@ -200,7 +201,7 @@ public class CliArgumentParser
         foreach (var option in _options.Values.OrderBy(x => x.Name))
         {
             var optionStr = $"  --{option.Name}";
-            if (option.ShortName != null)
+            if (option.ShortName is not null)
                 optionStr += $", -{option.ShortName}";
 
             if (option.RequiresValue)
@@ -225,7 +226,7 @@ public class CliArgumentParser
 /// <summary>
 /// CLI option definition
 /// </summary>
-public class CliOption
+sealed public class CliOption
 {
     public string Name { get; set; } = string.Empty;
     public string? ShortName { get; set; }
@@ -237,7 +238,7 @@ public class CliOption
 /// <summary>
 /// Parsed CLI arguments
 /// </summary>
-public class CliArguments
+sealed public class CliArguments
 {
     public Dictionary<string, CliOptionValue> Options { get; set; } = new();
     public List<string> PositionalArgs { get; set; } = new();
@@ -277,7 +278,7 @@ public class CliArguments
 /// <summary>
 /// CLI option value
 /// </summary>
-public class CliOptionValue
+sealed public class CliOptionValue
 {
     public string Name { get; set; } = string.Empty;
     public string? Value { get; set; }

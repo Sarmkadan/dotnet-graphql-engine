@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -11,7 +12,7 @@ namespace GraphQLEngine.Services.BackgroundServices;
 /// Background service for periodic health checks
 /// Monitors system health and logs status updates
 /// </summary>
-public class HealthCheckBackgroundService : IDisposable
+sealed public class HealthCheckBackgroundService : IDisposable
 {
     private readonly ILogger<HealthCheckBackgroundService> _logger;
     private readonly HealthCheckOptions _options;
@@ -33,7 +34,7 @@ public class HealthCheckBackgroundService : IDisposable
     /// </summary>
     public void Start()
     {
-        if (_healthCheckTimer != null)
+        if (_healthCheckTimer is not null)
         {
             _logger.LogWarning("Health check service is already running");
             return;
@@ -58,7 +59,7 @@ public class HealthCheckBackgroundService : IDisposable
     /// </summary>
     public void Stop()
     {
-        if (_healthCheckTimer != null)
+        if (_healthCheckTimer is not null)
         {
             _healthCheckTimer.Dispose();
             _healthCheckTimer = null;
@@ -287,7 +288,7 @@ public class HealthCheckBackgroundService : IDisposable
 /// <summary>
 /// Health check result
 /// </summary>
-public class HealthCheckResult
+sealed public class HealthCheckResult
 {
     public DateTime CheckedAt { get; set; }
     public bool IsHealthy { get; set; }
@@ -298,7 +299,7 @@ public class HealthCheckResult
 /// <summary>
 /// Individual health check item
 /// </summary>
-public class HealthCheckItem
+sealed public class HealthCheckItem
 {
     public string Name { get; set; } = string.Empty;
     public bool IsHealthy { get; set; }
@@ -309,7 +310,7 @@ public class HealthCheckItem
 /// <summary>
 /// Health check options
 /// </summary>
-public class HealthCheckOptions
+sealed public class HealthCheckOptions
 {
     public int IntervalSeconds { get; set; } = 60;
     public int MaxResultsToKeep { get; set; } = 100;
@@ -318,7 +319,7 @@ public class HealthCheckOptions
 /// <summary>
 /// Health check statistics
 /// </summary>
-public class HealthCheckStatistics
+sealed public class HealthCheckStatistics
 {
     public int TotalChecks { get; set; }
     public int HealthyChecks { get; set; }

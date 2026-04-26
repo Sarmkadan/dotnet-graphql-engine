@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -11,7 +12,7 @@ namespace GraphQLEngine.Services.QueryAnalysis;
 /// <summary>
 /// Service for analyzing GraphQL query complexity
 /// </summary>
-public class QueryAnalysisService
+sealed public class QueryAnalysisService
 {
     private readonly ILogger<QueryAnalysisService> _logger;
     private readonly Dictionary<string, QueryComplexity> _analyses = new();
@@ -26,7 +27,7 @@ public class QueryAnalysisService
     /// </summary>
     public QueryComplexity AnalyzeQuery(GraphQLQuery query)
     {
-        if (query == null) throw new ArgumentNullException(nameof(query));
+        if (query is null) throw new ArgumentNullException(nameof(query));
 
         var analysis = new QueryComplexity(query.Id);
 
@@ -108,7 +109,7 @@ public class QueryAnalysisService
     public string GetComplexityReport(string queryId)
     {
         var analysis = GetAnalysis(queryId);
-        if (analysis == null)
+        if (analysis is null)
             return $"No analysis found for query: {queryId}";
 
         return analysis.GetReport();

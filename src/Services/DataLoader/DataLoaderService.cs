@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -11,7 +12,7 @@ namespace GraphQLEngine.Services.DataLoader;
 /// <summary>
 /// Service for managing batch data loading to prevent N+1 queries
 /// </summary>
-public class DataLoaderService
+sealed public class DataLoaderService
 {
     private readonly ILogger<DataLoaderService> _logger;
     private readonly Dictionary<string, DataLoaderRequest> _activeLoaders = new();
@@ -31,7 +32,7 @@ public class DataLoaderService
         if (string.IsNullOrEmpty(loaderName))
             throw new ArgumentException("Loader name cannot be empty", nameof(loaderName));
 
-        if (batchFunction == null) throw new ArgumentNullException(nameof(batchFunction));
+        if (batchFunction is null) throw new ArgumentNullException(nameof(batchFunction));
 
         _batchFunctions[loaderName] = batchFunction;
         _logger.LogInformation("Batch function registered for loader: {LoaderName}", loaderName);
@@ -98,7 +99,7 @@ public class DataLoaderService
             var results = await batchFunc(request.Keys.ToList());
 
             // Map results to keys
-            if (results != null)
+            if (results is not null)
             {
                 for (int i = 0; i < request.Keys.Count && i < results.Count; i++)
                 {
@@ -137,7 +138,7 @@ public class DataLoaderService
     public object? GetResult(string requestId, object key)
     {
         var request = GetRequest(requestId);
-        if (request == null) return null;
+        if (request is null) return null;
 
         request.TryGetResult(key, out var result);
         return result;

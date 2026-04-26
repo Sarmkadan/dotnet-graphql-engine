@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -13,7 +14,7 @@ namespace GraphQLEngine.Domain.Entities;
 /// Clients send only a SHA-256 hash on repeat requests; the full document is stored on first
 /// registration and looked up by hash on subsequent calls.
 /// </summary>
-public class PersistedQuery
+sealed public class PersistedQuery
 {
     /// <summary>
     /// Unique identifier for this persisted-query record.

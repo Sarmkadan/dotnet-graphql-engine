@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -12,7 +13,7 @@ namespace GraphQLEngine.Services.BackgroundServices;
 /// Background service for cache maintenance and optimization
 /// Handles cache invalidation, cleanup, and statistics collection
 /// </summary>
-public class CacheMaintenanceBackgroundService : IDisposable
+sealed public class CacheMaintenanceBackgroundService : IDisposable
 {
     private readonly DistributedCacheService _cacheService;
     private readonly ILogger<CacheMaintenanceBackgroundService> _logger;
@@ -36,7 +37,7 @@ public class CacheMaintenanceBackgroundService : IDisposable
     /// </summary>
     public void Start()
     {
-        if (_maintenanceTimer != null)
+        if (_maintenanceTimer is not null)
         {
             _logger.LogWarning("Cache maintenance service is already running");
             return;
@@ -58,7 +59,7 @@ public class CacheMaintenanceBackgroundService : IDisposable
     /// </summary>
     public void Stop()
     {
-        if (_maintenanceTimer != null)
+        if (_maintenanceTimer is not null)
         {
             _maintenanceTimer.Dispose();
             _maintenanceTimer = null;
@@ -259,7 +260,7 @@ public class CacheMaintenanceBackgroundService : IDisposable
 /// <summary>
 /// Cache maintenance log entry
 /// </summary>
-public class CacheMaintenanceLog
+sealed public class CacheMaintenanceLog
 {
     public DateTime StartTime { get; set; }
     public DateTime? EndTime { get; set; }
@@ -272,7 +273,7 @@ public class CacheMaintenanceLog
 /// <summary>
 /// Maintenance task result
 /// </summary>
-public class MaintenanceTaskResult
+sealed public class MaintenanceTaskResult
 {
     public string TaskName { get; set; } = string.Empty;
     public bool Success { get; set; }
@@ -283,7 +284,7 @@ public class MaintenanceTaskResult
 /// <summary>
 /// Cache maintenance options
 /// </summary>
-public class CacheMaintenanceOptions
+sealed public class CacheMaintenanceOptions
 {
     public int IntervalMinutes { get; set; } = 30;
     public bool EnableStatisticsCollection { get; set; } = true;

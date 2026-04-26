@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -11,7 +12,7 @@ namespace GraphQLEngine.Services.Events;
 /// Event publisher that wraps the event bus and provides domain-specific event publishing
 /// Coordinates with logging and telemetry systems
 /// </summary>
-public class EventPublisher : IDisposable
+sealed public class EventPublisher : IDisposable
 {
     private readonly EventBus _eventBus;
     private readonly ILogger<EventPublisher> _logger;
@@ -174,7 +175,7 @@ public class EventPublisher : IDisposable
 /// <summary>
 /// Published event record for audit trail
 /// </summary>
-public class PublishedEventRecord
+sealed public class PublishedEventRecord
 {
     public string EventId { get; set; } = string.Empty;
     public string EventType { get; set; } = string.Empty;
@@ -185,7 +186,7 @@ public class PublishedEventRecord
 /// <summary>
 /// Event publishing statistics
 /// </summary>
-public class EventPublishingStatistics
+sealed public class EventPublishingStatistics
 {
     public int TotalEventsPublished { get; set; }
     public Dictionary<string, int> EventTypeBreakdown { get; set; } = new();

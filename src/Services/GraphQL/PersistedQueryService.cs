@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -18,7 +19,7 @@ namespace GraphQLEngine.Services.GraphQL;
 /// An in-process hash index provides O(1) lookups; the repository is the durable store and
 /// the authoritative fallback for warm-start / multi-instance deployments.
 /// </summary>
-public class PersistedQueryService
+sealed public class PersistedQueryService
 {
     private readonly IRepository<PersistedQuery> _repository;
     private readonly ILogger<PersistedQueryService> _logger;

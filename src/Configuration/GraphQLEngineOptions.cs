@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -10,7 +11,7 @@ namespace GraphQLEngine.Configuration;
 /// <summary>
 /// Configuration options for the GraphQL engine
 /// </summary>
-public class GraphQLEngineOptions
+sealed public class GraphQLEngineOptions
 {
     public string? ServiceName { get; set; } = "dotnet-graphql-engine";
     public string? Version { get; set; } = "1.0.0";

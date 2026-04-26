@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -11,7 +12,7 @@ namespace GraphQLEngine.Integration;
 /// Integration layer for external APIs
 /// Provides common patterns for API communication with caching and error handling
 /// </summary>
-public class ExternalApiIntegration : IDisposable
+sealed public class ExternalApiIntegration : IDisposable
 {
     private readonly HttpClientFactory _httpClientFactory;
     private readonly ILogger<ExternalApiIntegration> _logger;
@@ -201,7 +202,7 @@ public class ExternalApiIntegration : IDisposable
     {
         var url = $"{baseUrl.TrimEnd('/')}/{path.TrimStart('/')}";
 
-        if (queryParams != null && queryParams.Count > 0)
+        if (queryParams is not null && queryParams.Count > 0)
         {
             var queryString = string.Join("&", queryParams.Select(x => $"{x.Key}={Uri.EscapeDataString(x.Value)}"));
             url = $"{url}?{queryString}";
@@ -219,7 +220,7 @@ public class ExternalApiIntegration : IDisposable
 /// <summary>
 /// External API endpoint registration
 /// </summary>
-public class ExternalApiEndpoint
+sealed public class ExternalApiEndpoint
 {
     public string Name { get; set; } = string.Empty;
     public string BaseUrl { get; set; } = string.Empty;
@@ -235,7 +236,7 @@ public class ExternalApiEndpoint
 /// <summary>
 /// External API endpoint configuration
 /// </summary>
-public class ExternalApiEndpointConfig
+sealed public class ExternalApiEndpointConfig
 {
     public int TimeoutSeconds { get; set; } = 30;
     public int MaxRetries { get; set; } = 3;
@@ -247,7 +248,7 @@ public class ExternalApiEndpointConfig
 /// <summary>
 /// API response wrapper
 /// </summary>
-public class ApiResponse<T> where T : class
+sealed public class ApiResponse<T> where T : class
 {
     public bool Success { get; set; }
     public T? Data { get; set; }
@@ -276,7 +277,7 @@ public class ApiResponse<T> where T : class
 /// <summary>
 /// External API statistics
 /// </summary>
-public class ExternalApiStatistics
+sealed public class ExternalApiStatistics
 {
     public int TotalEndpoints { get; set; }
     public int HealthyEndpoints { get; set; }
@@ -289,7 +290,7 @@ public class ExternalApiStatistics
 /// <summary>
 /// Individual endpoint statistics
 /// </summary>
-public class EndpointStats
+sealed public class EndpointStats
 {
     public string Name { get; set; } = string.Empty;
     public bool IsHealthy { get; set; }

@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -18,7 +19,7 @@ public static class ReflectionHelper
     /// </summary>
     public static List<PropertyInfo> GetPublicProperties(Type type)
     {
-        if (type == null)
+        if (type is null)
             throw new ArgumentNullException(nameof(type));
 
         return type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
@@ -30,7 +31,7 @@ public static class ReflectionHelper
     /// </summary>
     public static List<MethodInfo> GetPublicMethods(Type type)
     {
-        if (type == null)
+        if (type is null)
             throw new ArgumentNullException(nameof(type));
 
         return type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static)
@@ -43,7 +44,7 @@ public static class ReflectionHelper
     /// </summary>
     public static bool ImplementsInterface<TInterface>(Type type) where TInterface : class
     {
-        if (type == null)
+        if (type is null)
             throw new ArgumentNullException(nameof(type));
 
         return type.GetInterfaces().Contains(typeof(TInterface));
@@ -54,10 +55,10 @@ public static class ReflectionHelper
     /// </summary>
     public static List<Type> GetDerivedTypes(Assembly assembly, Type baseType)
     {
-        if (assembly == null)
+        if (assembly is null)
             throw new ArgumentNullException(nameof(assembly));
 
-        if (baseType == null)
+        if (baseType is null)
             throw new ArgumentNullException(nameof(baseType));
 
         return assembly.GetTypes()
@@ -70,7 +71,7 @@ public static class ReflectionHelper
     /// </summary>
     public static object? CreateInstance(Type type)
     {
-        if (type == null)
+        if (type is null)
             throw new ArgumentNullException(nameof(type));
 
         try
@@ -88,7 +89,7 @@ public static class ReflectionHelper
     /// </summary>
     public static object? CreateInstance(Type type, params object?[] parameters)
     {
-        if (type == null)
+        if (type is null)
             throw new ArgumentNullException(nameof(type));
 
         try
@@ -106,7 +107,7 @@ public static class ReflectionHelper
     /// </summary>
     public static object? GetPropertyValue(object obj, string propertyName)
     {
-        if (obj == null)
+        if (obj is null)
             throw new ArgumentNullException(nameof(obj));
 
         if (string.IsNullOrEmpty(propertyName))
@@ -121,7 +122,7 @@ public static class ReflectionHelper
     /// </summary>
     public static void SetPropertyValue(object obj, string propertyName, object? value)
     {
-        if (obj == null)
+        if (obj is null)
             throw new ArgumentNullException(nameof(obj));
 
         if (string.IsNullOrEmpty(propertyName))
@@ -137,14 +138,14 @@ public static class ReflectionHelper
     /// </summary>
     public static object? InvokeMethod(object obj, string methodName, params object?[] parameters)
     {
-        if (obj == null)
+        if (obj is null)
             throw new ArgumentNullException(nameof(obj));
 
         if (string.IsNullOrEmpty(methodName))
             throw new ArgumentNullException(nameof(methodName));
 
         var method = obj.GetType().GetMethod(methodName, BindingFlags.Public | BindingFlags.IgnoreCase);
-        if (method == null)
+        if (method is null)
             throw new InvalidOperationException($"Method '{methodName}' not found on type {obj.GetType().FullName}");
 
         try
@@ -162,7 +163,7 @@ public static class ReflectionHelper
     /// </summary>
     public static List<T> GetCustomAttributes<T>(Type type) where T : Attribute
     {
-        if (type == null)
+        if (type is null)
             throw new ArgumentNullException(nameof(type));
 
         return type.GetCustomAttributes(typeof(T), true)
@@ -175,10 +176,10 @@ public static class ReflectionHelper
     /// </summary>
     public static bool IsNullableType(Type type)
     {
-        if (type == null)
+        if (type is null)
             throw new ArgumentNullException(nameof(type));
 
-        return Nullable.GetUnderlyingType(type) != null;
+        return Nullable.GetUnderlyingType(type) is not null;
     }
 
     /// <summary>
@@ -186,7 +187,7 @@ public static class ReflectionHelper
     /// </summary>
     public static Type? GetNullableUnderlyingType(Type type)
     {
-        if (type == null)
+        if (type is null)
             throw new ArgumentNullException(nameof(type));
 
         return Nullable.GetUnderlyingType(type);
@@ -197,7 +198,7 @@ public static class ReflectionHelper
     /// </summary>
     public static List<Type> GetGenericArguments(Type type)
     {
-        if (type == null)
+        if (type is null)
             throw new ArgumentNullException(nameof(type));
 
         return type.GetGenericArguments().ToList();
@@ -208,7 +209,7 @@ public static class ReflectionHelper
     /// </summary>
     public static bool IsGeneric(Type type)
     {
-        if (type == null)
+        if (type is null)
             throw new ArgumentNullException(nameof(type));
 
         return type.IsGenericType;
@@ -219,10 +220,10 @@ public static class ReflectionHelper
     /// </summary>
     public static void MapProperties(object source, object destination)
     {
-        if (source == null)
+        if (source is null)
             throw new ArgumentNullException(nameof(source));
 
-        if (destination == null)
+        if (destination is null)
             throw new ArgumentNullException(nameof(destination));
 
         var sourceProperties = source.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
@@ -231,12 +232,12 @@ public static class ReflectionHelper
         foreach (var sourceProp in sourceProperties)
         {
             var destProp = destProperties.FirstOrDefault(p => p.Name == sourceProp.Name);
-            if (destProp != null && destProp.CanWrite)
+            if (destProp is not null && destProp.CanWrite)
             {
                 try
                 {
                     var value = sourceProp.GetValue(source);
-                    if (value != null || destProp.PropertyType.IsGenericType == false)
+                    if (value is not null || destProp.PropertyType.IsGenericType == false)
                         destProp.SetValue(destination, value);
                 }
                 catch
@@ -252,7 +253,7 @@ public static class ReflectionHelper
     /// </summary>
     public static string GetReadableTypeName(Type type)
     {
-        if (type == null)
+        if (type is null)
             throw new ArgumentNullException(nameof(type));
 
         if (!type.IsGenericType)

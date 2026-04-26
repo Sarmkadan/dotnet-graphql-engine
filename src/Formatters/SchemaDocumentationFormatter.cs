@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -12,7 +13,7 @@ namespace GraphQLEngine.Formatters;
 /// Formats GraphQL schema as human-readable documentation
 /// Generates markdown, HTML, or text documentation from schema definitions
 /// </summary>
-public class SchemaDocumentationFormatter
+sealed public class SchemaDocumentationFormatter
 {
     private readonly DocumentationFormatterOptions _options;
 
@@ -42,34 +43,34 @@ public class SchemaDocumentationFormatter
         sb.AppendLine("## Table of Contents");
         sb.AppendLine("- [Query](#query)");
         sb.AppendLine("- [Mutation](#mutation)");
-        if (schema.SubscriptionType != null)
+        if (schema.SubscriptionType is not null)
             sb.AppendLine("- [Subscription](#subscription)");
         sb.AppendLine("- [Types](#types)");
         sb.AppendLine();
 
         // Query type
-        if (schema.QueryType != null)
+        if (schema.QueryType is not null)
         {
             sb.AppendLine("## Query");
             sb.AppendLine(GenerateTypeMarkdown(schema.QueryType, 3));
         }
 
         // Mutation type
-        if (schema.MutationType != null)
+        if (schema.MutationType is not null)
         {
             sb.AppendLine("## Mutation");
             sb.AppendLine(GenerateTypeMarkdown(schema.MutationType, 3));
         }
 
         // Subscription type
-        if (schema.SubscriptionType != null)
+        if (schema.SubscriptionType is not null)
         {
             sb.AppendLine("## Subscription");
             sb.AppendLine(GenerateTypeMarkdown(schema.SubscriptionType, 3));
         }
 
         // Types
-        if (types != null && types.Count > 0)
+        if (types is not null && types.Count > 0)
         {
             sb.AppendLine("## Types");
             sb.AppendLine();
@@ -128,7 +129,7 @@ public class SchemaDocumentationFormatter
             sb.AppendLine();
         }
 
-        if (schema.QueryType != null)
+        if (schema.QueryType is not null)
         {
             sb.AppendLine("QUERY ROOT TYPE:");
             sb.AppendLine(GenerateTypeText(schema.QueryType, indentLevel: 1));
@@ -148,7 +149,7 @@ public class SchemaDocumentationFormatter
         sb.AppendLine($"## Quick Reference - {schema.Name}");
         sb.AppendLine();
 
-        if (schema.QueryType?.Fields != null)
+        if (schema.QueryType?.Fields is not null)
         {
             sb.AppendLine("### Queries:");
             foreach (var field in schema.QueryType.Fields)
@@ -158,7 +159,7 @@ public class SchemaDocumentationFormatter
             sb.AppendLine();
         }
 
-        if (schema.MutationType?.Fields != null)
+        if (schema.MutationType?.Fields is not null)
         {
             sb.AppendLine("### Mutations:");
             foreach (var field in schema.MutationType.Fields)
@@ -180,7 +181,7 @@ public class SchemaDocumentationFormatter
         sb.AppendLine("## Example Queries");
         sb.AppendLine();
 
-        if (schema.QueryType?.Fields != null && schema.QueryType.Fields.Any())
+        if (schema.QueryType?.Fields is not null && schema.QueryType.Fields.Any())
         {
             sb.AppendLine("### Basic Queries");
             sb.AppendLine("```graphql");
@@ -218,7 +219,7 @@ public class SchemaDocumentationFormatter
         sb.AppendLine($"**Kind:** `{type.Kind}`");
         sb.AppendLine();
 
-        if (type.Fields != null && type.Fields.Count > 0)
+        if (type.Fields is not null && type.Fields.Count > 0)
         {
             sb.AppendLine($"{heading}# Fields");
             sb.AppendLine();
@@ -247,7 +248,7 @@ public class SchemaDocumentationFormatter
         sb.AppendLine($"{indent}Type: {type.Name}");
         sb.AppendLine($"{indent}Kind: {type.Kind}");
 
-        if (type.Fields != null)
+        if (type.Fields is not null)
         {
             sb.AppendLine($"{indent}Fields:");
             foreach (var field in type.Fields)
@@ -263,7 +264,7 @@ public class SchemaDocumentationFormatter
 /// <summary>
 /// Options for documentation formatting
 /// </summary>
-public class DocumentationFormatterOptions
+sealed public class DocumentationFormatterOptions
 {
     public bool IncludeExamples { get; set; } = true;
     public bool IncludeDeprecated { get; set; } = true;

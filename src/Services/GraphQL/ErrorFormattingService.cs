@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -14,7 +15,7 @@ namespace GraphQLEngine.Services.GraphQL;
 /// <summary>
 /// Service for formatting and standardizing GraphQL errors
 /// </summary>
-public class ErrorFormattingService
+sealed public class ErrorFormattingService
 {
     private readonly ILogger<ErrorFormattingService> _logger;
     private readonly GraphQLEngineOptions _options;
@@ -31,7 +32,7 @@ public class ErrorFormattingService
     /// </summary>
     public Dictionary<string, object> FormatError(ExecutionError error)
     {
-        if (error == null) throw new ArgumentNullException(nameof(error));
+        if (error is null) throw new ArgumentNullException(nameof(error));
 
         var response = new Dictionary<string, object>
         {
@@ -62,7 +63,7 @@ public class ErrorFormattingService
     /// </summary>
     public Dictionary<string, object> FormatException(GraphQLException ex)
     {
-        if (ex == null) throw new ArgumentNullException(nameof(ex));
+        if (ex is null) throw new ArgumentNullException(nameof(ex));
 
         var response = new Dictionary<string, object>
         {
@@ -90,7 +91,7 @@ public class ErrorFormattingService
     /// </summary>
     public Dictionary<string, object> FormatValidationException(ValidationException ex)
     {
-        if (ex == null) throw new ArgumentNullException(nameof(ex));
+        if (ex is null) throw new ArgumentNullException(nameof(ex));
 
         return new Dictionary<string, object>
         {
@@ -107,7 +108,7 @@ public class ErrorFormattingService
     public Dictionary<string, object> FormatQueryComplexityException(
         QueryComplexityException ex)
     {
-        if (ex == null) throw new ArgumentNullException(nameof(ex));
+        if (ex is null) throw new ArgumentNullException(nameof(ex));
 
         return new Dictionary<string, object>
         {
@@ -124,7 +125,7 @@ public class ErrorFormattingService
     /// </summary>
     public Dictionary<string, object> FormatExecutionErrors(ExecutionContext context)
     {
-        if (context == null) throw new ArgumentNullException(nameof(context));
+        if (context is null) throw new ArgumentNullException(nameof(context));
 
         var errors = context.Errors
             .Select(FormatError)
@@ -144,7 +145,7 @@ public class ErrorFormattingService
     /// </summary>
     public Dictionary<string, object> FormatGeneralException(Exception ex)
     {
-        if (ex == null) throw new ArgumentNullException(nameof(ex));
+        if (ex is null) throw new ArgumentNullException(nameof(ex));
 
         _logger.LogError(ex, "Unhandled exception");
 
@@ -180,7 +181,7 @@ public class ErrorFormattingService
             { "timestamp", DateTime.UtcNow }
         };
 
-        if (extensions != null && extensions.Count > 0)
+        if (extensions is not null && extensions.Count > 0)
         {
             response["extensions"] = extensions;
         }

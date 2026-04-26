@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -67,7 +68,7 @@ public static class PersistedQueryExtensions
 /// <summary>
 /// Configuration options for the APQ persisted-query feature.
 /// </summary>
-public class PersistedQueryOptions
+sealed public class PersistedQueryOptions
 {
     /// <summary>
     /// When <c>true</c>, incoming APQ payloads that supply both a hash and a full query

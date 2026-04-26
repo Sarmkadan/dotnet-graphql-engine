@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -8,7 +9,7 @@ namespace GraphQLEngine.Domain.Entities;
 /// <summary>
 /// Represents a batch data loading request to prevent N+1 queries
 /// </summary>
-public class DataLoaderRequest
+sealed public class DataLoaderRequest
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string LoaderName { get; set; } = string.Empty;
@@ -43,7 +44,7 @@ public class DataLoaderRequest
     /// </summary>
     public void AddKey(object key)
     {
-        if (key == null) throw new ArgumentNullException(nameof(key));
+        if (key is null) throw new ArgumentNullException(nameof(key));
 
         if (!_keys.Contains(key))
         {
@@ -57,7 +58,7 @@ public class DataLoaderRequest
     /// </summary>
     public bool RemoveKey(object key)
     {
-        if (key == null) return false;
+        if (key is null) return false;
 
         if (_keys.Remove(key))
         {
@@ -73,7 +74,7 @@ public class DataLoaderRequest
     /// </summary>
     public void SetResult(object key, object? result)
     {
-        if (key == null) throw new ArgumentNullException(nameof(key));
+        if (key is null) throw new ArgumentNullException(nameof(key));
 
         _results[key] = result;
     }

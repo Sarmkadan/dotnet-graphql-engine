@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -8,7 +9,7 @@ namespace GraphQLEngine.Domain.Entities;
 /// <summary>
 /// Represents a complete GraphQL schema with root types and definitions
 /// </summary>
-public class GraphQLSchema
+sealed public class GraphQLSchema
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string Name { get; set; } = string.Empty;
@@ -40,7 +41,7 @@ public class GraphQLSchema
     /// </summary>
     public void AddType(GraphQLType type)
     {
-        if (type == null) throw new ArgumentNullException(nameof(type));
+        if (type is null) throw new ArgumentNullException(nameof(type));
         if (string.IsNullOrEmpty(type.Name))
             throw new ArgumentException("Type name is required", nameof(type));
 
@@ -131,16 +132,16 @@ public class GraphQLSchema
         if (string.IsNullOrWhiteSpace(Name))
             errors.Add("Schema name is required");
 
-        if (QueryType == null)
+        if (QueryType is null)
             errors.Add("Schema must have a Query root type");
 
-        if (QueryType != null && !QueryType.Validate(out var queryErrors))
+        if (QueryType is not null && !QueryType.Validate(out var queryErrors))
             errors.AddRange(queryErrors.Select(e => $"Query type error: {e}"));
 
-        if (MutationType != null && !MutationType.Validate(out var mutationErrors))
+        if (MutationType is not null && !MutationType.Validate(out var mutationErrors))
             errors.AddRange(mutationErrors.Select(e => $"Mutation type error: {e}"));
 
-        if (SubscriptionType != null && !SubscriptionType.Validate(out var subscriptionErrors))
+        if (SubscriptionType is not null && !SubscriptionType.Validate(out var subscriptionErrors))
             errors.AddRange(subscriptionErrors.Select(e => $"Subscription type error: {e}"));
 
         foreach (var type in _types.Values)

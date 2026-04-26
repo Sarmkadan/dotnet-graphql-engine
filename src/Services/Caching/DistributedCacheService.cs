@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -12,7 +13,7 @@ namespace GraphQLEngine.Services.Caching;
 /// Distributed caching service with support for cache invalidation and TTL
 /// Uses in-memory implementation with distributed interface
 /// </summary>
-public class DistributedCacheService : IDisposable
+sealed public class DistributedCacheService : IDisposable
 {
     private readonly ILogger<DistributedCacheService> _logger;
     private readonly CacheOptions _options;
@@ -96,7 +97,7 @@ public class DistributedCacheService : IDisposable
     public T? GetOrSet<T>(string key, Func<T?> factory, TimeSpan? expiration = null)
     {
         var cached = Get<T>(key);
-        if (cached != null)
+        if (cached is not null)
             return cached;
 
         var value = factory();
@@ -110,7 +111,7 @@ public class DistributedCacheService : IDisposable
     public async Task<T?> GetOrSetAsync<T>(string key, Func<Task<T?>> factory, TimeSpan? expiration = null)
     {
         var cached = Get<T>(key);
-        if (cached != null)
+        if (cached is not null)
             return cached;
 
         var value = await factory();
@@ -258,7 +259,7 @@ public class DistributedCacheService : IDisposable
 /// <summary>
 /// Cache entry with metadata
 /// </summary>
-public class CacheEntry
+sealed public class CacheEntry
 {
     public string Key { get; set; } = string.Empty;
     public object? Value { get; set; }
@@ -274,7 +275,7 @@ public class CacheEntry
 /// <summary>
 /// Cache options
 /// </summary>
-public class CacheOptions
+sealed public class CacheOptions
 {
     public int DefaultTTLMinutes { get; set; } = 30;
     public int MaxEntriesBeforeCleanup { get; set; } = 10000;
@@ -285,7 +286,7 @@ public class CacheOptions
 /// <summary>
 /// Cache statistics
 /// </summary>
-public class CacheStatistics
+sealed public class CacheStatistics
 {
     public int TotalEntries { get; set; }
     public long TotalHits { get; set; }
