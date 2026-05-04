@@ -168,4 +168,97 @@ The methods support both camelCase and indented formatting options for JSON outp
 
 
 
+## DependencyInjectionJsonExtensions
+
+`DependencyInjectionJsonExtensions` provides JSON serialization and deserialization utilities for GraphQL engine configuration options. It supports both `GraphQLEngineOptions` and `DotnetGraphqlEngineOptions` types, allowing you to serialize configuration objects to JSON strings and deserialize them back to strongly-typed configuration instances. The extension methods handle null safety, provide both throwing and non-throwing patterns, and support both compact and indented JSON formatting.
+
+### Usage Example
+
+```csharp
+using GraphQLEngine.Configuration;
+
+class Program
+{
+    static void Main()
+    {
+        // Example 1: Serialize GraphQLEngineOptions to JSON
+        var options = new GraphQLEngineOptions
+        {
+            Schema = "https://api.example.com/graphql",
+            Timeout = TimeSpan.FromSeconds(30),
+            MaxQueryDepth = 10
+        };
+
+        // Serialize to compact JSON string
+        string json = options.ToJson();
+        Console.WriteLine("Serialized GraphQLEngineOptions:");
+        Console.WriteLine(json);
+        
+        // Serialize with indentation for readability
+        string indentedJson = options.ToJson(indented: true);
+        Console.WriteLine("\nIndented JSON:");
+        Console.WriteLine(indentedJson);
+
+        // Example 2: Deserialize back to GraphQLEngineOptions
+        string configJson = """{
+            "schema": "https://api.example.com/graphql",
+            "timeout": "00:00:30",
+            "maxQueryDepth": 10
+        }""";
+
+        var deserializedOptions = DependencyInjectionJsonExtensions.FromJson(configJson);
+        Console.WriteLine($"\nDeserialized schema: {deserializedOptions?.Schema}");
+        Console.WriteLine($"Deserialized timeout: {deserializedOptions?.Timeout}");
+
+        // Example 3: Try pattern for safe deserialization
+        if (DependencyInjectionJsonExtensions.TryFromJson(configJson, out var safeOptions))
+        {
+            Console.WriteLine("Successfully deserialized with TryFromJson");
+        }
+
+        // Example 4: Serialize DotnetGraphqlEngineOptions
+        var dotnetOptions = new DotnetGraphqlEngineOptions
+        {
+            EnableTracing = true,
+            BatchRequests = true,
+            SubscriptionProtocol = "WebSocket"
+        };
+
+        string dotnetJson = dotnetOptions.ToJson();
+        Console.WriteLine("\nSerialized DotnetGraphqlEngineOptions:");
+        Console.WriteLine(dotnetJson);
+
+        // Example 5: Deserialize DotnetGraphqlEngineOptions
+        string dotnetConfigJson = """{
+            "enableTracing": true,
+            "batchRequests": true,
+            "subscriptionProtocol": "WebSocket"
+        }""";
+
+        var deserializedDotnetOptions = dotnetConfigJson.FromJsonDotnet();
+        Console.WriteLine($"\nDeserialized enableTracing: {deserializedDotnetOptions?.EnableTracing}");
+
+        // Example 6: Try pattern for DotnetGraphqlEngineOptions
+        if (dotnetConfigJson.TryFromJson(out var tryDotnetOptions))
+        {
+            Console.WriteLine("Successfully deserialized DotnetGraphqlEngineOptions with TryFromJson");
+        }
+    }
+}
+```
+
+The `DependencyInjectionJsonExtensions` class is particularly useful when you need to:
+
+- Serialize configuration objects to JSON for storage or transmission
+- Deserialize JSON configuration back to strongly-typed options
+- Handle both `GraphQLEngineOptions` and `DotnetGraphqlEngineOptions` types with the same API
+- Safely attempt deserialization without throwing exceptions on failure
+- Support both compact and human-readable JSON formatting
+
+
+The extension methods use camelCase property naming and ignore null values by default, making them suitable for both API configuration and configuration file scenarios.
+
+
+
+
 // ... rest of the original README content ...
