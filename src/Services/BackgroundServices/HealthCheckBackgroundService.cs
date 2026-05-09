@@ -163,7 +163,7 @@ public class HealthCheckBackgroundService : IDisposable
             var peakWorkingSet = process.PeakWorkingSet64;
 
             // Check if memory usage is reasonable (less than 2GB)
-            var isHealthy = workingSet < 2 * 1024 * 1024 * 1024;
+            var isHealthy = workingSet < 2L * 1024L * 1024L * 1024L;
 
             result.Checks["Memory"] = new HealthCheckItem
             {

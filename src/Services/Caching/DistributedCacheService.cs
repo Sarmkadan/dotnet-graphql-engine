@@ -277,7 +277,7 @@ public class CacheEntry
 public class CacheOptions
 {
     public int DefaultTTLMinutes { get; set; } = 30;
-    public int MaxEntriesBefore Cleanup { get; set; } = 10000;
+    public int MaxEntriesBeforeCleanup { get; set; } = 10000;
     public bool EnableCleanup { get; set; } = true;
     public int CleanupIntervalMinutes { get; set; } = 15;
 }

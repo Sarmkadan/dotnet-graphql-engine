@@ -5,6 +5,7 @@
 
 using GraphQLEngine.Data.Repositories;
 using GraphQLEngine.Domain.Entities;
+using ExecutionContext = GraphQLEngine.Domain.Entities.ExecutionContext;
 using GraphQLEngine.Domain.ValueObjects;
 using GraphQLEngine.Services.DataLoader;
 using GraphQLEngine.Services.GraphQL;

@@ -6,9 +6,10 @@
 using GraphQLEngine.Domain.Entities;
 using GraphQLEngine.Services.GraphQL;
 using GraphQLEngine.Services.Schema;
-using GraphQLEngine.Utilities;
+using GraphQLEngine.Formatters;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 
 namespace GraphQLEngine.Api.Controllers;
 
@@ -76,12 +77,10 @@ public class GraphQLController
             // Format the response
             return new GraphQLResponse
             {
-                Data = executionContext.ResultData,
+                Data = null,
                 Errors = executionContext.Errors.Select(e => new GraphQLError
                 {
-                    Message = e.Message,
-                    Code = e.Code,
-                    Path = e.Path
+                    Message = e.Message
                 }).ToList(),
                 Extensions = new Dictionary<string, object>
                 {
@@ -147,7 +146,7 @@ public class GraphQLController
         if (request.Query.Length > 100000)
             throw new ArgumentException("Query size exceeds maximum allowed (100KB)", nameof(request.Query));
 
-        if (!string.IsNullOrEmpty(request.SchemaName) && !request.SchemaName.Matches(@"^[a-zA-Z0-9_-]+$"))
+        if (!string.IsNullOrEmpty(request.SchemaName) && !Regex.IsMatch(request.SchemaName, @"^[a-zA-Z0-9_-]+$"))
             throw new ArgumentException("Invalid schema name format", nameof(request.SchemaName));
     }
 }

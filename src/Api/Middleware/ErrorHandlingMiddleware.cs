@@ -57,8 +57,8 @@ public class ErrorHandlingMiddleware
 
         return new ErrorResponse
         {
-            StatusCode = ex.StatusCode,
-            Code = ex.Code,
+            StatusCode = 400,
+            Code = ex.ErrorCode ?? "GRAPHQL_ERROR",
             Message = ex.Message,
             Details = ex.Message,
             IsUserFacingError = true,
