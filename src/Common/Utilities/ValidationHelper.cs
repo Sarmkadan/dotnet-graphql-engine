@@ -12,8 +12,20 @@ namespace GraphQLEngine.Common.Utilities;
 /// <summary>
 /// Helper utilities for validation
 /// </summary>
-public static class ValidationHelper
+public static partial class ValidationHelper
 {
+    [GeneratedRegex(@"^[^\s@]+@[^\s@]+\.[^\s@]+$")]
+    private static partial Regex EmailPattern();
+
+    [GeneratedRegex(@"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", RegexOptions.IgnoreCase)]
+    private static partial Regex GuidPattern();
+
+    [GeneratedRegex(@"^\d+$")]
+    private static partial Regex NumericPattern();
+
+    [GeneratedRegex(@"^[a-zA-Z0-9_-]+$")]
+    private static partial Regex AlphanumericPattern();
+
     /// <summary>
     /// Validates a GraphQL query string
     /// </summary>
@@ -90,15 +102,7 @@ public static class ValidationHelper
     {
         if (string.IsNullOrEmpty(email)) return false;
 
-        try
-        {
-            var regex = new Regex(@"^[^\s@]+@[^\s@]+\.[^\s@]+$");
-            return regex.IsMatch(email);
-        }
-        catch
-        {
-            return false;
-        }
+        return EmailPattern().IsMatch(email);
     }
 
     /// <summary>
@@ -119,11 +123,7 @@ public static class ValidationHelper
         if (string.IsNullOrEmpty(id)) return false;
 
         // Accept UUIDs, numeric IDs, or alphanumeric strings
-        var guidPattern = new Regex(@"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", RegexOptions.IgnoreCase);
-        var numericPattern = new Regex(@"^\d+$");
-        var alphanumericPattern = new Regex(@"^[a-zA-Z0-9_-]+$");
-
-        return guidPattern.IsMatch(id) || numericPattern.IsMatch(id) || alphanumericPattern.IsMatch(id);
+        return GuidPattern().IsMatch(id) || NumericPattern().IsMatch(id) || AlphanumericPattern().IsMatch(id);
     }
 
     /// <summary>
