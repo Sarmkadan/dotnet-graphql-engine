@@ -12,7 +12,7 @@ using ExecutionContext = GraphQLEngine.Domain.Entities.ExecutionContext;
 namespace GraphQLEngine.Services.GraphQL;
 
 /// <summary>
-/// Service for executing GraphQL queries and mutations
+/// Service for executing GraphQL queries and mutations.
 /// </summary>
 sealed public class GraphQLExecutionService
 {
@@ -27,8 +27,10 @@ sealed public class GraphQLExecutionService
     }
 
     /// <summary>
-    /// Registers a resolver function for a field
+    /// Registers a resolver function for a field.
     /// </summary>
+    /// <param name="fieldPath">The path to the field in the GraphQL schema.</param>
+    /// <param name="resolver">The resolver function object.</param>
     public void RegisterResolver(string fieldPath, object resolver)
     {
         if (string.IsNullOrEmpty(fieldPath))
@@ -41,8 +43,10 @@ sealed public class GraphQLExecutionService
     }
 
     /// <summary>
-    /// Executes a GraphQL query
+    /// Executes a GraphQL query.
     /// </summary>
+    /// <param name="query">The GraphQL query to execute.</param>
+    /// <returns>The execution context containing results and errors.</returns>
     public async Task<ExecutionContext> ExecuteAsync(GraphQLQuery query)
     {
         if (query is null) throw new ArgumentNullException(nameof(query));
@@ -503,8 +507,9 @@ sealed public class GraphQLExecutionService
     }
 
     /// <summary>
-    /// Gets execution statistics
+    /// Gets execution statistics.
     /// </summary>
+    /// <returns>A dictionary containing execution statistics.</returns>
     public Dictionary<string, object> GetStatistics()
     {
         return new Dictionary<string, object>

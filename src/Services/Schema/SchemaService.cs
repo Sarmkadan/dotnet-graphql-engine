@@ -11,21 +11,27 @@ using Microsoft.Extensions.Logging;
 namespace GraphQLEngine.Services.Schema;
 
 /// <summary>
-/// Service for managing GraphQL schemas
+/// Service for managing GraphQL schemas.
 /// </summary>
 sealed public class SchemaService
 {
     private readonly ILogger<SchemaService> _logger;
     private readonly Dictionary<string, GraphQLSchema> _schemas = new();
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SchemaService"/> class.
+    /// </summary>
+    /// <param name="logger">The logger instance.</param>
     public SchemaService(ILogger<SchemaService> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <summary>
-    /// Creates and registers a new schema
+    /// Creates and registers a new schema.
     /// </summary>
+    /// <param name="schemaName">The name of the schema.</param>
+    /// <returns>The created <see cref="GraphQLSchema"/>.</returns>
     public GraphQLSchema CreateSchema(string schemaName)
     {
         if (string.IsNullOrEmpty(schemaName))
