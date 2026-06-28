@@ -121,6 +121,19 @@ services.AddGraphQLEngine(options =>
 });
 ```
 
+## Features
+
+- ✅ Code-first schema definition
+- ✅ Query execution and validation
+- ✅ Schema introspection
+- ✅ Query complexity analysis
+- ✅ Caching support
+- ✅ Subscription support
+- ✅ DataLoader integration
+- ✅ Multiple schema support
+- ✅ Schema stitching
+- ✅ In-memory repository
+
 ## Examples
 
 We provide several practical examples to help you get started with the .NET GraphQL Engine. You can find them in the `examples/` directory:
