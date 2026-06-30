@@ -4,3 +4,4 @@ obj/
 *.md
 tests/
 docs/
+.vs/

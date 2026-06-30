@@ -144,6 +144,28 @@ We provide several practical examples to help you get started with the .NET Grap
 
 For more complex scenarios, check out the existing files in the [examples/](examples/) directory.
 
+## Docker Support
+
+We provide Docker support for easy deployment and development.
+
+### Running with Docker Compose
+
+To run the application and Redis dependency using Docker Compose:
+
+```bash
+docker-compose up --build
+```
+
+The application will be available at `http://localhost:8080`.
+
+### Building the Docker Image
+
+To build the Docker image manually:
+
+```bash
+docker build -t dotnet-graphql-engine .
+```
+
 ## License
 
 MIT License - Copyright (c) 2026 Vladyslav Zaiets
