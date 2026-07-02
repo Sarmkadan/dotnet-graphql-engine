@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+<PropertyGroup>
+  <TargetFramework>net10.0</TargetFramework>
+  <ImplicitUsings>enable</ImplicitUsings>
+  <Nullable>enable</Nullable>
+  <IsPackable>false</IsPackable>
+  <IsTestProject>false</IsTestProject>
+  <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+  <OutputType>Exe</OutputType>
+</PropertyGroup>
+
+<ItemGroup>
+  <PackageReference Include="BenchmarkDotNet" Version="0.13.12" />
+  <PackageReference Include="BenchmarkDotNet.Diagnostics.Windows" Version="0.13.12" />
+</ItemGroup>
+
+<ItemGroup>
+  <ProjectReference Include="..\..\dotnet-graphql-engine.csproj" />
+</ItemGroup>
+
+</Project>
