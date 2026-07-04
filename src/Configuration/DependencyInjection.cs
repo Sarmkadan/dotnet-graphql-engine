@@ -14,6 +14,7 @@ using GraphQLEngine.Services.QueryAnalysis;
 using GraphQLEngine.Services.Schema;
 using GraphQLEngine.Services.Subscriptions;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace GraphQLEngine.Configuration;
 
@@ -29,17 +30,20 @@ public static class DependencyInjection
         this IServiceCollection services,
         Action<GraphQLEngineOptions>? configure = null)
     {
-        // Create and configure options
-        var options = new GraphQLEngineOptions();
-        configure?.Invoke(options);
+        // Configure options with IOptions pattern
+        services.AddOptions<GraphQLEngineOptions>();
+
+        if (configure != null)
+        {
+            services.Configure(configure);
+        }
 
         // Validate options
-        if (!options.Validate(out var errors))
-            throw new InvalidOperationException(
-                $"Invalid GraphQL engine options: {string.Join(", ", errors)}");
-
-        // Register options as singleton
-        services.AddSingleton(options);
+        services.AddSingleton<IValidateOptions<GraphQLEngineOptions>>(provider =>
+        {
+            var options = provider.GetRequiredService<IOptions<GraphQLEngineOptions>>();
+            return new GraphQLEngineOptionsValidator(options);
+        });
 
         // Register repositories
         services.AddSingleton(typeof(IRepository<>), typeof(InMemoryRepository<>));
@@ -56,19 +60,21 @@ public static class DependencyInjection
         services.AddScoped<DataLoaderService>();
 
         // Register subscription configuration and service
-        var subscriptionConfig = new SubscriptionConfig
+        services.AddSingleton<SubscriptionConfig>(provider =>
         {
-            Enabled = options.EnableSubscriptions,
-            MaxConnections = options.MaxSubscriptionConnections,
-            ConnectionTimeoutMs = options.SubscriptionTimeoutMs,
-            HeartbeatIntervalMs = options.HeartbeatIntervalMs
-        };
-        services.AddSingleton(subscriptionConfig);
+            var options = provider.GetRequiredService<IOptions<GraphQLEngineOptions>>();
+            return new SubscriptionConfig
+            {
+                Enabled = options.Value.EnableSubscriptions,
+                MaxConnections = options.Value.MaxSubscriptionConnections,
+                ConnectionTimeoutMs = options.Value.SubscriptionTimeoutMs,
+                HeartbeatIntervalMs = options.Value.HeartbeatIntervalMs
+            };
+        });
         services.AddScoped<SubscriptionService>();
 
         // Register schema stitching configuration
-        var stitchingConfig = new SchemaStitchingConfig("default");
-        services.AddSingleton(stitchingConfig);
+        services.AddSingleton<SchemaStitchingConfig>(_ => new SchemaStitchingConfig("default"));
 
         return services;
     }
@@ -138,5 +144,30 @@ public static class ServiceCollectionExtensions
             options.EnableDetailedErrorMessages = true;
             options.EnableIntrospection = true;
         });
+    }
+}
+
+/// <summary>
+/// Validates GraphQL engine configuration options
+/// </summary>
+internal sealed class GraphQLEngineOptionsValidator : IValidateOptions<GraphQLEngineOptions>
+{
+    private readonly IOptions<GraphQLEngineOptions> _options;
+
+    public GraphQLEngineOptionsValidator(IOptions<GraphQLEngineOptions> options)
+    {
+        _options = options;
+    }
+
+    public ValidateOptionsResult Validate(string? name, GraphQLEngineOptions options)
+    {
+        var errors = options.Validate();
+
+        if (errors.Count == 0)
+        {
+            return ValidateOptionsResult.Success;
+        }
+
+        return ValidateOptionsResult.Fail(errors);
     }
 }
