@@ -30,6 +30,11 @@ sealed public class ExecutionContext
     private readonly List<ExecutionError> _errors = new();
     public IReadOnlyList<ExecutionError> Errors => _errors.AsReadOnly();
 
+    /// <summary>
+    /// Indicates whether any errors were recorded during execution
+    /// </summary>
+    public bool HasErrors => _errors.Count > 0;
+
     private readonly Dictionary<string, object> _cache = new();
     public IReadOnlyDictionary<string, object> Cache => _cache.AsReadOnly();
 
@@ -60,6 +65,16 @@ sealed public class ExecutionContext
     {
         _contextData.TryGetValue(key, out var value);
         return value;
+    }
+
+    /// <summary>
+    /// Gets a strongly-typed query argument value that resolvers can access
+    /// </summary>
+    public T? GetArgument<T>(string key)
+    {
+        var value = GetContextValue(key);
+        if (value is T typed) return typed;
+        return default;
     }
 
     /// <summary>

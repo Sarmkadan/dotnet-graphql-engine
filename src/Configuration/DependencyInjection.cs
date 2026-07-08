@@ -14,6 +14,7 @@ using GraphQLEngine.Services.QueryAnalysis;
 using GraphQLEngine.Services.Schema;
 using GraphQLEngine.Services.Subscriptions;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace GraphQLEngine.Configuration;

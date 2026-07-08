@@ -1,6 +1,8 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Diagnosers;
+using GraphQLEngine.Configuration;
 using GraphQLEngine.Domain.Entities;
+using ExecutionContext = GraphQLEngine.Domain.Entities.ExecutionContext;
 using GraphQLEngine.Services.GraphQL;
 using GraphQLEngine.Services.Schema;
 using Microsoft.Extensions.DependencyInjection;
@@ -57,13 +59,13 @@ public class QueryExecutionBenchmarks
         {
             Name = "User",
             Description = "A user in the system",
-            Kind = TypeKind.Object
+            Kind = GraphQLTypeKind.Object
         };
-        userType.AddField(new GraphQLField { Name = "id", Type = "ID!", Description = "User ID" });
-        userType.AddField(new GraphQLField { Name = "name", Type = "String!", Description = "User name" });
-        userType.AddField(new GraphQLField { Name = "email", Type = "String!", Description = "User email" });
-        userType.AddField(new GraphQLField { Name = "age", Type = "Int", Description = "User age" });
-        userType.AddField(new GraphQLField { Name = "posts", Type = "[Post!]!", Description = "User posts" });
+        userType.AddField(new GraphQLField { Name = "id", ReturnType = "ID!", Description = "User ID" });
+        userType.AddField(new GraphQLField { Name = "name", ReturnType = "String!", Description = "User name" });
+        userType.AddField(new GraphQLField { Name = "email", ReturnType = "String!", Description = "User email" });
+        userType.AddField(new GraphQLField { Name = "age", ReturnType = "Int", Description = "User age" });
+        userType.AddField(new GraphQLField { Name = "posts", ReturnType = "[Post!]!", Description = "User posts" });
 
         _schemaService.AddType("BenchmarkSchema", userType);
 
@@ -72,14 +74,14 @@ public class QueryExecutionBenchmarks
         {
             Name = "Post",
             Description = "A blog post",
-            Kind = TypeKind.Object
+            Kind = GraphQLTypeKind.Object
         };
-        postType.AddField(new GraphQLField { Name = "id", Type = "ID!", Description = "Post ID" });
-        postType.AddField(new GraphQLField { Name = "title", Type = "String!", Description = "Post title" });
-        postType.AddField(new GraphQLField { Name = "content", Type = "String!", Description = "Post content" });
-        postType.AddField(new GraphQLField { Name = "authorId", Type = "ID!", Description = "Author ID" });
-        postType.AddField(new GraphQLField { Name = "comments", Type = "[Comment!]!", Description = "Post comments" });
-        postType.AddField(new GraphQLField { Name = "createdAt", Type = "String!", Description = "Creation timestamp" });
+        postType.AddField(new GraphQLField { Name = "id", ReturnType = "ID!", Description = "Post ID" });
+        postType.AddField(new GraphQLField { Name = "title", ReturnType = "String!", Description = "Post title" });
+        postType.AddField(new GraphQLField { Name = "content", ReturnType = "String!", Description = "Post content" });
+        postType.AddField(new GraphQLField { Name = "authorId", ReturnType = "ID!", Description = "Author ID" });
+        postType.AddField(new GraphQLField { Name = "comments", ReturnType = "[Comment!]!", Description = "Post comments" });
+        postType.AddField(new GraphQLField { Name = "createdAt", ReturnType = "String!", Description = "Creation timestamp" });
 
         _schemaService.AddType("BenchmarkSchema", postType);
 
@@ -88,12 +90,12 @@ public class QueryExecutionBenchmarks
         {
             Name = "Comment",
             Description = "A comment on a post",
-            Kind = TypeKind.Object
+            Kind = GraphQLTypeKind.Object
         };
-        commentType.AddField(new GraphQLField { Name = "id", Type = "ID!", Description = "Comment ID" });
-        commentType.AddField(new GraphQLField { Name = "text", Type = "String!", Description = "Comment text" });
-        commentType.AddField(new GraphQLField { Name = "authorId", Type = "ID!", Description = "Author ID" });
-        commentType.AddField(new GraphQLField { Name = "postId", Type = "ID!", Description = "Post ID" });
+        commentType.AddField(new GraphQLField { Name = "id", ReturnType = "ID!", Description = "Comment ID" });
+        commentType.AddField(new GraphQLField { Name = "text", ReturnType = "String!", Description = "Comment text" });
+        commentType.AddField(new GraphQLField { Name = "authorId", ReturnType = "ID!", Description = "Author ID" });
+        commentType.AddField(new GraphQLField { Name = "postId", ReturnType = "ID!", Description = "Post ID" });
 
         _schemaService.AddType("BenchmarkSchema", commentType);
 
@@ -102,19 +104,19 @@ public class QueryExecutionBenchmarks
         {
             Name = "Query",
             Description = "Root query type",
-            Kind = TypeKind.Object
+            Kind = GraphQLTypeKind.Object
         };
-        queryType.AddField(new GraphQLField { Name = "user", Type = "User", Description = "Get a user" });
-        queryType.AddField(new GraphQLField { Name = "users", Type = "[User!]!", Description = "Get all users" });
-        queryType.AddField(new GraphQLField { Name = "post", Type = "Post", Description = "Get a post" });
-        queryType.AddField(new GraphQLField { Name = "posts", Type = "[Post!]!", Description = "Get all posts" });
-        queryType.AddField(new GraphQLField { Name = "search", Type = "[Post!]!", Description = "Search posts" });
+        queryType.AddField(new GraphQLField { Name = "user", ReturnType = "User", Description = "Get a user" });
+        queryType.AddField(new GraphQLField { Name = "users", ReturnType = "[User!]!", Description = "Get all users" });
+        queryType.AddField(new GraphQLField { Name = "post", ReturnType = "Post", Description = "Get a post" });
+        queryType.AddField(new GraphQLField { Name = "posts", ReturnType = "[Post!]!", Description = "Get all posts" });
+        queryType.AddField(new GraphQLField { Name = "search", ReturnType = "[Post!]!", Description = "Search posts" });
 
         _schemaService.AddType("BenchmarkSchema", queryType);
 
         // Register resolvers
-        _executionService.RegisterResolver("user", async (context) => new { id = "1", name = "John Doe", email = "john@example.com", age = 30, posts = new object[] { } });
-        _executionService.RegisterResolver("users", async (context) =>
+        _executionService.RegisterResolver("user", async (ExecutionContext context) => new { id = "1", name = "John Doe", email = "john@example.com", age = 30, posts = new object[] { } });
+        _executionService.RegisterResolver("users", async (ExecutionContext context) =>
         {
             var users = new object[]
             {
@@ -126,8 +128,8 @@ public class QueryExecutionBenchmarks
             };
             return users;
         });
-        _executionService.RegisterResolver("post", async (context) => new { id = "1", title = "Hello World", content = "This is a post", authorId = "1", comments = new object[] { }, createdAt = DateTime.UtcNow.ToString("o") });
-        _executionService.RegisterResolver("posts", async (context) =>
+        _executionService.RegisterResolver("post", async (ExecutionContext context) => new { id = "1", title = "Hello World", content = "This is a post", authorId = "1", comments = new object[] { }, createdAt = DateTime.UtcNow.ToString("o") });
+        _executionService.RegisterResolver("posts", async (ExecutionContext context) =>
         {
             var posts = new object[]
             {
@@ -139,7 +141,7 @@ public class QueryExecutionBenchmarks
             };
             return posts;
         });
-        _executionService.RegisterResolver("search", async (context) =>
+        _executionService.RegisterResolver("search", async (ExecutionContext context) =>
         {
             var searchTerm = context.GetArgument<string>("term");
             return new object[] { };
@@ -311,7 +313,7 @@ public class QueryExecutionBenchmarks
         _schemaService.AddType("TempSchema", new GraphQLType
         {
             Name = "TempType",
-            Kind = TypeKind.Object
+            Kind = GraphQLTypeKind.Object
         });
     }
 
@@ -319,7 +321,7 @@ public class QueryExecutionBenchmarks
     [BenchmarkCategory("Resolver Registration")]
     public void RegisterResolver()
     {
-        _executionService!.RegisterResolver("tempField" + Guid.NewGuid(), async (ctx) => new { value = 42 });
+        _executionService!.RegisterResolver("tempField" + Guid.NewGuid(), async (ExecutionContext ctx) => new { value = 42 });
     }
 
     [Benchmark]

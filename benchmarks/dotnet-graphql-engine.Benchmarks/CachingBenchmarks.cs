@@ -1,6 +1,8 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Diagnosers;
+using GraphQLEngine.Configuration;
 using GraphQLEngine.Domain.Entities;
+using ExecutionContext = GraphQLEngine.Domain.Entities.ExecutionContext;
 using GraphQLEngine.Services.GraphQL;
 using GraphQLEngine.Services.Schema;
 using Microsoft.Extensions.DependencyInjection;
@@ -55,11 +57,11 @@ public class CachingBenchmarks
         {
             Name = "User",
             Description = "A user in the system",
-            Kind = TypeKind.Object
+            Kind = GraphQLTypeKind.Object
         };
-        userType.AddField(new GraphQLField { Name = "id", Type = "ID!", Description = "User ID" });
-        userType.AddField(new GraphQLField { Name = "name", Type = "String!", Description = "User name" });
-        userType.AddField(new GraphQLField { Name = "email", Type = "String!", Description = "User email" });
+        userType.AddField(new GraphQLField { Name = "id", ReturnType = "ID!", Description = "User ID" });
+        userType.AddField(new GraphQLField { Name = "name", ReturnType = "String!", Description = "User name" });
+        userType.AddField(new GraphQLField { Name = "email", ReturnType = "String!", Description = "User email" });
 
         _schemaService.AddType("BenchmarkSchema", userType);
 
@@ -68,16 +70,16 @@ public class CachingBenchmarks
         {
             Name = "Query",
             Description = "Root query type",
-            Kind = TypeKind.Object
+            Kind = GraphQLTypeKind.Object
         };
-        queryType.AddField(new GraphQLField { Name = "user", Type = "User", Description = "Get a user" });
-        queryType.AddField(new GraphQLField { Name = "users", Type = "[User!]!", Description = "Get all users" });
+        queryType.AddField(new GraphQLField { Name = "user", ReturnType = "User", Description = "Get a user" });
+        queryType.AddField(new GraphQLField { Name = "users", ReturnType = "[User!]!", Description = "Get all users" });
 
         _schemaService.AddType("BenchmarkSchema", queryType);
 
         // Register resolvers
-        _executionService.RegisterResolver("user", async (context) => new { id = "1", name = "John Doe", email = "john@example.com" });
-        _executionService.RegisterResolver("users", async (context) =>
+        _executionService.RegisterResolver("user", async (ExecutionContext context) => new { id = "1", name = "John Doe", email = "john@example.com" });
+        _executionService.RegisterResolver("users", async (ExecutionContext context) =>
         {
             return new object[]
             {
@@ -222,27 +224,27 @@ public class CachingComparisonBenchmarks
         _nonCachedExecutionService = _nonCachedServiceProvider.GetRequiredService<GraphQLExecutionService>();
 
         // Define simple schema
-        var schemaService = _cachedExecutionService.GetRequiredService<SchemaService>();
+        var schemaService = _cachedServiceProvider.GetRequiredService<SchemaService>();
         var userType = new GraphQLType
         {
             Name = "User",
-            Kind = TypeKind.Object
+            Kind = GraphQLTypeKind.Object
         };
-        userType.AddField(new GraphQLField { Name = "id", Type = "ID!" });
-        userType.AddField(new GraphQLField { Name = "name", Type = "String!" });
+        userType.AddField(new GraphQLField { Name = "id", ReturnType = "ID!" });
+        userType.AddField(new GraphQLField { Name = "name", ReturnType = "String!" });
 
         schemaService.AddType("TestSchema", userType);
 
         var queryType = new GraphQLType
         {
             Name = "Query",
-            Kind = TypeKind.Object
+            Kind = GraphQLTypeKind.Object
         };
-        queryType.AddField(new GraphQLField { Name = "user", Type = "User" });
+        queryType.AddField(new GraphQLField { Name = "user", ReturnType = "User" });
         schemaService.AddType("TestSchema", queryType);
 
-        _cachedExecutionService.RegisterResolver("user", async (ctx) => new { id = "1", name = "Test User" });
-        _nonCachedExecutionService.RegisterResolver("user", async (ctx) => new { id = "1", name = "Test User" });
+        _cachedExecutionService.RegisterResolver("user", async (ExecutionContext ctx) => new { id = "1", name = "Test User" });
+        _nonCachedExecutionService.RegisterResolver("user", async (ExecutionContext ctx) => new { id = "1", name = "Test User" });
 
         _testQuery = new GraphQLQuery("{ user { id name } }");
     }
