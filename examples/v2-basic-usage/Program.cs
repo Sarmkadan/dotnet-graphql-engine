@@ -1,6 +1,7 @@
 #nullable enable
 using GraphQLEngine;
 using GraphQLEngine.Configuration;
+using GraphQLEngine.Hosting;
 using GraphQLEngine.Services.GraphQL;
 using GraphQLEngine.Domain.Entities;
 using GraphQLEngine.Services.Schema;
