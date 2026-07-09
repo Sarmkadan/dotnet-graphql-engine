@@ -31,22 +31,33 @@ public static class DependencyInjection
         this IServiceCollection services,
         Action<GraphQLEngineOptions>? configure = null)
     {
-        // Configure options with IOptions pattern
+        // -----------------------------------------------------------------
+        // Options registration (IOptions pattern)
+        // -----------------------------------------------------------------
         services.AddOptions<GraphQLEngineOptions>();
+        services.AddOptions<DotnetGraphqlEngineOptions>(); // new alternative options class
 
         if (configure != null)
         {
             services.Configure(configure);
         }
 
-        // Validate options
+        // Validate options (both option types share the same validator logic)
         services.AddSingleton<IValidateOptions<GraphQLEngineOptions>>(provider =>
         {
             var options = provider.GetRequiredService<IOptions<GraphQLEngineOptions>>();
             return new GraphQLEngineOptionsValidator(options);
         });
 
-        // Register repositories
+        services.AddSingleton<IValidateOptions<DotnetGraphqlEngineOptions>>(provider =>
+        {
+            var options = provider.GetRequiredService<IOptions<DotnetGraphqlEngineOptions>>();
+            return new DotnetGraphqlEngineOptionsValidator(options);
+        });
+
+        // -----------------------------------------------------------------
+        // Repository registration
+        // -----------------------------------------------------------------
         services.AddSingleton(typeof(IRepository<>), typeof(InMemoryRepository<>));
         services.AddSingleton<IRepository<GraphQLSchema>, InMemoryRepository<GraphQLSchema>>();
         services.AddSingleton<IRepository<GraphQLType>, InMemoryRepository<GraphQLType>>();
@@ -54,13 +65,17 @@ public static class DependencyInjection
         services.AddSingleton<IRepository<ExecutionContext>, InMemoryRepository<ExecutionContext>>();
         services.AddSingleton<IRepository<DataLoaderRequest>, InMemoryRepository<DataLoaderRequest>>();
 
-        // Register services
+        // -----------------------------------------------------------------
+        // Service registration
+        // -----------------------------------------------------------------
         services.AddScoped<GraphQLExecutionService>();
         services.AddScoped<SchemaService>();
         services.AddScoped<QueryAnalysisService>();
         services.AddScoped<DataLoaderService>();
 
-        // Register subscription configuration and service
+        // -----------------------------------------------------------------
+        // Subscription configuration and service
+        // -----------------------------------------------------------------
         services.AddSingleton<SubscriptionConfig>(provider =>
         {
             var options = provider.GetRequiredService<IOptions<GraphQLEngineOptions>>();
@@ -74,7 +89,9 @@ public static class DependencyInjection
         });
         services.AddScoped<SubscriptionService>();
 
-        // Register schema stitching configuration
+        // -----------------------------------------------------------------
+        // Schema stitching configuration
+        // -----------------------------------------------------------------
         services.AddSingleton<SchemaStitchingConfig>(_ => new SchemaStitchingConfig("default"));
 
         return services;
@@ -107,37 +124,20 @@ public static class DependencyInjection
 /// </summary>
 public static class ServiceCollectionExtensions
 {
-    /// <summary>
-    /// Adds GraphQL engine with default configuration
-    /// </summary>
-    public static IServiceCollection AddGraphQLEngineDefault(
-        this IServiceCollection services)
-    {
-        return services.AddGraphQLEngine();
-    }
+    public static IServiceCollection AddGraphQLEngineDefault(this IServiceCollection services)
+        => services.AddGraphQLEngine();
 
-    /// <summary>
-    /// Adds GraphQL engine with strict query limits
-    /// </summary>
-    public static IServiceCollection AddGraphQLEngineStrict(
-        this IServiceCollection services)
-    {
-        return services.AddGraphQLEngine(options =>
+    public static IServiceCollection AddGraphQLEngineStrict(this IServiceCollection services)
+        => services.AddGraphQLEngine(options =>
         {
             options.MaxQueryComplexity = 1000;
             options.MaxQueryDepth = 5;
             options.QueryTimeoutMs = 10000;
             options.EnableDetailedErrorMessages = false;
         });
-    }
 
-    /// <summary>
-    /// Adds GraphQL engine with permissive configuration (development)
-    /// </summary>
-    public static IServiceCollection AddGraphQLEnginePermissive(
-        this IServiceCollection services)
-    {
-        return services.AddGraphQLEngine(options =>
+    public static IServiceCollection AddGraphQLEnginePermissive(this IServiceCollection services)
+        => services.AddGraphQLEngine(options =>
         {
             options.MaxQueryComplexity = 50000;
             options.MaxQueryDepth = 20;
@@ -145,7 +145,6 @@ public static class ServiceCollectionExtensions
             options.EnableDetailedErrorMessages = true;
             options.EnableIntrospection = true;
         });
-    }
 }
 
 /// <summary>
@@ -155,20 +154,27 @@ internal sealed class GraphQLEngineOptionsValidator : IValidateOptions<GraphQLEn
 {
     private readonly IOptions<GraphQLEngineOptions> _options;
 
-    public GraphQLEngineOptionsValidator(IOptions<GraphQLEngineOptions> options)
-    {
-        _options = options;
-    }
+    public GraphQLEngineOptionsValidator(IOptions<GraphQLEngineOptions> options) => _options = options;
 
     public ValidateOptionsResult Validate(string? name, GraphQLEngineOptions options)
     {
         var errors = options.Validate();
+        return errors.Count == 0 ? ValidateOptionsResult.Success : ValidateOptionsResult.Fail(errors);
+    }
+}
 
-        if (errors.Count == 0)
-        {
-            return ValidateOptionsResult.Success;
-        }
+/// <summary>
+/// Validates the alternative options class (DotnetGraphqlEngineOptions)
+/// </summary>
+internal sealed class DotnetGraphqlEngineOptionsValidator : IValidateOptions<DotnetGraphqlEngineOptions>
+{
+    private readonly IOptions<DotnetGraphqlEngineOptions> _options;
 
-        return ValidateOptionsResult.Fail(errors);
+    public DotnetGraphqlEngineOptionsValidator(IOptions<DotnetGraphqlEngineOptions> options) => _options = options;
+
+    public ValidateOptionsResult Validate(string? name, DotnetGraphqlEngineOptions options)
+    {
+        var errors = options.Validate();
+        return errors.Count == 0 ? ValidateOptionsResult.Success : ValidateOptionsResult.Fail(errors);
     }
 }

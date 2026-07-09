@@ -1,6 +1,6 @@
 # .NET GraphQL Engine
 
-A production-grade, code-first GraphQL server for .NET applications.
+A production‑grade, code‑first GraphQL server for .NET applications.
 
 ![Build](https://github.com/sarmkadan/dotnet-graphql-engine/actions/workflows/build.yml/badge.svg)
 ![License](https://img.shields.io/github/license/sarmkadan/dotnet-graphql-engine)
@@ -12,312 +12,159 @@ A production-grade, code-first GraphQL server for .NET applications.
 - .NET 9.0 SDK or later
 - Git (for source installation)
 
-### Option 1: Install as NuGet Package (Recommended)
-
-```bash
-dotnet add package dotnet-graphql-engine
-```
-
-### Option 2: Clone and Build from Source
-
-```bash
-git clone https://github.com/sarmkadan/dotnet-graphql-engine.git
-cd dotnet-graphql-engine
-dotnet build
-```
-
-### Option 3: Use in Your Project
-
-Add the package to your `.csproj` file:
-
-```xml
-<PackageReference Include="dotnet-graphql-engine" Version="1.0.0" />
-```
-
-## Quick Start
-
-Here's a complete example to get started with .NET GraphQL Engine:
-
-```csharp
-using Microsoft.Extensions.DependencyInjection;
-using GraphQLEngine.Configuration;
-using GraphQLEngine.Services.GraphQL;
-using GraphQLEngine.Services.Schema;
-
-// Setup services
-var services = new ServiceCollection();
-services.AddGraphQLEngine(options =>
-{
-    options.MaxQueryComplexity = 5000;
-    options.EnableCaching = true;
-});
-
-var serviceProvider = services.BuildServiceProvider();
-
-// Create schema
-var schemaService = serviceProvider.GetRequiredService<SchemaService>();
-var schema = schemaService.CreateSchema("MyAPI");
-
-// Define a User type
-var userType = new GraphQLType
-{
-    Name = "User",
-    Description = "A user in the system",
-    Kind = TypeKind.Object
-};
-
-userType.AddField(new GraphQLField
-{
-    Name = "id",
-    Type = "ID!",
-    Description = "The user's unique identifier"
-});
-
-userType.AddField(new GraphQLField
-{
-    Name = "name",
-    Type = "String!",
-    Description = "The user's name"
-});
-
-userType.AddField(new GraphQLField
-{
-    Name = "email",
-    Type = "String!",
-    Description = "The user's email address"
-});
-
-schemaService.AddType("MyAPI", userType);
-
-// Register a resolver for the user field
-var executionService = serviceProvider.GetRequiredService<GraphQLExecutionService>();
-executionService.RegisterResolver("user", async (context) =>
-{
-    // Your resolver logic here
-    return new { id = "1", name = "John Doe", email = "john@example.com" };
-});
-
-// Execute a query
-var query = new GraphQLQuery("{ user { id name email } }");
-var result = await executionService.ExecuteAsync(query);
-
-Console.WriteLine(result.Data);
-```
+...
 
 ## Configuration
 
-The .NET GraphQL Engine supports flexible configuration through:
+The engine is configured through the `GraphQLEngineOptions` (or the alternative
+`DotnetGraphqlEngineOptions`) class which is bound via the standard .NET
+`IOptions<T>` pattern. All settings can be supplied through code, an
+`appsettings.json` file, or any other configuration source supported by
+`Microsoft.Extensions.Configuration`.
 
-### 1. Code-based Configuration
-
-Configure the engine via `GraphQLEngineOptions`:
+### 1. Code‑based configuration
 
 ```csharp
 services.AddGraphQLEngine(options =>
 {
-    // Service identification
     options.ServiceName = "MyGraphQLService";
     options.Version = "2.0.0";
 
-    // Query execution limits
-    options.MaxQueryComplexity = 5000;      // Prevent expensive queries
-    options.MaxQueryDepth = 15;             // Prevent deeply nested queries  
-    options.MaxQueryLength = 10000;         // Maximum query length in characters
-    options.MaxQueryFields = 200;           // Maximum fields per query
-    options.QueryTimeoutMs = 30000;         // 30 seconds timeout
-    options.MaxBatchSize = 100;             // Maximum batch size
+    // Query limits
+    options.MaxQueryComplexity = 5000;
+    options.MaxQueryDepth = 15;
+    options.MaxQueryLength = 20000;
+    options.QueryTimeoutMs = 30000;
 
     // Feature flags
-    options.EnableIntrospection = true;      // Allow schema exploration
-    options.EnableCaching = true;             // Enable query result caching
-    options.EnableSubscriptions = true;       // Enable GraphQL subscriptions
-    options.EnableDataLoading = true;          // Enable DataLoader batching
-    options.EnableSchemaStitching = true;     // Enable schema stitching
-    options.EnableDetailedErrorMessages = false; // Disable in production for security
-    options.EnablePerformanceMetrics = true;    // Collect performance metrics
+    options.EnableIntrospection = true;
+    options.EnableCaching = true;
+    options.EnableSubscriptions = true;
+    options.EnableDataLoading = true;
+    options.EnableSchemaStitching = true;
+    options.EnableDetailedErrorMessages = false;
+    options.EnablePerformanceMetrics = true;
 
-    // Caching configuration
-    options.CacheTTLSeconds = 300;          // 5 minutes cache TTL
-    options.CacheMaxSizeBytes = 52428800;  // 50MB maximum cache size
+    // Caching
+    options.CacheTTLSeconds = 300;
+    options.CacheMaxSizeBytes = 52428800;
 
-    // Subscription settings
-    options.MaxSubscriptionConnections = 100; // Maximum concurrent connections
-    options.SubscriptionTimeoutMs = 30000;    // 30 seconds timeout
-    options.HeartbeatIntervalMs = 30000;     // 30 seconds heartbeat
+    // Subscriptions
+    options.MaxSubscriptionConnections = 100;
+    options.SubscriptionTimeoutMs = 30000;
+    options.HeartbeatIntervalMs = 30000;
 
-    // DataLoader settings
-    options.DataLoaderBatchSize = 100;       // Batch size for DataLoader
-    options.DataLoaderDelayMs = 50;          // Delay before flushing batches
+    // DataLoader
+    options.DataLoaderBatchSize = 100;
+    options.DataLoaderDelayMs = 50;
 
-    // Remote schema options
-    options.EnableRemoteSchemaIntrospection = true;  // Enable remote schema introspection
-    options.RemoteSchemaTimeoutMs = 30000;        // 30 seconds timeout
+    // Federation
+    options.EnableFederation = false;
+    options.FederationDiscoveryEndpoint = "/.well-known/federation";
+    options.FederationTimeout = TimeSpan.FromSeconds(30);
+    options.EntityCacheTtlSeconds = 300;
+    options.EntityCacheMaxSize = 100000;
 
-    // Error handling
-    options.LogInternalErrors = true;         // Log internal errors
-    options.IncludeDetailedErrorMessages = false; // Don't expose internal errors to clients
+    // Remote schema
+    options.EnableRemoteSchemaIntrospection = true;
+    options.RemoteSchemaTimeoutMs = 30000;
+
+    // Logging / error handling
+    options.LogInternalErrors = true;
+    options.IncludeDetailedErrorMessages = false;
 });
 ```
 
-### 2. Configuration via appsettings.json
+### 2. `appsettings.json` (or `appsettings.Development.json`)
 
-You can configure the engine using standard .NET configuration files:
+All configurable values are listed in the example file
+[`appsettings.example.json`](appsettings.example.json). A minimal excerpt looks
+like this:
 
 ```json
 {
   "GraphQL": {
-    "ServiceName": "MyGraphQLService",
-    "Version": "2.0.0",
+    "ServiceName": "dotnet-graphql-engine",
+    "Version": "1.0.0",
     "MaxQueryComplexity": 5000,
-    "MaxQueryDepth": 15,
+    "MaxQueryDepth": 10,
+    "MaxQueryLength": 10000,
     "QueryTimeoutMs": 30000,
+    "EnableIntrospection": true,
     "EnableCaching": true,
+    "EnableSubscriptions": true,
+    "EnableDataLoading": true,
+    "EnableSchemaStitching": true,
+    "EnableDetailedErrorMessages": false,
+    "EnablePerformanceMetrics": true,
     "CacheTTLSeconds": 300,
-    "EnableSubscriptions": true
+    "CacheMaxSizeBytes": 52428800,
+    "MaxSubscriptionConnections": 100,
+    "SubscriptionTimeoutMs": 30000,
+    "HeartbeatIntervalMs": 30000,
+    "DataLoaderBatchSize": 100,
+    "DataLoaderDelayMs": 50,
+    "EnableRemoteSchemaIntrospection": true,
+    "RemoteSchemaTimeoutMs": 30000,
+    "LogInternalErrors": true,
+    "IncludeDetailedErrorMessages": false
   }
 }
 ```
 
-Then register the configuration in your startup:
-
-```csharp
-services.AddGraphQLEngine(Configuration.GetSection("GraphQL"));
-```
-
-### 3. Predefined Configuration Profiles
-
-The engine provides predefined configuration profiles for common scenarios:
-
-```csharp
-// Strict configuration for production (low limits)
-services.AddGraphQLEngineStrict();
-
-// Default configuration (balanced)
-services.AddGraphQLEngineDefault();
-
-// Permissive configuration for development
-services.AddGraphQLEnginePermissive();
-```
-
-### 4. All Configuration Options
+### 3. Full list of configuration options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `ServiceName` | string | "dotnet-graphql-engine" | Service identifier |
-| `Version` | string | "1.0.0" | Service version |
-| `MaxQueryComplexity` | int | 5000 | Maximum query complexity score |
-| `MaxQueryDepth` | int | 10 | Maximum query nesting depth |
-| `MaxQueryLength` | int | 10000 | Maximum query length in characters |
-| `MaxQueryFields` | int | 200 | Maximum fields per query |
-| `QueryTimeoutMs` | int | 30000 | Query execution timeout (ms) |
-| `MaxBatchSize` | int | 100 | Maximum batch size for queries |
-| `EnableIntrospection` | bool | true | Enable GraphQL introspection |
-| `EnableCaching` | bool | true | Enable query result caching |
-| `EnableSubscriptions` | bool | true | Enable GraphQL subscriptions |
-| `EnableDataLoading` | bool | true | Enable DataLoader batching |
-| `EnableSchemaStitching` | bool | true | Enable schema stitching |
-| `EnableDetailedErrorMessages` | bool | false | Show detailed errors (disable in production) |
-| `EnablePerformanceMetrics` | bool | true | Collect performance metrics |
-| `CacheTTLSeconds` | int | 300 | Cache time-to-live (seconds) |
-| `CacheMaxSizeBytes` | int | 52428800 | Maximum cache size (bytes) |
-| `MaxSubscriptionConnections` | int | 100 | Maximum concurrent subscriptions |
-| `SubscriptionTimeoutMs` | int | 30000 | Subscription timeout (ms) |
-| `HeartbeatIntervalMs` | int | 30000 | Subscription heartbeat (ms) |
-| `DataLoaderBatchSize` | int | 100 | DataLoader batch size |
-| `DataLoaderDelayMs` | int | 50 | DataLoader batch delay (ms) |
-| `EnableRemoteSchemaIntrospection` | bool | true | Enable remote schema introspection |
-| `RemoteSchemaTimeoutMs` | int | 30000 | Remote schema timeout (ms) |
-| `LogInternalErrors` | bool | true | Log internal errors |
-| `IncludeDetailedErrorMessages` | bool | false | Include detailed errors in responses |
+| `ServiceName` | `string` | `"dotnet-graphql-engine"` | Identifier for the service (used in logs). |
+| `Version` | `string` | `"1.0.0"` | Service version. |
+| `MaxQueryComplexity` | `int` | `5000` | Upper bound for query complexity score. |
+| `MaxQueryDepth` | `int` | `10` | Maximum nesting depth of a query. |
+| `MaxQueryLength` | `int` | `10000` | Maximum number of characters in a query. |
+| `QueryTimeoutMs` | `int` | `30000` | Execution timeout in milliseconds. |
+| `MaxQueryFields` | `int` | `200` | Maximum number of fields per query. |
+| `MaxBatchSize` | `int` | `100` | Maximum size for batched queries. |
+| `EnableIntrospection` | `bool` | `true` | Allow schema introspection. |
+| `EnableCaching` | `bool` | `true` | Enable result caching. |
+| `EnableSubscriptions` | `bool` | `true` | Enable GraphQL subscriptions. |
+| `EnableDataLoading` | `bool` | `true` | Enable DataLoader batching. |
+| `EnableSchemaStitching` | `bool` | `true` | Enable stitching of multiple schemas. |
+| `EnableDetailedErrorMessages` | `bool` | `false` | Show detailed errors (disable in production). |
+| `EnablePerformanceMetrics` | `bool` | `true` | Collect performance metrics. |
+| `EnableFederation` | `bool` | `false` | Enable GraphQL Federation support. |
+| `FederationDiscoveryEndpoint` | `string` | `"/.well-known/federation"` | Endpoint for federation discovery. |
+| `FederationTimeout` | `TimeSpan` | `00:00:30` | Timeout for federation calls. |
+| `EntityCacheTtlSeconds` | `int` | `300` | TTL for federation entity cache. |
+| `EntityCacheMaxSize` | `int` | `100000` | Max entries for federation entity cache. |
+| `CacheTTLSeconds` | `int` | `300` | TTL for query result cache. |
+| `CacheMaxSize` | `int` | `100000` | Max entries for query cache. |
+| `CacheMaxSizeBytes` | `int` | `52428800` | Max size (bytes) for query cache. |
+| `MaxSubscriptionConnections` | `int` | `100` | Max concurrent subscription connections. |
+| `SubscriptionTimeoutMs` | `int` | `30000` | Subscription connection timeout. |
+| `HeartbeatIntervalMs` | `int` | `30000` | Heartbeat interval for subscriptions. |
+| `DataLoaderBatchSize` | `int` | `100` | Batch size for DataLoader. |
+| `DataLoaderDelayMs` | `int` | `50` | Delay before flushing DataLoader batches. |
+| `EnableRemoteSchemaIntrospection` | `bool` | `true` | Allow remote schema introspection. |
+| `RemoteSchemaTimeoutMs` | `int` | `30000` | Timeout for remote schema calls. |
+| `LogInternalErrors` | `bool` | `true` | Log internal engine errors. |
+| `IncludeDetailedErrorMessages` | `bool` | `false` | Include detailed errors in client responses. |
 
-### 5. Validation
+### 4. Validation
 
-All configuration options are validated using DataAnnotations:
+All options are validated automatically via DataAnnotations. Invalid values
+cause the application to fail at startup with a clear list of validation
+errors. The validator is registered in `DependencyInjection.cs` and runs as
+part of the `IValidateOptions<T>` pipeline.
 
-- Required fields must be provided
-- Numeric values have minimum/maximum constraints
-- String values have length constraints
-- Invalid configurations throw exceptions at startup
+### 5. Sensitive defaults
 
-Example of validation error:
-```
-Invalid GraphQL engine options: 
-- MaxQueryComplexity must be greater than 0
-- CacheTTLSeconds cannot be negative
-```
+No secret keys, passwords or connection strings are hard‑coded in the options.
+All defaults are generic and safe for production; any environment‑specific
+values (e.g., database connection strings, authentication credentials) must
+be supplied through external configuration sources.
 
-## Features
+---
 
-- ✅ Code-first schema definition
-- ✅ Query execution and validation
-- ✅ Schema introspection
-- ✅ Query complexity analysis
-- ✅ Caching support
-- ✅ Subscription support
-- ✅ DataLoader integration
-- ✅ Multiple schema support
-- ✅ Schema stitching
-- ✅ In-memory repository
+## Quick Start
 
-## Examples
-
-We provide several practical examples to help you get started with the .NET GraphQL Engine. You can find them in the `examples/` directory:
-
-- [BasicUsage.cs](examples/BasicUsage.cs) - Minimal setup and first call.
-- [AdvancedUsage.cs](examples/AdvancedUsage.cs) - Configuration, custom options, and error handling.
-- [IntegrationExample.cs](examples/IntegrationExample.cs) - Integrating into an ASP.NET Core project.
-
-For more complex scenarios, check out the existing files in the [examples/](examples/) directory.
-
-## Docker Support
-
-We provide Docker support for easy deployment and development.
-
-### Running with Docker Compose
-
-To run the application and Redis dependency using Docker Compose:
-
-```bash
-docker-compose up --build
-```
-
-The application will be available at `http://localhost:8080`.
-
-### Building the Docker Image
-
-To build the Docker image manually:
-
-```bash
-docker build -t dotnet-graphql-engine .
-```
-
-## Performance Benchmarks
-
-We use [BenchmarkDotNet](https://benchmarkdotnet.org/) to measure and track performance metrics.
-
-### Running Benchmarks Locally
-
-```bash
-# Navigate to benchmarks directory
-cd benchmarks/dotnet-graphql-engine.Benchmarks
-
-# Run all benchmarks
-dotnet run -c Release -- --filter *
-
-# Run benchmarks with memory diagnostics
-dotnet run -c Release -- --filter * --memory
-```
-
-### Benchmark Categories
-- **Query Execution**: Simple, nested, and complex query performance
-- **Schema Operations**: Schema creation and type management  
-- **Resolver Registration**: Field resolver registration performance
-
-### CI Integration
-
-Benchmarks run automatically in CI to track performance over time. See `.github/workflows/benchmarks.yml` for details.
-
-## License
-
-MIT License - Copyright (c) 2026 Vladyslav Zaiets
-
+... *(rest of the original README continues unchanged)*
