@@ -21,15 +21,12 @@ public static class QueryFieldValidation
     /// </summary>
     /// <param name="value">The QueryField to validate.</param>
     /// <returns>A list of validation problems; empty if the field is valid.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
     public static IReadOnlyList<string> Validate(this QueryField? value)
     {
-        var errors = new List<string>();
+        ArgumentNullException.ThrowIfNull(value);
 
-        if (value == null)
-        {
-            errors.Add("QueryField cannot be null.");
-            return errors.AsReadOnly();
-        }
+        var errors = new List<string>();
 
         // Validate Name
         if (string.IsNullOrWhiteSpace(value.Name))
@@ -116,18 +113,19 @@ public static class QueryFieldValidation
     /// <param name="value">The QueryField to check.</param>
     /// <returns>True if the field is valid; otherwise, false.</returns>
     public static bool IsValid(this QueryField? value)
-    {
-        return value?.Validate().Count == 0;
-    }
+        => value is not null && value.Validate().Count == 0;
 
     /// <summary>
     /// Ensures that a <see cref="QueryField"/> instance is valid, throwing an <see cref="ArgumentException"/>
     /// with a detailed message listing all validation problems if it is not.
     /// </summary>
     /// <param name="value">The QueryField to validate.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown when the field is invalid.</exception>
     public static void EnsureValid(this QueryField? value)
     {
+        ArgumentNullException.ThrowIfNull(value);
+
         var errors = value.Validate();
 
         if (errors.Count > 0)
