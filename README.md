@@ -222,6 +222,64 @@ await benchmarks.QueryWithArguments();
 benchmarks.Cleanup();
 ```
 
+## GraphQLException
+
+The `GraphQLException` class serves as the base exception type for all GraphQL engine operations. It provides standardized error handling with support for custom error codes and extensible metadata through the `Extensions` dictionary. This exception hierarchy enables consistent error reporting across the entire GraphQL API surface.
+
+### Usage Example
+
+```csharp
+using GraphQLEngine.Exceptions;
+
+// Create a base GraphQL exception with custom error code
+var exception = new GraphQLException("Invalid query syntax", "QUERY_SYNTAX_ERROR");
+
+// Add custom extension data for client consumption
+exception.AddExtension("query", "{ user { name }");
+exception.AddExtension("timestamp", DateTime.UtcNow);
+
+// Throw the exception
+throw exception;
+
+// Create a schema exception
+var schemaException = new SchemaException("Type 'User' not found in schema");
+throw schemaException;
+
+// Create an execution exception with field context
+var executionException = new ExecutionException(
+    "Field 'user.posts' returned null",
+    "user.posts",
+    42
+);
+executionException.AddExtension("parentType", "User");
+throw executionException;
+
+// Create a query complexity exception
+var complexityException = new QueryComplexityException(
+    "Query complexity score 1250 exceeds maximum of 1000",
+    1250,
+    1000
+);
+throw complexityException;
+
+// Create a validation exception with multiple errors
+var validationException = new ValidationException(
+    "Query validation failed",
+    new List<string> {
+        "Field 'user' must have at least one selection",
+        "Argument 'id' is required"
+    }
+);
+throw validationException;
+
+// Create a data loader exception
+var loaderException = new DataLoaderException(
+    "Failed to load data for 'UserLoader'",
+    "UserLoader"
+);
+throw loaderException;
+```
+
 ## Quick Start
 
 ... *(rest of the original README continues unchanged)*
