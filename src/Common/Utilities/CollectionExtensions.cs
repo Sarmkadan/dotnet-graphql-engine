@@ -12,251 +12,358 @@ namespace GraphQLEngine.Common.Utilities;
 /// </summary>
 public static class CollectionExtensions
 {
-    /// <summary>
-    /// Checks if a collection is null or empty
-    /// </summary>
-    public static bool IsNullOrEmpty<T>(this IEnumerable<T>? collection)
-    {
-        return collection is null || !collection.Any();
-    }
+	/// <summary>
+	/// Checks if a collection is null or empty
+	/// </summary>
+	/// <param name="collection">The collection to check</param>
+	/// <returns>True if the collection is null or empty; otherwise, false</returns>
+	public static bool IsNullOrEmpty<T>(this IEnumerable<T>? collection)
+	{
+		return collection is null || !collection.Any();
+	}
 
-    /// <summary>
-    /// Checks if a collection has items
-    /// </summary>
-    public static bool HasItems<T>(this IEnumerable<T>? collection)
-    {
-        return collection is not null && collection.Any();
-    }
+	/// <summary>
+	/// Checks if a collection has items
+	/// </summary>
+	/// <param name="collection">The collection to check</param>
+	/// <returns>True if the collection is not null and contains items; otherwise, false</returns>
+	public static bool HasItems<T>(this IEnumerable<T>? collection)
+	{
+		return collection is not null && collection.Any();
+	}
 
-    /// <summary>
-    /// Gets the first item or null instead of throwing exception
-    /// </summary>
-    public static T? FirstOrNull<T>(this IEnumerable<T>? collection) where T : class
-    {
-        return collection?.FirstOrDefault();
-    }
+	/// <summary>
+	/// Gets the first item or null instead of throwing exception
+	/// </summary>
+	/// <param name="collection">The collection to get the first item from</param>
+	/// <returns>The first item or null if collection is null or empty</returns>
+	public static T? FirstOrNull<T>(this IEnumerable<T>? collection) where T : class
+	{
+		return collection?.FirstOrDefault();
+	}
 
-    /// <summary>
-    /// Safely adds an item to a collection
-    /// </summary>
-    public static void AddIfNotNull<T>(this ICollection<T> collection, T? item)
-    {
-        if (item is not null)
-            collection.Add(item);
-    }
+	/// <summary>
+	/// Safely adds an item to a collection
+	/// </summary>
+	/// <param name="collection">The collection to add to</param>
+	/// <param name="item">The item to add (will be skipped if null)</param>
+	/// <exception cref="ArgumentNullException">Thrown if collection is null</exception>
+	public static void AddIfNotNull<T>(this ICollection<T> collection, T? item)
+	{
+		ArgumentNullException.ThrowIfNull(collection);
 
-    /// <summary>
-    /// Adds multiple items to a collection
-    /// </summary>
-    public static void AddRange<T>(this ICollection<T> collection, IEnumerable<T>? items)
-    {
-        if (items is null)
-            return;
+		if (item is not null)
+			collection.Add(item);
+	}
 
-        foreach (var item in items)
-            collection.Add(item);
-    }
+	/// <summary>
+	/// Adds multiple items to a collection
+	/// </summary>
+	/// <param name="collection">The collection to add items to</param>
+	/// <param name="items">The items to add (will be skipped if null)</param>
+	/// <exception cref="ArgumentNullException">Thrown if collection is null</exception>
+	public static void AddRange<T>(this ICollection<T> collection, IEnumerable<T>? items)
+	{
+		ArgumentNullException.ThrowIfNull(collection);
 
-    /// <summary>
-    /// Removes multiple items from a collection
-    /// </summary>
-    public static void RemoveRange<T>(this ICollection<T> collection, IEnumerable<T>? items)
-    {
-        if (items is null)
-            return;
+		if (items is null)
+			return;
 
-        foreach (var item in items)
-            collection.Remove(item);
-    }
+		foreach (var item in items)
+			collection.Add(item);
+	}
 
-    /// <summary>
-    /// Splits a collection into batches
-    /// </summary>
-    public static IEnumerable<List<T>> Batch<T>(this IEnumerable<T> collection, int batchSize)
-    {
-        if (batchSize <= 0)
-            throw new ArgumentException("Batch size must be greater than 0", nameof(batchSize));
+	/// <summary>
+	/// Removes multiple items from a collection
+	/// </summary>
+	/// <param name="collection">The collection to remove items from</param>
+	/// <param name="items">The items to remove (will be skipped if null)</param>
+	/// <exception cref="ArgumentNullException">Thrown if collection is null</exception>
+	public static void RemoveRange<T>(this ICollection<T> collection, IEnumerable<T>? items)
+	{
+		ArgumentNullException.ThrowIfNull(collection);
 
-        var batch = new List<T>(batchSize);
-        foreach (var item in collection)
-        {
-            batch.Add(item);
-            if (batch.Count >= batchSize)
-            {
-                yield return batch;
-                batch = new List<T>(batchSize);
-            }
-        }
+		if (items is null)
+			return;
 
-        if (batch.Count > 0)
-            yield return batch;
-    }
+		foreach (var item in items)
+			collection.Remove(item);
+	}
 
-    /// <summary>
-    /// Gets distinct items by a key selector
-    /// </summary>
-    public static IEnumerable<T> DistinctBy<T, TKey>(this IEnumerable<T> collection,
-        Func<T, TKey> keySelector)
-    {
-        var seenKeys = new HashSet<TKey>();
-        foreach (var item in collection)
-        {
-            var key = keySelector(item);
-            if (seenKeys.Add(key))
-                yield return item;
-        }
-    }
+	/// <summary>
+	/// Splits a collection into batches
+	/// </summary>
+	/// <param name="collection">The collection to batch</param>
+	/// <param name="batchSize">The size of each batch (must be greater than 0)</param>
+	/// <returns>An enumerable of batches, each containing up to batchSize items</returns>
+	/// <exception cref="ArgumentNullException">Thrown if collection is null</exception>
+	/// <exception cref="ArgumentException">Thrown if batchSize is less than or equal to 0</exception>
+	public static IEnumerable<List<T>> Batch<T>(this IEnumerable<T> collection, int batchSize)
+	{
+		ArgumentNullException.ThrowIfNull(collection);
 
-    /// <summary>
-    /// Returns the index of an item in a collection
-    /// </summary>
-    public static int IndexOf<T>(this IEnumerable<T> collection, T item)
-    {
-        var index = 0;
-        foreach (var current in collection)
-        {
-            if (Equals(current, item))
-                return index;
-            index++;
-        }
-        return -1;
-    }
+		if (batchSize <= 0)
+			throw new ArgumentException("Batch size must be greater than 0", nameof(batchSize));
 
-    /// <summary>
-    /// Executes an action for each item in a collection
-    /// </summary>
-    public static void ForEach<T>(this IEnumerable<T> collection, Action<T> action)
-    {
-        foreach (var item in collection)
-            action(item);
-    }
+		var batch = new List<T>(batchSize);
+		foreach (var item in collection)
+		{
+			batch.Add(item);
+			if (batch.Count >= batchSize)
+			{
+				yield return batch;
+				batch = new List<T>(batchSize);
+			}
+		}
 
-    /// <summary>
-    /// Executes an action for each item with its index
-    /// </summary>
-    public static void ForEachWithIndex<T>(this IEnumerable<T> collection, Action<T, int> action)
-    {
-        var index = 0;
-        foreach (var item in collection)
-        {
-            action(item, index);
-            index++;
-        }
-    }
+		if (batch.Count > 0)
+			yield return batch;
+	}
 
-    /// <summary>
-    /// Checks if a collection matches all criteria
-    /// </summary>
-    public static bool All<T>(this IEnumerable<T> collection, T? value)
-    {
-        return collection.All(item => Equals(item, value));
-    }
+	/// <summary>
+	/// Gets distinct items by a key selector
+	/// </summary>
+	/// <param name="collection">The collection to process</param>
+	/// <param name="keySelector">Function to extract the key to compare</param>
+	/// <returns>An enumerable containing only distinct items based on the key selector</returns>
+	/// <exception cref="ArgumentNullException">Thrown if collection or keySelector is null</exception>
+	public static IEnumerable<T> DistinctBy<T, TKey>(
+		this IEnumerable<T> collection,
+		Func<T, TKey> keySelector)
+	{
+		ArgumentNullException.ThrowIfNull(collection);
+		ArgumentNullException.ThrowIfNull(keySelector);
 
-    /// <summary>
-    /// Combines multiple collections
-    /// </summary>
-    public static IEnumerable<T> Combine<T>(params IEnumerable<T>?[] collections)
-    {
-        foreach (var collection in collections.Where(c => c is not null))
-        {
-            foreach (var item in collection!)
-                yield return item;
-        }
-    }
+		var seenKeys = new HashSet<TKey>();
+		foreach (var item in collection)
+		{
+			var key = keySelector(item);
+			if (seenKeys.Add(key))
+				yield return item;
+		}
+	}
 
-    /// <summary>
-    /// Gets a random item from a collection
-    /// </summary>
-    public static T? Random<T>(this IEnumerable<T> collection)
-    {
-        var list = collection.ToList();
-        if (list.Count == 0)
-            return default;
+	/// <summary>
+	/// Returns the index of an item in a collection
+	/// </summary>
+	/// <param name="collection">The collection to search</param>
+	/// <param name="item">The item to find</param>
+	/// <returns>The zero-based index of the item, or -1 if not found</returns>
+	/// <exception cref="ArgumentNullException">Thrown if collection is null</exception>
+	public static int IndexOf<T>(this IEnumerable<T> collection, T item)
+	{
+		ArgumentNullException.ThrowIfNull(collection);
 
-        var random = new System.Random();
-        return list[random.Next(list.Count)];
-    }
+		var index = 0;
+		foreach (var current in collection)
+		{
+			if (Equals(current, item))
+				return index;
+			index++;
+		}
+		return -1;
+	}
 
-    /// <summary>
-    /// Shuffles a collection
-    /// </summary>
-    public static IEnumerable<T> Shuffle<T>(this IEnumerable<T> collection)
-    {
-        var list = collection.ToList();
-        var random = new System.Random();
+	/// <summary>
+	/// Executes an action for each item in a collection
+	/// </summary>
+	/// <param name="collection">The collection to iterate</param>
+	/// <param name="action">The action to execute for each item</param>
+	/// <exception cref="ArgumentNullException">Thrown if collection or action is null</exception>
+	public static void ForEach<T>(this IEnumerable<T> collection, Action<T> action)
+	{
+		ArgumentNullException.ThrowIfNull(collection);
+		ArgumentNullException.ThrowIfNull(action);
 
-        for (int i = list.Count - 1; i > 0; i--)
-        {
-            int randomIndex = random.Next(0, i + 1);
-            (list[i], list[randomIndex]) = (list[randomIndex], list[i]);
-        }
+		foreach (var item in collection)
+			action(item);
+	}
 
-        return list;
-    }
+	/// <summary>
+	/// Executes an action for each item with its index
+	/// </summary>
+	/// <param name="collection">The collection to iterate</param>
+	/// <param name="action">The action to execute for each item with its index</param>
+	/// <exception cref="ArgumentNullException">Thrown if collection or action is null</exception>
+	public static void ForEachWithIndex<T>(this IEnumerable<T> collection, Action<T, int> action)
+	{
+		ArgumentNullException.ThrowIfNull(collection);
+		ArgumentNullException.ThrowIfNull(action);
 
-    /// <summary>
-    /// Groups and counts items
-    /// </summary>
-    public static Dictionary<TKey, int> CountBy<T, TKey>(this IEnumerable<T> collection,
-        Func<T, TKey> keySelector) where TKey : notnull
-    {
-        var result = new Dictionary<TKey, int>();
-        foreach (var item in collection)
-        {
-            var key = keySelector(item);
-            if (result.ContainsKey(key))
-                result[key]++;
-            else
-                result[key] = 1;
-        }
-        return result;
-    }
+		var index = 0;
+		foreach (var item in collection)
+		{
+			action(item, index);
+			index++;
+		}
+	}
 
-    /// <summary>
-    /// Converts a collection to a dictionary with a default value
-    /// </summary>
-    public static Dictionary<TKey, TValue> ToDictionary<T, TKey, TValue>(
-        this IEnumerable<T> collection,
-        Func<T, TKey> keySelector,
-        TValue defaultValue) where TKey : notnull
-    {
-        return collection.ToDictionary(keySelector, _ => defaultValue);
-    }
+	/// <summary>
+	/// Checks if all items in a collection match a specific value
+	/// </summary>
+	/// <param name="collection">The collection to check</param>
+	/// <param name="value">The value to compare against</param>
+	/// <returns>True if all items equal the specified value; otherwise, false</returns>
+	/// <exception cref="ArgumentNullException">Thrown if collection is null</exception>
+	public static bool All<T>(this IEnumerable<T> collection, T? value)
+	{
+		ArgumentNullException.ThrowIfNull(collection);
 
-    /// <summary>
-    /// Sorts a collection in a specified order
-    /// </summary>
-    public static IEnumerable<T> OrderByMany<T>(this IEnumerable<T> collection,
-        params Func<T, IComparable>[] keySelectors)
-    {
-        var enumerable = collection;
-        for (int i = keySelectors.Length - 1; i >= 0; i--)
-        {
-            enumerable = enumerable.OrderBy(keySelectors[i]);
-        }
-        return enumerable;
-    }
+		return collection.All(item => Equals(item, value));
+	}
 
-    /// <summary>
-    /// Flattens nested collections
-    /// </summary>
-    public static IEnumerable<T> Flatten<T>(this IEnumerable<IEnumerable<T>> collection)
-    {
-        return collection.SelectMany(x => x);
-    }
+	/// <summary>
+	/// Combines multiple collections into one
+	/// </summary>
+	/// <param name="collections">The collections to combine</param>
+	/// <returns>An enumerable containing all items from all non-null collections</returns>
+	public static IEnumerable<T> Combine<T>(params IEnumerable<T>?[] collections)
+	{
+		foreach (var collection in collections.Where(c => c is not null))
+		{
+			foreach (var item in collection!)
+				yield return item;
+		}
+	}
 
-    /// <summary>
-    /// Gets the median value
-    /// </summary>
-    public static T? Median<T>(this IEnumerable<T> collection) where T : IComparable<T>
-    {
-        var sorted = collection.OrderBy(x => x).ToList();
-        if (sorted.Count == 0)
-            return default;
+	/// <summary>
+	/// Gets a random item from a collection
+	/// </summary>
+	/// <param name="collection">The collection to get a random item from</param>
+	/// <returns>A random item from the collection, or default if collection is empty</returns>
+	/// <exception cref="ArgumentNullException">Thrown if collection is null</exception>
+	public static T? Random<T>(this IEnumerable<T> collection)
+	{
+		ArgumentNullException.ThrowIfNull(collection);
 
-        var middle = sorted.Count / 2;
-        return sorted.Count % 2 == 1
-            ? sorted[middle]
-            : sorted[middle - 1];
-    }
+		var list = collection.ToList();
+		if (list.Count == 0)
+			return default;
+
+		var random = new System.Random();
+		return list[random.Next(list.Count)];
+	}
+
+	/// <summary>
+	/// Shuffles a collection using Fisher-Yates algorithm
+	/// </summary>
+	/// <param name="collection">The collection to shuffle</param>
+	/// <returns>A new enumerable containing the shuffled items</returns>
+	/// <exception cref="ArgumentNullException">Thrown if collection is null</exception>
+	public static IEnumerable<T> Shuffle<T>(this IEnumerable<T> collection)
+	{
+		ArgumentNullException.ThrowIfNull(collection);
+
+		var list = collection.ToList();
+		var random = new System.Random();
+
+		for (int i = list.Count - 1; i > 0; i--)
+		{
+			int randomIndex = random.Next(0, i + 1);
+			(list[i], list[randomIndex]) = (list[randomIndex], list[i]);
+		}
+
+		return list;
+	}
+
+	/// <summary>
+	/// Groups and counts items by a key selector
+	/// </summary>
+	/// <param name="collection">The collection to process</param>
+	/// <param name="keySelector">Function to extract the key to group by</param>
+	/// <returns>A dictionary mapping keys to their counts</returns>
+	/// <exception cref="ArgumentNullException">Thrown if collection or keySelector is null</exception>
+	/// <exception cref="ArgumentException">Thrown if the result contains null keys</exception>
+	public static Dictionary<TKey, int> CountBy<T, TKey>(
+		this IEnumerable<T> collection,
+		Func<T, TKey> keySelector) where TKey : notnull
+	{
+		ArgumentNullException.ThrowIfNull(collection);
+		ArgumentNullException.ThrowIfNull(keySelector);
+
+		var result = new Dictionary<TKey, int>();
+		foreach (var item in collection)
+		{
+			var key = keySelector(item);
+			if (result.ContainsKey(key))
+				result[key]++;
+			else
+				result[key] = 1;
+		}
+		return result;
+	}
+
+	/// <summary>
+	/// Converts a collection to a dictionary with a default value for all keys
+	/// </summary>
+	/// <param name="collection">The collection to convert</param>
+	/// <param name="keySelector">Function to extract the key</param>
+	/// <param name="defaultValue">The default value to use for all entries</param>
+	/// <returns>A dictionary mapping keys to values</returns>
+	/// <exception cref="ArgumentNullException">Thrown if collection or keySelector is null</exception>
+	public static Dictionary<TKey, TValue> ToDictionary<T, TKey, TValue>(
+		this IEnumerable<T> collection,
+		Func<T, TKey> keySelector,
+		TValue defaultValue) where TKey : notnull
+	{
+		ArgumentNullException.ThrowIfNull(collection);
+		ArgumentNullException.ThrowIfNull(keySelector);
+
+		return collection.ToDictionary(keySelector, _ => defaultValue);
+	}
+
+	/// <summary>
+	/// Sorts a collection by multiple keys in specified order
+	/// </summary>
+	/// <param name="collection">The collection to sort</param>
+	/// <param name="keySelectors">Functions to extract sort keys in order of priority</param>
+	/// <returns>An enumerable containing items sorted by all keys</returns>
+	/// <exception cref="ArgumentNullException">Thrown if collection or any keySelector is null</exception>
+	public static IEnumerable<T> OrderByMany<T>(
+		this IEnumerable<T> collection,
+		params Func<T, IComparable>[] keySelectors)
+	{
+		ArgumentNullException.ThrowIfNull(collection);
+		ArgumentNullException.ThrowIfNull(keySelectors);
+
+		var enumerable = collection;
+		for (int i = keySelectors.Length - 1; i >= 0; i--)
+		{
+			enumerable = enumerable.OrderBy(keySelectors[i]);
+		}
+		return enumerable;
+	}
+
+	/// <summary>
+	/// Flattens nested collections into a single level
+	/// </summary>
+	/// <param name="collection">The collection of collections to flatten</param>
+	/// <returns>An enumerable containing all items from all nested collections</returns>
+	/// <exception cref="ArgumentNullException">Thrown if collection is null</exception>
+	public static IEnumerable<T> Flatten<T>(this IEnumerable<IEnumerable<T>> collection)
+	{
+		ArgumentNullException.ThrowIfNull(collection);
+
+		return collection.SelectMany(x => x);
+	}
+
+	/// <summary>
+	/// Gets the median value from a collection
+	/// </summary>
+	/// <param name="collection">The collection to process</param>
+	/// <returns>The median value, or default if collection is empty</returns>
+	/// <exception cref="ArgumentNullException">Thrown if collection is null</exception>
+	public static T? Median<T>(this IEnumerable<T> collection) where T : IComparable<T>
+	{
+		ArgumentNullException.ThrowIfNull(collection);
+
+		var sorted = collection.OrderBy(x => x).ToList();
+		if (sorted.Count == 0)
+			return default;
+
+		var middle = sorted.Count / 2;
+		return sorted.Count % 2 == 1
+			? sorted[middle]
+			: sorted[middle - 1];
+	}
 }
