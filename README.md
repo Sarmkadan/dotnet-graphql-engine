@@ -1,27 +1,26 @@
 // ... rest of the original README content ...
 
-## PersistedQueryExtensions
+## GraphQLHttpRequest
 
-The `PersistedQueryExtensions` class provides a set of utility methods for configuring and validating persisted queries. It allows you to add persisted queries to the service collection, enforce hash verification, set the maximum index size, and configure other settings.
+The `GraphQLHttpRequest` class provides a set of utility methods for configuring and validating GraphQL requests. It allows you to specify the query, operation name, and variables for a GraphQL request.
 
 ### Usage Example
 
 ```csharp
 using GraphQLEngine.Configuration;
 
-// Add persisted queries to the service collection
-var services = new ServiceCollection();
-services.AddPersistedQueries();
-
-// Configure persisted query settings
-services.AddPersistedQueries(options => 
+// Create a GraphQL request with query and variables
+var request = new GraphQLHttpRequest
 {
-  options.EnforceHashVerification = true;
-  options.MaxIndexSize = 1024;
-  options.AllowlistOnly = false;
-  options.ReturnNotFoundError = true;
-  options.Validate = true;
-});
+    Query = "query { hello }",
+    Variables = new Dictionary<string, object?>
+    {
+        ["name"] = "John Doe"
+    }
+};
+
+// Map the GraphQL request to an endpoint route
+var endpoint = request.MapGraphQL();
 ```
 
 ## DependencyInjection
@@ -83,3 +82,4 @@ var executionService = testServiceProvider.GetRequiredService<GraphQLExecutionSe
 ```
 
 // ... rest of the original README content ...
+```
