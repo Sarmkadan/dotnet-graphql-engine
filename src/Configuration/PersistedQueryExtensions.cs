@@ -26,13 +26,16 @@ public static class PersistedQueryExtensions
     /// <example>
     /// <code>
     /// services.AddGraphQLEngine()
-    ///         .AddPersistedQueries();
+    /// .AddPersistedQueries();
     /// </code>
     /// </example>
     /// <param name="services">The service collection to configure.</param>
     /// <returns>The same <see cref="IServiceCollection"/> for chaining.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="services"/> is <c>null</c>.</exception>
     public static IServiceCollection AddPersistedQueries(this IServiceCollection services)
     {
+        ArgumentNullException.ThrowIfNull(services);
+
         services.AddSingleton<IRepository<PersistedQuery>, InMemoryRepository<PersistedQuery>>();
         services.AddScoped<PersistedQueryService>();
 
@@ -46,10 +49,16 @@ public static class PersistedQueryExtensions
     /// <param name="services">The service collection to configure.</param>
     /// <param name="configure">Callback to apply custom options.</param>
     /// <returns>The same <see cref="IServiceCollection"/> for chaining.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="services"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="configure"/> is <c>null</c>.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the provided options are invalid.</exception>
     public static IServiceCollection AddPersistedQueries(
         this IServiceCollection services,
         Action<PersistedQueryOptions> configure)
     {
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(configure);
+
         var options = new PersistedQueryOptions();
         configure(options);
 
@@ -105,9 +114,13 @@ sealed public class PersistedQueryOptions
     /// </summary>
     /// <param name="errors">Populated with one message per violated constraint.</param>
     /// <returns><c>true</c> when all options are valid.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="errors"/> is <c>null</c>.</exception>
     public bool Validate(out List<string> errors)
     {
         errors = new List<string>();
+
+        if (errors is null)
+            throw new ArgumentNullException(nameof(errors));
 
         if (MaxIndexSize <= 0)
             errors.Add("MaxIndexSize must be greater than 0");
