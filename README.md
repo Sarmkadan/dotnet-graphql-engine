@@ -1,5 +1,32 @@
 // ... rest of the original README content ...
 
+## Event
+
+The `Event` class represents a specific event that can be published and subscribed to within the event bus. It provides metadata about the event, including its ID, timestamp, source, and data.
+
+### Usage Example
+
+```csharp
+using GraphQLEngine.Services.Events;
+
+// Create an event with metadata
+var event = new Event
+{
+    Id = "my-event-id",
+    Timestamp = DateTime.UtcNow,
+    Source = "MySource",
+    Metadata = new Dictionary<string, object>
+    {
+        ["key"] = "value"
+    },
+    Data = new object[] { 1, 2, 3 }
+};
+
+// Publish the event
+var eventBus = new EventBus();
+eventBus.Publish(event);
+```
+
 ## GraphQLHttpRequest
 
 The `GraphQLHttpRequest` class provides a set of utility methods for configuring and validating GraphQL requests. It allows you to specify the query, operation name, and variables for a GraphQL request.
@@ -82,4 +109,3 @@ var executionService = testServiceProvider.GetRequiredService<GraphQLExecutionSe
 ```
 
 // ... rest of the original README content ...
-```
