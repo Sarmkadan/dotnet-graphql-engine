@@ -9,19 +9,22 @@ using System.Text;
 namespace GraphQLEngine.Common.Utilities;
 
 /// <summary>
-/// Validation utilities for ValidationHelper static class
+/// Validation utilities for <see cref="ValidationHelper"/> static class
 /// </summary>
 public static class ValidationHelperValidation
 {
     /// <summary>
-    /// Validates all public validation methods of ValidationHelper and returns human-readable problems
+    /// Validates all public validation methods of <see cref="ValidationHelper"/> and returns human-readable problems
     /// </summary>
     /// <returns>List of validation problems, empty if valid</returns>
+    /// <exception cref="ArgumentNullException">Thrown when any input parameter is null</exception>
     public static IReadOnlyList<string> Validate()
     {
+        ArgumentNullException.ThrowIfNull(nameof(ValidationHelper));
+
         var errors = new List<string>();
 
-        // Validate QueryString - but we need a string parameter, so we'll test with a sample
+        // Validate QueryString
         var queryResult = ValidationHelper.ValidateQueryString("query { test }", out var queryErrors);
         if (!queryResult)
         {
@@ -34,7 +37,7 @@ public static class ValidationHelperValidation
             errors.Add("Type name validation failed for 'TestType'");
         }
 
-        if (!ValidationHelper.ValidateTypeName(""))
+        if (!ValidationHelper.ValidateTypeName(string.Empty))
         {
             errors.Add("Type name validation failed for empty string");
         }
@@ -61,7 +64,7 @@ public static class ValidationHelperValidation
             errors.Add("Email validation should fail for invalid email 'invalid-email'");
         }
 
-        if (ValidationHelper.ValidateEmail(""))
+        if (ValidationHelper.ValidateEmail(string.Empty))
         {
             errors.Add("Email validation should fail for empty email");
         }
@@ -77,7 +80,7 @@ public static class ValidationHelperValidation
             errors.Add("URL validation should fail for invalid URL 'not-a-url'");
         }
 
-        if (ValidationHelper.ValidateUrl(""))
+        if (ValidationHelper.ValidateUrl(string.Empty))
         {
             errors.Add("URL validation should fail for empty URL");
         }
@@ -93,7 +96,7 @@ public static class ValidationHelperValidation
             errors.Add("ID validation failed for valid GUID");
         }
 
-        if (ValidationHelper.ValidateId(""))
+        if (ValidationHelper.ValidateId(string.Empty))
         {
             errors.Add("ID validation should fail for empty ID");
         }
@@ -158,7 +161,7 @@ public static class ValidationHelperValidation
 
             for (int i = 0; i < errors.Count; i++)
             {
-                errorMessage.AppendLine($"  {i + 1}. {errors[i]}");
+                errorMessage.AppendLine($" {i + 1}. {errors[i]}");
             }
 
             throw new ArgumentException(errorMessage.ToString());
