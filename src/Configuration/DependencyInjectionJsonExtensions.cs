@@ -3,54 +3,52 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 
 namespace GraphQLEngine.Configuration;
 
 /// <summary>
-/// System.Text.Json serialization extensions for GraphQL engine configuration
+/// Provides System.Text.Json serialization extensions for GraphQL engine configuration options.
 /// </summary>
 public static class DependencyInjectionJsonExtensions
 {
-    private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
+    private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.General)
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         WriteIndented = false,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        PropertyNameCaseInsensitive = true
+        PropertyNameCaseInsensitive = true,
+        TypeInfoResolver = new DefaultJsonTypeInfoResolver()
     };
 
     /// <summary>
-    /// Serializes a GraphQLEngineOptions instance to JSON string
+    /// Serializes a <see cref="GraphQLEngineOptions"/> instance to a JSON string.
     /// </summary>
-    /// <param name="value">The GraphQLEngineOptions instance to serialize</param>
-    /// <param name="indented">Whether to format the JSON with indentation</param>
-    /// <returns>JSON string representation</returns>
+    /// <param name="value">The <see cref="GraphQLEngineOptions"/> instance to serialize.</param>
+    /// <param name="indented">Whether to format the JSON with indentation.</param>
+    /// <returns>JSON string representation of the configuration.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is <see langword="null"/>.</exception>
     public static string ToJson(this GraphQLEngineOptions value, bool indented = false)
     {
-        if (value == null)
-        {
-            throw new ArgumentNullException(nameof(value));
-        }
+        ArgumentNullException.ThrowIfNull(value);
 
         var options = indented
-            ? new JsonSerializerOptions(_jsonOptions)
-            {
-                WriteIndented = true
-            }
+            ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true }
             : _jsonOptions;
 
         return JsonSerializer.Serialize(value, options);
     }
 
     /// <summary>
-    /// Deserializes a JSON string to a GraphQLEngineOptions instance
+    /// Deserializes a JSON string to a <see cref="GraphQLEngineOptions"/> instance.
     /// </summary>
-    /// <param name="json">JSON string to deserialize</param>
-    /// <returns>Deserialized GraphQLEngineOptions instance or null if JSON is null/empty</returns>
+    /// <param name="json">JSON string to deserialize.</param>
+    /// <returns>Deserialized <see cref="GraphQLEngineOptions"/> instance, or <see langword="null"/> if the JSON is <see langword="null"/>, empty, or whitespace.</returns>
+    /// <exception cref="JsonException">Thrown when the JSON is malformed and cannot be deserialized.</exception>
     public static GraphQLEngineOptions? FromJson(string json)
     {
         if (string.IsNullOrWhiteSpace(json))
@@ -62,11 +60,12 @@ public static class DependencyInjectionJsonExtensions
     }
 
     /// <summary>
-    /// Attempts to deserialize a JSON string to a GraphQLEngineOptions instance
+    /// Attempts to deserialize a JSON string to a <see cref="GraphQLEngineOptions"/> instance.
     /// </summary>
-    /// <param name="json">JSON string to deserialize</param>
-    /// <param name="value">Output parameter for the deserialized value</param>
-    /// <returns>True if deserialization succeeded, false otherwise</returns>
+    /// <param name="json">JSON string to deserialize.</param>
+    /// <param name="value">Output parameter for the deserialized value.</param>
+    /// <returns><see langword="true"/> if deserialization succeeded; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is <see langword="null"/>.</exception>
     public static bool TryFromJson(string json, out GraphQLEngineOptions? value)
     {
         value = null;
@@ -88,33 +87,29 @@ public static class DependencyInjectionJsonExtensions
     }
 
     /// <summary>
-    /// Serializes a DotnetGraphqlEngineOptions instance to JSON string
+    /// Serializes a <see cref="DotnetGraphqlEngineOptions"/> instance to a JSON string.
     /// </summary>
-    /// <param name="value">The DotnetGraphqlEngineOptions instance to serialize</param>
-    /// <param name="indented">Whether to format the JSON with indentation</param>
-    /// <returns>JSON string representation</returns>
+    /// <param name="value">The <see cref="DotnetGraphqlEngineOptions"/> instance to serialize.</param>
+    /// <param name="indented">Whether to format the JSON with indentation.</param>
+    /// <returns>JSON string representation of the configuration.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is <see langword="null"/>.</exception>
     public static string ToJson(this DotnetGraphqlEngineOptions value, bool indented = false)
     {
-        if (value == null)
-        {
-            throw new ArgumentNullException(nameof(value));
-        }
+        ArgumentNullException.ThrowIfNull(value);
 
         var options = indented
-            ? new JsonSerializerOptions(_jsonOptions)
-            {
-                WriteIndented = true
-            }
+            ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true }
             : _jsonOptions;
 
         return JsonSerializer.Serialize(value, options);
     }
 
     /// <summary>
-    /// Deserializes a JSON string to a DotnetGraphqlEngineOptions instance
+    /// Deserializes a JSON string to a <see cref="DotnetGraphqlEngineOptions"/> instance.
     /// </summary>
-    /// <param name="json">JSON string to deserialize</param>
-    /// <returns>Deserialized DotnetGraphqlEngineOptions instance or null if JSON is null/empty</returns>
+    /// <param name="json">JSON string to deserialize.</param>
+    /// <returns>Deserialized <see cref="DotnetGraphqlEngineOptions"/> instance, or <see langword="null"/> if the JSON is <see langword="null"/>, empty, or whitespace.</returns>
+    /// <exception cref="JsonException">Thrown when the JSON is malformed and cannot be deserialized.</exception>
     public static DotnetGraphqlEngineOptions? FromJsonDotnet(this string json)
     {
         if (string.IsNullOrWhiteSpace(json))
@@ -126,11 +121,12 @@ public static class DependencyInjectionJsonExtensions
     }
 
     /// <summary>
-    /// Attempts to deserialize a JSON string to a DotnetGraphqlEngineOptions instance
+    /// Attempts to deserialize a JSON string to a <see cref="DotnetGraphqlEngineOptions"/> instance.
     /// </summary>
-    /// <param name="json">JSON string to deserialize</param>
-    /// <param name="value">Output parameter for the deserialized value</param>
-    /// <returns>True if deserialization succeeded, false otherwise</returns>
+    /// <param name="json">JSON string to deserialize.</param>
+    /// <param name="value">Output parameter for the deserialized value.</param>
+    /// <returns><see langword="true"/> if deserialization succeeded; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is <see langword="null"/>.</exception>
     public static bool TryFromJson(this string json, out DotnetGraphqlEngineOptions? value)
     {
         value = null;
