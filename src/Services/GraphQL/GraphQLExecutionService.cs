@@ -106,8 +106,9 @@ sealed public class GraphQLExecutionService
     }
 
     /// <summary>
-    /// Recursively executes fields based on the structured QueryField list.
-    /// This is a simplified simulation for demonstration.
+    /// Recursively executes fields based on the structured QueryField list,
+    /// invoking any registered resolver for each field and storing its result
+    /// in the execution context.
     /// </summary>
     private async Task ExecuteFieldsRecursiveAsync(IEnumerable<QueryField> fields, ExecutionContext context)
     {
@@ -118,9 +119,9 @@ sealed public class GraphQLExecutionService
                 var resolverKey = field.Name; // Use field name for resolver lookup
                 if (_resolvers.TryGetValue(resolverKey, out var resolver))
                 {
-                    // Simulate resolver execution
+                    var result = await InvokeResolverAsync(resolver, context);
+                    context.SetContextValue(field.Alias ?? field.Name, result);
                     context.RecordResolverExecution(field.Name);
-                    await Task.Delay(10); // Simulate async work
                 }
                 else
                 {
@@ -139,6 +140,37 @@ sealed public class GraphQLExecutionService
                 context.AddError(ex.Message, field.Name);
             }
         }
+    }
+
+    /// <summary>
+    /// Invokes a registered resolver, supporting synchronous and asynchronous
+    /// delegates with either no parameters or a single ExecutionContext parameter.
+    /// </summary>
+    private static async Task<object?> InvokeResolverAsync(object resolver, ExecutionContext context)
+    {
+        object? result = resolver switch
+        {
+            Func<ExecutionContext, Task<object?>> asyncWithContext => await asyncWithContext(context),
+            Func<Task<object?>> asyncNoArgs => await asyncNoArgs(),
+            Func<ExecutionContext, object?> syncWithContext => syncWithContext(context),
+            Func<object?> syncNoArgs => syncNoArgs(),
+            Delegate del => del.Method.GetParameters().Length == 1
+                ? del.DynamicInvoke(context)
+                : del.DynamicInvoke(),
+            _ => resolver // A constant value registered as the resolver
+        };
+
+        // Unwrap Task/Task<T> results produced through the generic delegate path
+        if (result is Task task)
+        {
+            await task;
+            var resultProperty = task.GetType().GetProperty("Result");
+            result = resultProperty is not null && resultProperty.PropertyType.Name != "VoidTaskResult"
+                ? resultProperty.GetValue(task)
+                : null;
+        }
+
+        return result;
     }
 
     /// <summary>
