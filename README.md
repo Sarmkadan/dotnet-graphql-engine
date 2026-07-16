@@ -1,4 +1,13 @@
-// ... rest of the original README content ...
+# dotnet-graphql-engine
+
+A self-contained, code-first GraphQL engine for .NET 8 - parsing, execution, complexity
+analysis, DataLoader batching, caching, persisted queries and subscriptions, with no
+dependency on ASP.NET Core or any existing GraphQL library.
+
+## Architecture
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full picture: source layout,
+component breakdown, data flow, design decisions and known limitations.
 
 ## GraphQLExceptionExtensions
 
