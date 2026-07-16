@@ -73,6 +73,16 @@ public static class DependencyInjection
         services.AddScoped<QueryAnalysisService>();
         services.AddScoped<DataLoaderService>();
 
+        // These were previously only constructible by hand; register them so
+        // consumers can resolve them the same way as the rest of the engine.
+        services.AddScoped<CacheService>(provider => new CacheService(
+            provider.GetRequiredService<ILogger<CacheService>>(),
+            provider.GetRequiredService<IOptions<GraphQLEngineOptions>>().Value));
+        services.AddScoped<ErrorFormattingService>(provider => new ErrorFormattingService(
+            provider.GetRequiredService<ILogger<ErrorFormattingService>>(),
+            provider.GetRequiredService<IOptions<GraphQLEngineOptions>>().Value));
+        services.AddScoped<PersistedQueryService>();
+
         // -----------------------------------------------------------------
         // Subscription configuration and service
         // -----------------------------------------------------------------
