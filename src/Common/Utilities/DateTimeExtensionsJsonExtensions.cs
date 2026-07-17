@@ -22,13 +22,11 @@ namespace GraphQLEngine.Common.Utilities
         /// <summary>
         /// Serializes a <see cref="DateTime"/> instance to a JSON string.
         /// </summary>
-        /// <param name="value">The <see cref="DateTime"/> to serialize.</param>
+        /// <param name="value">The date and time value to serialize.</param>
         /// <param name="indented">Whether to format the JSON with indentation.</param>
-        /// <returns>A JSON string representation of the <see cref="DateTime"/>.</returns>
-        /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
+        /// <returns>A JSON string representation of the date and time.</returns>
         public static string ToJson(this DateTime value, bool indented = false)
         {
-            ArgumentNullException.ThrowIfNull(value);
             
             JsonSerializerOptions options = new(JsonSerializerOptions)
             {
@@ -39,11 +37,12 @@ namespace GraphQLEngine.Common.Utilities
         }
 
         /// <summary>
-        /// Deserializes a JSON string to a <see cref="DateTime"/> instance.
+        /// Deserializes a JSON string to a nullable <see cref="DateTime"/> instance.
         /// </summary>
         /// <param name="json">The JSON string to deserialize.</param>
-        /// <returns>A <see cref="DateTime"/> instance.</returns>
-        /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null or empty.</exception>
+        /// <returns>A nullable <see cref="DateTime"/> instance, or null if deserialization fails.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is empty or whitespace.</exception>
         /// <exception cref="JsonException">Thrown when JSON deserialization fails.</exception>
         public static DateTime? FromJson(string json)
         {
@@ -53,19 +52,22 @@ namespace GraphQLEngine.Common.Utilities
         }
 
         /// <summary>
-        /// Tries to deserialize a JSON string to a <see cref="DateTime"/> instance.
+        /// Tries to deserialize a JSON string to a nullable <see cref="DateTime"/> instance.
         /// </summary>
         /// <param name="json">The JSON string to deserialize.</param>
-        /// <param name="value">The deserialized <see cref="DateTime"/> if successful.</param>
+        /// <param name="value">The deserialized date and time if successful; otherwise null.</param>
         /// <returns>True if deserialization succeeded; otherwise false.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is empty or whitespace.</exception>
         public static bool TryFromJson(string json, out DateTime? value)
         {
             ArgumentException.ThrowIfNullOrEmpty(json);
             
             try
             {
-                value = JsonSerializer.Deserialize<DateTime>(json, JsonSerializerOptions);
-                return value is not null;
+                DateTime deserialized = JsonSerializer.Deserialize<DateTime>(json, JsonSerializerOptions);
+                value = deserialized;
+                return true;
             }
             catch (JsonException)
             {
