@@ -5,7 +5,6 @@
 // =============================================================================
 
 using System.Text;
-using System.Globalization;
 
 namespace GraphQLEngine.Common.Utilities;
 
@@ -19,6 +18,7 @@ public static class CollectionExtensionsValidation
     /// Note: This is implemented as a static method without parameters to avoid CS0721 (static types cannot be used as parameters).
     /// </summary>
     /// <returns>List of validation problems, empty if valid.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if any method throws ArgumentNullException for null inputs.</exception>
     public static IReadOnlyList<string> Validate()
     {
         var errors = new List<string>();
@@ -58,13 +58,14 @@ public static class CollectionExtensionsValidation
             errors.Add("HasItems failed for non-empty list");
         }
 
-        // Validate FirstOrNull
-        if (CollectionExtensions.FirstOrNull(listEmpty) != null)
+        // Validate FirstOrNull - Note: This method has constraint where T : class
+        // so it can only work with reference types properly
+        if (CollectionExtensions.FirstOrNull(listEmpty) is not null)
         {
             errors.Add("FirstOrNull failed for empty list");
         }
 
-        if (CollectionExtensions.FirstOrNull(listNotEmpty) != "test")
+        if (CollectionExtensions.FirstOrNull(listNotEmpty) is not "test")
         {
             errors.Add("FirstOrNull failed for non-empty list");
         }
@@ -149,7 +150,7 @@ public static class CollectionExtensionsValidation
 
         // Validate Random
         var randomItem = CollectionExtensions.Random(new[] { 1 });
-        if (randomItem != 1)
+        if (randomItem is not 1)
         {
             errors.Add("Random failed");
         }
@@ -191,7 +192,7 @@ public static class CollectionExtensionsValidation
 
         // Validate Median
         var median = CollectionExtensions.Median(new[] { 1, 3, 2 });
-        if (median != 2)
+        if (median is not 2)
         {
             errors.Add("Median failed");
         }
@@ -203,10 +204,7 @@ public static class CollectionExtensionsValidation
     /// Checks if the CollectionExtensions is valid (all validation methods pass).
     /// </summary>
     /// <returns>True if valid, false otherwise.</returns>
-    public static bool IsValid()
-    {
-        return Validate().Count == 0;
-    }
+    public static bool IsValid() => Validate().Count == 0;
 
     /// <summary>
     /// Ensures the CollectionExtensions is valid, throwing ArgumentException if not.
