@@ -31,21 +31,15 @@ public static class ValidationHelperJsonExtensions
     /// <param name="indented">Whether to format the JSON with indentation.</param>
     /// <returns>A JSON string representation of the ValidationHelper type marker.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
-    public static string ToJson(this object? value, bool indented = false)
-    {
-        ArgumentNullException.ThrowIfNull(value);
-
-        JsonSerializerOptions options = new(JsonSerializerOptions)
-        {
-            WriteIndented = indented
-        };
-
-        return JsonSerializer.Serialize(new { Type = nameof(ValidationHelper) }, options);
-    }
+    public static string ToJson(this object? value, bool indented = false) =>
+        JsonSerializer.Serialize(
+            new { Type = nameof(ValidationHelper) },
+            new JsonSerializerOptions(JsonSerializerOptions) { WriteIndented = indented }
+        );
 
     /// <summary>
     /// Deserializes a JSON string to a <see cref="ValidationHelper"/> marker.
-    /// Since ValidationHelper is a static class, this returns null if deserialization succeeds.
+    /// Since ValidationHelper is a static class, this returns null if deserialization succeeds and represents a ValidationHelper marker.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>A <see cref="ValidationHelper"/> marker (always null for static classes) if successful; otherwise, null.</returns>
@@ -68,7 +62,7 @@ public static class ValidationHelperJsonExtensions
 
     /// <summary>
     /// Attempts to deserialize a JSON string to a <see cref="ValidationHelper"/> marker.
-    /// Since ValidationHelper is a static class, this returns false if the JSON represents a ValidationHelper marker.
+    /// Since ValidationHelper is a static class, this returns true if the JSON represents a ValidationHelper marker.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">The deserialized <see cref="ValidationHelper"/> marker (always null for static classes).</param>
