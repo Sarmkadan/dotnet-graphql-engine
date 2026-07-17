@@ -10,17 +10,17 @@ using System.Globalization;
 namespace GraphQLEngine.Common.Utilities;
 
 /// <summary>
-/// Provides validation helpers for EnumHelper operations
+/// Provides validation helpers for <see cref="EnumHelper"/> operations.
 /// </summary>
 public static class EnumHelperValidation
 {
     /// <summary>
-    /// Validates an enum value and returns a list of human-readable problems
+    /// Validates an enum value and returns a list of human-readable problems.
     /// </summary>
-    /// <typeparam name="T">The enum type to validate</typeparam>
-    /// <param name="value">The enum value to validate</param>
-    /// <returns>List of validation problems; empty if valid</returns>
-    /// <exception cref="ArgumentNullException">Thrown if value is null</exception>
+    /// <typeparam name="T">The enum type to validate.</typeparam>
+    /// <param name="value">The enum value to validate.</param>
+    /// <returns>List of validation problems; empty if valid.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is <see langword="null"/>.</exception>
     public static IReadOnlyList<string> Validate<T>(T value) where T : Enum
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -69,7 +69,7 @@ public static class EnumHelperValidation
 
         try
         {
-            var parsedEmpty = EnumHelper.Parse<T>("   ");
+            var parsedEmpty = EnumHelper.Parse<T>(" ");
             if (parsedEmpty is not null)
                 problems.Add("Parse<T>(empty string) should return null");
         }
@@ -92,7 +92,7 @@ public static class EnumHelperValidation
 
         try
         {
-            var result = EnumHelper.TryParse<T>("   ", out _);
+            var result = EnumHelper.TryParse<T>(" ", out _);
             if (result)
                 problems.Add("TryParse<T>(empty string) should return false");
         }
@@ -257,12 +257,12 @@ public static class EnumHelperValidation
     }
 
     /// <summary>
-    /// Checks if an enum value is valid
+    /// Checks if an enum value is valid.
     /// </summary>
-    /// <typeparam name="T">The enum type to validate</typeparam>
-    /// <param name="value">The enum value to check</param>
-    /// <returns>True if valid; false otherwise</returns>
-    /// <exception cref="ArgumentNullException">Thrown if value is null</exception>
+    /// <typeparam name="T">The enum type to validate.</typeparam>
+    /// <param name="value">The enum value to check.</param>
+    /// <returns>True if valid; false otherwise.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is <see langword="null"/>.</exception>
     public static bool IsValid<T>(T value) where T : Enum
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -270,12 +270,12 @@ public static class EnumHelperValidation
     }
 
     /// <summary>
-    /// Ensures an enum value is valid, throwing ArgumentException if not
+    /// Ensures an enum value is valid, throwing <see cref="ArgumentException"/> if not.
     /// </summary>
-    /// <typeparam name="T">The enum type to validate</typeparam>
-    /// <param name="value">The enum value to validate</param>
-    /// <exception cref="ArgumentNullException">Thrown if value is null</exception>
-    /// <exception cref="ArgumentException">Thrown if validation fails, containing problem descriptions</exception>
+    /// <typeparam name="T">The enum type to validate.</typeparam>
+    /// <param name="value">The enum value to validate.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">Thrown if validation fails, containing problem descriptions.</exception>
     public static void EnsureValid<T>(T value) where T : Enum
     {
         ArgumentNullException.ThrowIfNull(value);
