@@ -15,6 +15,7 @@ public static class GraphQLExceptionJsonExtensions
     {
         PropertyNameCaseInsensitive = true,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        WriteIndented = false,
     };
 
     /// <summary>
@@ -23,14 +24,15 @@ public static class GraphQLExceptionJsonExtensions
     /// <param name="value">The <see cref="GraphQLException"/> to serialize.</param>
     /// <param name="indented">Whether to format the JSON with indentation.</param>
     /// <returns>The JSON string representation of the <paramref name="value"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is <c>null</c>.</exception>
     public static string ToJson(this GraphQLException value, bool indented = false)
     {
-        if (indented)
-        {
-            JsonOptions.WriteIndented = true;
-        }
+        ArgumentNullException.ThrowIfNull(value);
 
-        return JsonSerializer.Serialize(value, JsonOptions);
+        var options = JsonOptions;
+        options.WriteIndented = indented;
+
+        return JsonSerializer.Serialize(value, options);
     }
 
     /// <summary>
@@ -38,8 +40,11 @@ public static class GraphQLExceptionJsonExtensions
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>The deserialized <see cref="GraphQLException"/> or <c>null</c> if deserialization fails.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="json"/> is <c>null</c>.</exception>
     public static GraphQLException? FromJson(string json)
     {
+        ArgumentNullException.ThrowIfNull(json);
+
         try
         {
             return JsonSerializer.Deserialize<GraphQLException>(json, JsonOptions);
@@ -55,13 +60,16 @@ public static class GraphQLExceptionJsonExtensions
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">The deserialized <see cref="GraphQLException"/> or <c>null</c> if deserialization fails.</param>
-    /// <returns><c>true</c> if deserialization succeeds, <c>false</c> otherwise.</returns>
+    /// <returns><c>true</c> if deserialization succeeds and produces a non-null value, <c>false</c> otherwise.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="json"/> is <c>null</c>.</exception>
     public static bool TryFromJson(string json, out GraphQLException? value)
     {
+        ArgumentNullException.ThrowIfNull(json);
+
         try
         {
             value = JsonSerializer.Deserialize<GraphQLException>(json, JsonOptions);
-            return value != null;
+            return value is not null;
         }
         catch (JsonException)
         {
