@@ -9,6 +9,10 @@ namespace GraphQLEngine.Services.Events;
 /// <summary>
 /// Provides validation helpers for <see cref="Event"/> instances.
 /// </summary>
+/// <remarks>
+/// This class offers extension methods to validate <see cref="Event"/> objects, ensuring they meet the required schema constraints
+/// before being published or processed by the event bus system.
+/// </remarks>
 public static class EventValidation
 {
     /// <summary>
@@ -16,7 +20,7 @@ public static class EventValidation
     /// </summary>
     /// <param name="value">The event to validate.</param>
     /// <returns>A read‑only list of validation error messages. The list is empty when the event is valid.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is <c>null</c>.</exception>
     public static IReadOnlyList<string> Validate(this Event value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -24,9 +28,9 @@ public static class EventValidation
         var problems = new List<string>();
 
         // Id must be a non‑empty GUID string.
-        if (string.IsNullOrWhiteSpace(value.Id))
+        if (string.IsNullOrWhiteSpace(value.Id) || !Guid.TryParse(value.Id, out _))
         {
-            problems.Add("Id must be a non‑empty string.");
+            problems.Add("Id must be a valid non-empty GUID string.");
         }
 
         // Timestamp must not be the default value.
@@ -55,15 +59,15 @@ public static class EventValidation
     /// </summary>
     /// <param name="value">The event to check.</param>
     /// <returns><c>true</c> if the event has no validation problems; otherwise, <c>false</c>.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is <c>null</c>.</exception>
-    public static bool IsValid(this Event value) => !value.Validate().Any();
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is <c>null</c>.</exception>
+    public static bool IsValid(this Event value) => value.Validate().Count == 0;
 
     /// <summary>
     /// Ensures that the supplied <see cref="Event"/> is valid.
     /// </summary>
     /// <param name="value">The event to validate.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is <c>null</c>.</exception>
-    /// <exception cref="ArgumentException">Thrown when the event fails validation; the exception message contains a semicolon‑separated list of problems.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentException">The event fails validation; the exception message contains a semicolon-separated list of problems.</exception>
     public static void EnsureValid(this Event value)
     {
         ArgumentNullException.ThrowIfNull(value);
