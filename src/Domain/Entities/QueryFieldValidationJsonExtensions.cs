@@ -33,27 +33,20 @@ public static class QueryFieldValidationJsonExtensions
     /// <param name="indented">Whether to format the JSON with indentation for readability.</param>
     /// <returns>A JSON string representation of the QueryField.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
-    public static string ToJson(this QueryField value, bool indented = false)
-    {
-        ArgumentNullException.ThrowIfNull(value);
-
-        var options = indented
-            ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true }
-            : _jsonOptions;
-
-        return JsonSerializer.Serialize(value, options);
-    }
+    public static string ToJson(this QueryField value, bool indented = false) =>
+        JsonSerializer.Serialize(value, indented ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true } : _jsonOptions);
 
     /// <summary>
     /// Parses a JSON string and converts it to a <see cref="QueryField"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>A QueryField instance deserialized from JSON.</returns>
+    /// <returns>A QueryField instance deserialized from JSON, or null if deserialization fails.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is empty or whitespace.</exception>
     /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized.</exception>
     public static QueryField? FromJson(string json)
     {
-        ArgumentNullException.ThrowIfNull(json);
+        ArgumentException.ThrowIfNullOrEmpty(json);
 
         return JsonSerializer.Deserialize<QueryField>(json, _jsonOptions);
     }
@@ -71,7 +64,7 @@ public static class QueryFieldValidationJsonExtensions
         try
         {
             value = JsonSerializer.Deserialize<QueryField>(json, _jsonOptions);
-            return true;
+            return value is not null;
         }
         catch (JsonException)
         {
