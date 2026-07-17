@@ -22,7 +22,7 @@ public static class EnumHelperJsonExtensions
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
         WriteIndented = false,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
     /// <summary>
@@ -51,10 +51,12 @@ public static class EnumHelperJsonExtensions
     /// <typeparam name="T">The <see cref="Enum"/> type.</typeparam>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>An <see cref="Enum"/> instance.</returns>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is empty.</exception>
     /// <exception cref="JsonException">Thrown when JSON deserialization fails.</exception>
     public static T? FromJson<T>(string json) where T : Enum
     {
+        ArgumentNullException.ThrowIfNull(json);
         ArgumentException.ThrowIfNullOrEmpty(json);
 
         return JsonSerializer.Deserialize<T>(json, JsonSerializerOptions);
@@ -67,8 +69,11 @@ public static class EnumHelperJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">The deserialized <see cref="Enum"/> if successful.</param>
     /// <returns>True if deserialization succeeded; otherwise false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is empty.</exception>
     public static bool TryFromJson<T>(string json, out T? value) where T : Enum
     {
+        ArgumentNullException.ThrowIfNull(json);
         ArgumentException.ThrowIfNullOrEmpty(json);
 
         try
