@@ -72,6 +72,8 @@ public static class DependencyInjectionJsonExtensionsJsonExtensions
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is <see langword="null"/>.</exception>
     public static bool TryFromJson(this string json, out GraphQLEngineOptions? value)
     {
+        ArgumentNullException.ThrowIfNull(json);
+
         value = null;
 
         if (string.IsNullOrWhiteSpace(json))
@@ -136,6 +138,8 @@ public static class DependencyInjectionJsonExtensionsJsonExtensions
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is <see langword="null"/>.</exception>
     public static bool TryFromJson(this string json, out DotnetGraphqlEngineOptions? value)
     {
+        ArgumentNullException.ThrowIfNull(json);
+
         value = null;
 
         if (string.IsNullOrWhiteSpace(json))
