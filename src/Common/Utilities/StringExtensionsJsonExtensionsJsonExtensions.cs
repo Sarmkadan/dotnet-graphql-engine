@@ -9,9 +9,9 @@ using System.Text.Json;
 namespace GraphQLEngine.Common.Utilities;
 
 /// <summary>
-/// Provides JSON serialization and deserialization extension methods.
+/// Provides JSON serialization and deserialization extension methods for strings.
 /// </summary>
-public static class StringExtensionsJsonExtensionsJsonExtensions
+public static class StringJsonExtensions
 {
     private static readonly JsonSerializerOptions _jsonSerializerOptions = new(JsonSerializerDefaults.Web)
     {
@@ -42,7 +42,6 @@ public static class StringExtensionsJsonExtensionsJsonExtensions
     /// </summary>
     /// <param name="json">JSON string to deserialize.</param>
     /// <returns>The deserialized string value, or <see langword="null"/> if the input is null, whitespace, or parsing fails.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="json"/> is <see langword="null"/>.</exception>
     public static string? FromJson(string json)
     {
         ArgumentNullException.ThrowIfNull(json);
