@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 namespace Common.Utilities
 {
     /// <summary>
-    /// Provides JSON serialization helpers for <see cref="CollectionExtensions"/>.
+    /// Provides JSON serialization helpers for collections and objects.
     /// </summary>
     public static class CollectionExtensionsJsonExtensions
     {
@@ -14,24 +14,30 @@ namespace Common.Utilities
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         };
 
+        private static readonly JsonSerializerOptions _jsonSerializerOptionsIndented = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = true,
+        };
+
         /// <summary>
-        /// Converts the specified <see cref="CollectionExtensions"/> instance to a JSON string.
+        /// Converts the specified object to a JSON string.
         /// </summary>
-        /// <param name="value">The <see cref="CollectionExtensions"/> instance to convert.</param>
+        /// <param name="value">The object to convert to JSON.</param>
         /// <param name="indented">Whether to format the JSON string with indentation.</param>
-        /// <returns>A JSON string representation of the <see cref="CollectionExtensions"/> instance.</returns>
+        /// <returns>A JSON string representation of the object.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
         public static string ToJson(this object value, bool indented = false)
         {
             ArgumentNullException.ThrowIfNull(value);
-            return JsonSerializer.Serialize(value, indented ? _jsonSerializerOptions : _jsonSerializerOptions);
+            return JsonSerializer.Serialize(value, indented ? _jsonSerializerOptionsIndented : _jsonSerializerOptions);
         }
 
         /// <summary>
-        /// Attempts to deserialize a JSON string into a <see cref="CollectionExtensions"/> instance.
+        /// Attempts to deserialize a JSON string into an object.
         /// </summary>
         /// <param name="json">The JSON string to deserialize.</param>
-        /// <returns>A <see cref="CollectionExtensions"/> instance if deserialization is successful; otherwise, null.</returns>
+        /// <returns>An object if deserialization is successful; otherwise, null.</returns>
         /// <exception cref="ArgumentException">Thrown if <paramref name="json"/> is null or empty.</exception>
         public static object? FromJson(string json)
         {
@@ -47,10 +53,10 @@ namespace Common.Utilities
         }
 
         /// <summary>
-        /// Attempts to deserialize a JSON string into a <see cref="CollectionExtensions"/> instance.
+        /// Attempts to deserialize a JSON string into an object.
         /// </summary>
         /// <param name="json">The JSON string to deserialize.</param>
-        /// <param name="value">The deserialized <see cref="CollectionExtensions"/> instance if successful.</param>
+        /// <param name="value">The deserialized object if successful.</param>
         /// <returns>True if deserialization is successful; otherwise, false.</returns>
         /// <exception cref="ArgumentException">Thrown if <paramref name="json"/> is null or empty.</exception>
         public static bool TryFromJson(string json, out object? value)
