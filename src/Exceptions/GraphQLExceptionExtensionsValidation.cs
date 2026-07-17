@@ -5,7 +5,7 @@
 // CTO & Software Architect
 // ===================================================================
 
-using System.Globalization;
+using System.Diagnostics.CodeAnalysis;
 
 namespace GraphQLEngine.Exceptions;
 
@@ -57,7 +57,7 @@ public static class GraphQLExceptionExtensionsValidation
             }
         }
 
-        return problems.AsReadOnly();
+        return problems;
     }
 
     /// <summary>
@@ -65,10 +65,9 @@ public static class GraphQLExceptionExtensionsValidation
     /// </summary>
     /// <param name="exception">The GraphQL exception to check</param>
     /// <returns><see langword="true"/> if valid; otherwise, <see langword="false"/></returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="exception"/> is <see langword="null"/></exception>
     public static bool IsValidForExtensions(this GraphQLException? exception)
-    {
-        return exception is not null && ValidateExtensionCompatibility(exception).Count == 0;
-    }
+        => exception is not null && ValidateExtensionCompatibility(exception).Count == 0;
 
     /// <summary>
     /// Ensures the GraphQLException instance is valid for extension method usage,
