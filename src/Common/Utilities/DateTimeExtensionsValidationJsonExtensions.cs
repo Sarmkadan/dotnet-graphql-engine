@@ -27,7 +27,7 @@ public static class DateTimeExtensionsValidationJsonExtensions
     /// <param name="dateTime">The DateTime value to serialize.</param>
     /// <param name="indented">Whether to format the JSON with indentation.</param>
     /// <returns>The JSON string representation of the value.</returns>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when dateTime is MinValue or MaxValue.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="dateTime"/> is <see cref="DateTime.MinValue"/> or <see cref="DateTime.MaxValue"/>.</exception>
     /// <exception cref="ArgumentException">Thrown when validation fails.</exception>
     public static string ToJson(this DateTime dateTime, bool indented = false)
     {
@@ -47,24 +47,18 @@ public static class DateTimeExtensionsValidationJsonExtensions
     /// Deserializes a JSON string to a DateTime value.
     /// </summary>
     /// <param name="json">JSON string to deserialize.</param>
-    /// <returns>The deserialized DateTime value, or null if parsing fails.</returns>
+    /// <returns>The deserialized DateTime value, or <see langword="null"/> if parsing fails.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="json"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentException"><paramref name="json"/> is empty or whitespace.</exception>
     public static DateTime? FromJson(string json)
     {
-        ArgumentNullException.ThrowIfNull(json);
+        ArgumentException.ThrowIfNullOrEmpty(json);
 
-        if (string.IsNullOrWhiteSpace(json))
-            return null;
-
-        try
-        {
-            return JsonSerializer.Deserialize<DateTime>(json, _jsonSerializerOptions);
-        }
-        catch (JsonException)
-        {
-            return null;
-        }
+        return string.IsNullOrWhiteSpace(json)
+            ? null
+            : TryFromJson(json, out var result)
+                ? result
+                : null;
     }
 
     /// <summary>
@@ -81,7 +75,9 @@ public static class DateTimeExtensionsValidationJsonExtensions
         value = null;
 
         if (string.IsNullOrWhiteSpace(json))
+        {
             return false;
+        }
 
         try
         {
