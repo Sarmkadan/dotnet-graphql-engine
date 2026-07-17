@@ -4,53 +4,77 @@ using System.Text.Json.Serialization;
 
 namespace examples.v2_basic_usage
 {
-    public static class GraphQLHttpRequestExtensionsJsonExtensions
-    {
-        private static readonly JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = true
-        };
+/// <summary>
+/// Provides JSON serialization and deserialization extensions for <see cref="GraphQLHttpRequest"/> objects.
+/// </summary>
+public static class GraphQLHttpRequestExtensionsJsonExtensions
+{
+private static readonly JsonSerializerOptions _jsonSerializerOptions = new(JsonSerializerDefaults.Web)
+{
+PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+WriteIndented = false
+};
 
-        public static string ToJson(this GraphQLHttpRequestExtensions value, bool indented = false)
-        {
-            ArgumentNullException.ThrowIfNull(value);
-            if (indented)
-            {
-                return JsonSerializer.Serialize(value, _jsonSerializerOptions);
-            }
-            else
-            {
-                return JsonSerializer.Serialize(value);
-            }
-        }
+/// <summary>
+/// Converts a <see cref="GraphQLHttpRequest"/> to a JSON string representation.
+/// </summary>
+/// <param name="value">The <see cref="GraphQLHttpRequest"/> to serialize. Cannot be null.</param>
+/// <param name="indented">Whether to format the JSON with indentation for readability.</param>
+/// <returns>A JSON string representation of the request.</returns>
+/// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
+public static string ToJson(this GraphQLHttpRequest value, bool indented = false)
+{
+ArgumentNullException.ThrowIfNull(value);
 
-        public static GraphQLHttpRequestExtensions? FromJson(string json)
-        {
-            ArgumentNullException.ThrowIfNull(json);
-            try
-            {
-                return JsonSerializer.Deserialize<GraphQLHttpRequestExtensions>(json, _jsonSerializerOptions);
-            }
-            catch (JsonException)
-            {
-                return null;
-            }
-        }
+var options = indented
+? _jsonSerializerOptions with { WriteIndented = true }
+: _jsonSerializerOptions;
 
-        public static bool TryFromJson(string json, out GraphQLHttpRequestExtensions? value)
-        {
-            ArgumentNullException.ThrowIfNull(json);
-            try
-            {
-                value = JsonSerializer.Deserialize<GraphQLHttpRequestExtensions>(json, _jsonSerializerOptions);
-                return true;
-            }
-            catch (JsonException)
-            {
-                value = null;
-                return false;
-            }
-        }
-    }
+return JsonSerializer.Serialize(value, options);
+}
+
+/// <summary>
+/// Attempts to deserialize a JSON string into a <see cref="GraphQLHttpRequest"/>.
+/// </summary>
+/// <param name="json">The JSON string to deserialize. Cannot be null or whitespace.</param>
+/// <returns>A deserialized <see cref="GraphQLHttpRequest"/> or null if deserialization fails.</returns>
+/// <exception cref="ArgumentException">Thrown if <paramref name="json"/> is null, empty, or consists only of whitespace.</exception>
+public static GraphQLHttpRequest? FromJson(string json)
+{
+ArgumentException.ThrowIfNullOrWhiteSpace(json);
+
+try
+{
+return JsonSerializer.Deserialize<GraphQLHttpRequest>(json, _jsonSerializerOptions);
+}
+catch (JsonException)
+{
+return null;
+}
+}
+
+/// <summary>
+/// Attempts to deserialize a JSON string into a <see cref="GraphQLHttpRequest"/>.
+/// </summary>
+/// <param name="json">The JSON string to deserialize. Cannot be null or whitespace.</param>
+/// <param name="value">The deserialized <see cref="GraphQLHttpRequest"/> or null if deserialization fails.</param>
+/// <returns><see langword="true"/> if deserialization is successful; otherwise, <see langword="false"/>.</returns>
+/// <exception cref="ArgumentException">Thrown if <paramref name="json"/> is null, empty, or consists only of whitespace.</exception>
+public static bool TryFromJson(string json, out GraphQLHttpRequest? value)
+{
+ArgumentException.ThrowIfNullOrWhiteSpace(json);
+
+try
+{
+value = JsonSerializer.Deserialize<GraphQLHttpRequest>(json, _jsonSerializerOptions);
+return value is not null;
+}
+catch (JsonException)
+{
+value = null;
+return false;
+}
+}
+}
 }
