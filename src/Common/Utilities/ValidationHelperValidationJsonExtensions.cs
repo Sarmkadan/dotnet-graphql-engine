@@ -27,6 +27,7 @@ public static class ValidationHelperValidationJsonExtensions
     /// <param name="indented">Whether to format the JSON with indentation.</param>
     /// <returns>The JSON string representation of the object.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
+    /// <exception cref="JsonException">Thrown when serialization fails.</exception>
     public static string ToJson(this object? value, bool indented = false)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -42,8 +43,9 @@ public static class ValidationHelperValidationJsonExtensions
     /// Deserializes a JSON string to an object.
     /// </summary>
     /// <param name="json">JSON string to deserialize.</param>
-    /// <returns>The deserialized object, or null if parsing fails.</returns>
+    /// <returns>The deserialized object, or <see langword="null"/> if the input is empty/whitespace or parsing fails.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="json"/> is <see langword="null"/>.</exception>
+    /// <exception cref="JsonException">Thrown when deserialization fails.</exception>
     public static object? FromJson(string json)
     {
         ArgumentNullException.ThrowIfNull(json);
@@ -66,7 +68,7 @@ public static class ValidationHelperValidationJsonExtensions
     /// </summary>
     /// <param name="json">JSON string to deserialize.</param>
     /// <param name="value">Output parameter for the deserialized value.</param>
-    /// <returns><see langword="true"/> if deserialization succeeded; otherwise, <see langword="false"/>.</returns>
+    /// <returns><see langword="true"/> if deserialization succeeded; otherwise, <see langword="false"/> (for empty/whitespace input or parsing failures).</returns>
     /// <exception cref="ArgumentNullException"><paramref name="json"/> is <see langword="null"/>.</exception>
     public static bool TryFromJson(string json, out object? value)
     {
