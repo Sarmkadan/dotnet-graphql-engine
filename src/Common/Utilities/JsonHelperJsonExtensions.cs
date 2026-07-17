@@ -15,80 +15,71 @@ namespace GraphQLEngine.Common.Utilities;
 /// </summary>
 public static class JsonHelperJsonExtensions
 {
-    private static readonly JsonSerializerOptions CamelCaseOptions = new()
-    {
-        PropertyNameCaseInsensitive = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = false,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-    };
+	private static readonly JsonSerializerOptions CamelCaseOptions = new()
+	{
+		PropertyNameCaseInsensitive = true,
+		PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+		WriteIndented = false,
+		DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+	};
 
-    /// <summary>
-    /// Serializes an object to a JSON string using JsonHelper-compatible serialization options.
-    /// </summary>
-    /// <param name="value">The object to serialize</param>
-    /// <param name="indented">Whether to format the JSON with indentation</param>
-    /// <returns>A JSON string representation of the object</returns>
-    /// <exception cref="ArgumentNullException">Thrown when value is null</exception>
-    public static string ToJson(this object value, bool indented = false)
-    {
-        ArgumentNullException.ThrowIfNull(value);
+	/// <summary>
+	/// Serializes an object to a JSON string using JsonHelper-compatible serialization options.
+	/// </summary>
+	/// <param name="value">The object to serialize</param>
+	/// <param name="indented">Whether to format the JSON with indentation</param>
+	/// <returns>A JSON string representation of the object</returns>
+	/// <exception cref="ArgumentNullException">Thrown when value is null</exception>
+	public static string ToJson(this object value, bool indented = false)
+	{
+		ArgumentNullException.ThrowIfNull(value);
 
-        var options = indented
-            ? new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                WriteIndented = true,
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-            }
-            : CamelCaseOptions;
+		var options = indented
+			? new JsonSerializerOptions(CamelCaseOptions)
+			{
+				WriteIndented = true
+			}
+			: CamelCaseOptions;
 
-        return JsonSerializer.Serialize(value, options);
-    }
+		return JsonSerializer.Serialize(value, options);
+	}
 
-    /// <summary>
-    /// Deserializes a JSON string to an object using JsonHelper-compatible options.
-    /// </summary>
-    /// <typeparam name="T">The target type to deserialize to</typeparam>
-    /// <param name="json">The JSON string to deserialize</param>
-    /// <returns>An instance of type T if successful; otherwise, null</returns>
-    /// <exception cref="ArgumentException">Thrown when json is null or whitespace</exception>
-    public static T? FromJson<T>(string json)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(json);
+	/// <summary>
+	/// Deserializes a JSON string to an object using JsonHelper-compatible options.
+	/// </summary>
+	/// <typeparam name="T">The target type to deserialize to</typeparam>
+	/// <param name="json">The JSON string to deserialize</param>
+	/// <returns>An instance of type T if successful; otherwise, null</returns>
+	/// <exception cref="ArgumentException">Thrown when json is null or whitespace</exception>
+	/// <exception cref="JsonException">Thrown when the JSON is invalid for type T</exception>
+	public static T? FromJson<T>(string json)
+	{
+		ArgumentException.ThrowIfNullOrEmpty(json);
 
-        try
-        {
-            return JsonSerializer.Deserialize<T>(json, CamelCaseOptions);
-        }
-        catch (JsonException)
-        {
-            return default;
-        }
-    }
+		return JsonSerializer.Deserialize<T>(json, CamelCaseOptions);
+	}
 
-    /// <summary>
-    /// Attempts to deserialize a JSON string to an object of type T.
-    /// </summary>
-    /// <typeparam name="T">The target type to deserialize to</typeparam>
-    /// <param name="json">The JSON string to deserialize</param>
-    /// <param name="value">Output parameter that receives the deserialized object if successful</param>
-    /// <returns>true if deserialization succeeded; otherwise, false</returns>
-    /// <exception cref="ArgumentException">Thrown when json is null or whitespace</exception>
-    public static bool TryFromJson<T>(string json, out T? value)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(json);
+	/// <summary>
+	/// Attempts to deserialize a JSON string to an object of type T.
+	/// </summary>
+	/// <typeparam name="T">The target type to deserialize to</typeparam>
+	/// <param name="json">The JSON string to deserialize</param>
+	/// <param name="value">Output parameter that receives the deserialized object if successful</param>
+	/// <returns>true if deserialization succeeded; otherwise, false</returns>
+	/// <exception cref="ArgumentException">Thrown when json is null or whitespace</exception>
+	public static bool TryFromJson<T>(string json, out T? value)
+	{
+		ArgumentException.ThrowIfNullOrEmpty(json);
 
-        try
-        {
-            value = JsonSerializer.Deserialize<T>(json, CamelCaseOptions);
-            return true;
-        }
-        catch (JsonException)
-        {
-            value = default;
-            return false;
-        }
-    }
+		try
+		{
+			value = JsonSerializer.Deserialize<T>(json, CamelCaseOptions);
+			return true;
+		}
+		catch (JsonException)
+		{
+			value = default;
+			return false;
+		}
+	}
 }
