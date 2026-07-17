@@ -2,99 +2,134 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using System.Reflection;
-using System.Text;
-using System.Globalization;
 
 namespace GraphQLEngine.Common.Utilities;
 
 /// <summary>
-/// Validation utilities for <see cref="ReflectionHelper"/> static class.
+/// Provides runtime validation for <see cref="ReflectionHelper"/> static class methods.
 /// </summary>
 public static class ReflectionHelperValidation
 {
     /// <summary>
-    /// Validates various methods of <see cref="ReflectionHelper"/> and returns human-readable problems.
+    /// Validates the behavior of <see cref="ReflectionHelper"/> methods against expected invariants.
     /// </summary>
-    /// <returns>List of validation problems, empty if valid.</returns>
+    /// <returns>List of validation problems, empty if all validations pass.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if any input parameter is null.</exception>
     public static IReadOnlyList<string> Validate()
     {
+        ArgumentNullException.ThrowIfNull(typeof(ReflectionHelper));
+
         var errors = new List<string>();
 
-        // Validate IsNullableType
+        // Validate IsNullableType behavior
         if (ReflectionHelper.IsNullableType(typeof(int)))
         {
-            errors.Add("IsNullableType failed for int");
+            errors.Add("IsNullableType should return false for non-nullable type int");
         }
 
         if (!ReflectionHelper.IsNullableType(typeof(int?)))
         {
-            errors.Add("IsNullableType failed for int?");
+            errors.Add("IsNullableType should return true for nullable type int?");
         }
 
-        // Validate GetNullableUnderlyingType
-        if (ReflectionHelper.GetNullableUnderlyingType(typeof(int?)) != typeof(int))
+        if (ReflectionHelper.IsNullableType(null))
         {
-            errors.Add("GetNullableUnderlyingType failed for int?");
+            errors.Add("IsNullableType should throw ArgumentNullException for null type");
         }
 
-        // Validate IsGeneric
+        // Validate GetNullableUnderlyingType behavior
+        var intUnderlying = ReflectionHelper.GetNullableUnderlyingType(typeof(int?));
+        if (intUnderlying != typeof(int))
+        {
+            errors.Add("GetNullableUnderlyingType should return typeof(int) for int?");
+        }
+
+        var nonNullableUnderlying = ReflectionHelper.GetNullableUnderlyingType(typeof(int));
+        if (nonNullableUnderlying is not null)
+        {
+            errors.Add("GetNullableUnderlyingType should return null for non-nullable type int");
+        }
+
+        if (ReflectionHelper.GetNullableUnderlyingType(null) is not null)
+        {
+            errors.Add("GetNullableUnderlyingType should throw ArgumentNullException for null type");
+        }
+
+        // Validate IsGeneric behavior
         if (ReflectionHelper.IsGeneric(typeof(int)))
         {
-            errors.Add("IsGeneric failed for int");
+            errors.Add("IsGeneric should return false for non-generic type int");
         }
 
         if (!ReflectionHelper.IsGeneric(typeof(List<int>)))
         {
-            errors.Add("IsGeneric failed for List<int>");
+            errors.Add("IsGeneric should return true for generic type List<int>");
         }
 
-        // Validate GetReadableTypeName
-        var typeName = ReflectionHelper.GetReadableTypeName(typeof(List<int>));
-        if (typeName != "List<Int32>")
+        if (ReflectionHelper.IsGeneric(null))
         {
-            errors.Add($"GetReadableTypeName failed for List<int>, got: {typeName}");
+            errors.Add("IsGeneric should throw ArgumentNullException for null type");
         }
 
-        // Validate ImplementsInterface
+        // Validate GetReadableTypeName behavior
+        var listTypeName = ReflectionHelper.GetReadableTypeName(typeof(List<int>));
+        if (listTypeName != "List<Int32>")
+        {
+            errors.Add($"GetReadableTypeName should return 'List<Int32>' for List<int>, got: {listTypeName}");
+        }
+
+        var simpleTypeName = ReflectionHelper.GetReadableTypeName(typeof(string));
+        if (simpleTypeName != "String")
+        {
+            errors.Add($"GetReadableTypeName should return 'String' for string, got: {simpleTypeName}");
+        }
+
+        if (ReflectionHelper.GetReadableTypeName(null) is not null)
+        {
+            errors.Add("GetReadableTypeName should throw ArgumentNullException for null type");
+        }
+
+        // Validate ImplementsInterface behavior
         if (!ReflectionHelper.ImplementsInterface<System.Collections.IEnumerable>(typeof(List<int>)))
         {
-            errors.Add("ImplementsInterface failed for List<int> implementing IEnumerable");
+            errors.Add("ImplementsInterface should return true for List<int> implementing IEnumerable");
+        }
+
+        if (ReflectionHelper.ImplementsInterface<System.Collections.IEnumerable>(typeof(string)))
+        {
+            errors.Add("ImplementsInterface should return false for string which doesn't implement IEnumerable<T>");
+        }
+
+        if (ReflectionHelper.ImplementsInterface<IDisposable>(null))
+        {
+            errors.Add("ImplementsInterface should throw ArgumentNullException for null type");
         }
 
         return errors.AsReadOnly();
     }
 
     /// <summary>
-    /// Checks if the ReflectionHelper is valid (all validation methods pass).
+    /// Determines whether all <see cref="ReflectionHelper"/> validations pass.
     /// </summary>
-    /// <returns>True if valid, false otherwise.</returns>
-    public static bool IsValid()
-    {
-        return Validate().Count == 0;
-    }
+    /// <returns>True if all validations pass; otherwise, false.</returns>
+    public static bool IsValid() => Validate().Count == 0;
 
     /// <summary>
-    /// Ensures the ReflectionHelper is valid, throwing ArgumentException if not.
+    /// Validates <see cref="ReflectionHelper"/> and throws an exception if any validation fails.
     /// </summary>
-    /// <exception cref="ArgumentException">Thrown when validation fails with list of problems.</exception>
+    /// <exception cref="ArgumentException">Thrown when one or more validations fail.
+    /// The exception message contains a numbered list of all validation failures.</exception>
     public static void EnsureValid()
     {
         var errors = Validate();
 
         if (errors.Count > 0)
         {
-            var errorMessage = new StringBuilder();
-            errorMessage.AppendLine("ReflectionHelper validation failed:");
-
-            for (int i = 0; i < errors.Count; i++)
-            {
-                errorMessage.AppendLine($" {i + 1}. {errors[i]}");
-            }
-
-            throw new ArgumentException(errorMessage.ToString());
+            throw new ArgumentException(
+                $"ReflectionHelper validation failed:{Environment.NewLine}  {string.Join($"{Environment.NewLine}  ", errors)}");
         }
     }
 }
