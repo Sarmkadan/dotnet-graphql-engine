@@ -4,12 +4,12 @@
 // CTO & Software Architect
 // =============================================================================
 
-using System.Globalization;
+using System.Diagnostics.CodeAnalysis;
 
 namespace GraphQLEngine.Configuration;
 
 /// <summary>
-/// Validation helpers for <see cref="PersistedQueryExtensions"/> and <see cref="PersistedQueryOptions"/>.
+/// Validation helpers for <see cref="PersistedQueryOptions"/>.
 /// </summary>
 public static class PersistedQueryExtensionsValidation
 {
@@ -26,7 +26,9 @@ public static class PersistedQueryExtensionsValidation
         var errors = new List<string>();
 
         if (value.MaxIndexSize <= 0)
+        {
             errors.Add($"MaxIndexSize must be greater than 0, but was {value.MaxIndexSize}.");
+        }
 
         return errors.AsReadOnly();
     }
@@ -37,7 +39,7 @@ public static class PersistedQueryExtensionsValidation
     /// <param name="value">The options to check.</param>
     /// <returns><c>true</c> when valid; otherwise <c>false</c>.</returns>
     public static bool IsValid(this PersistedQueryOptions? value)
-        => value is not null && value.Validate() is { Count: 0 };
+        => value is not null && value.Validate(out var errors) && errors.Count == 0;
 
     /// <summary>
     /// Ensures the <see cref="PersistedQueryOptions"/> instance is valid, throwing an <see cref="ArgumentException"/>
@@ -50,9 +52,10 @@ public static class PersistedQueryExtensionsValidation
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        var errors = value.Validate();
-        if (errors.Count == 0)
+        if (!value.Validate(out var errors))
+        {
             return;
+        }
 
         throw new ArgumentException(
             $"PersistedQueryOptions is invalid:{Environment.NewLine}- ".Replace("- ", "") +
