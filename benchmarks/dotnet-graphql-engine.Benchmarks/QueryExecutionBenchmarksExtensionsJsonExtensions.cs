@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -7,13 +8,14 @@ namespace GraphQLEngine.Benchmarks;
 /// <summary>
 /// Provides System.Text.Json serialization extensions for <see cref="QueryExecutionBenchmarksExtensions"/>.
 /// </summary>
-public static class QueryExecutionBenchmarksExtensionsJsonExtensions
+public sealed class QueryExecutionBenchmarksExtensionsJsonExtensions
 {
     private static readonly JsonSerializerOptions _jsonSerializerOptions = new(JsonSerializerDefaults.Web)
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         WriteIndented = false,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        PropertyNameCaseInsensitive = true
     };
 
     /// <summary>
@@ -42,8 +44,9 @@ public static class QueryExecutionBenchmarksExtensionsJsonExtensions
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>The deserialized <see cref="QueryExecutionBenchmarksExtensions"/> instance, or <see langword="null"/> if the JSON is empty or whitespace.</returns>
-    /// <exception cref="ArgumentException"><paramref name="json"/> is <see langword="null"/> or empty.</exception>
-    /// <exception cref="JsonException">The JSON is invalid or cannot be deserialized.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="json"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="json"/> is empty or whitespace.</exception>
+    /// <exception cref="JsonException">The JSON is invalid or cannot be deserialized into a <see cref="QueryExecutionBenchmarksExtensions"/> instance.</exception>
     public static QueryExecutionBenchmarksExtensions? FromJson(string json)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
@@ -62,6 +65,8 @@ public static class QueryExecutionBenchmarksExtensionsJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">Receives the deserialized value if successful.</param>
     /// <returns><see langword="true"/> if deserialization succeeds; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="json"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="json"/> is empty or whitespace.</exception>
     public static bool TryFromJson(string json, out QueryExecutionBenchmarksExtensions? value)
     {
         value = null;
