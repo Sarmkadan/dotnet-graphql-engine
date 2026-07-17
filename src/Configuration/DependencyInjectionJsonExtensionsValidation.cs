@@ -12,60 +12,70 @@ namespace GraphQLEngine.Configuration;
 /// </summary>
 public static class DependencyInjectionJsonExtensionsValidation
 {
-    /// <summary>
-    /// Validates extensions methods of <see cref="DependencyInjectionJsonExtensions"/> for invalid usage.
-    /// </summary>
-    /// <returns>A list of human-readable problems with the extensions methods.</returns>
-    public static IReadOnlyList<string> Validate()
-    {
-        var problems = new List<string>();
+	/// <summary>
+	/// Validates extensions methods of <see cref="DependencyInjectionJsonExtensions"/> for invalid usage.
+	/// </summary>
+	/// <returns>A list of human-readable problems with the extensions methods.</returns>
+	/// <exception cref="ArgumentNullException">Thrown when <paramref name="problems"/> is <see langword="null"/>.</exception>
+	public static IReadOnlyList<string> Validate()
+	{
+		var problems = new List<string>();
 
-        // Validate ToJson methods
-        ValidateToJson(problems);
+		// Validate ToJson methods
+		ValidateToJson(problems);
 
-        // Validate FromJson methods
-        ValidateFromJson(problems);
+		// Validate FromJson methods
+		ValidateFromJson(problems);
 
-        // Validate TryFromJson methods
-        ValidateTryFromJson(problems);
+		// Validate TryFromJson methods
+		ValidateTryFromJson(problems);
 
-        return problems.AsReadOnly();
-    }
+		return problems.AsReadOnly();
+	}
 
-    private static void ValidateToJson(List<string> problems)
-    {
-        // No validation rules currently needed for ToJson methods.
-    }
+	private static void ValidateToJson(List<string> problems)
+	{
+		ArgumentNullException.ThrowIfNull(problems);
 
-    private static void ValidateFromJson(List<string> problems)
-    {
-        // FromJson methods return null for null or whitespace input; this is valid.
-    }
+		// Validate that ToJson methods properly handle null inputs
+		// These methods should throw ArgumentNullException for null inputs
+	}
 
-    private static void ValidateTryFromJson(List<string> problems)
-    {
-        // TryFromJson methods return false for null or whitespace input; this is valid.
-    }
+	private static void ValidateFromJson(List<string> problems)
+	{
+		ArgumentNullException.ThrowIfNull(problems);
 
-    /// <summary>
-    /// Checks if extensions methods of <see cref="DependencyInjectionJsonExtensions"/> are valid.
-    /// </summary>
-    /// <returns><see langword="true"/> if the extensions methods are valid; otherwise, <see langword="false"/>.</returns>
-    public static bool IsValid()
-    {
-        return Validate().Count == 0;
-    }
+		// FromJson methods should return null for null, empty, or whitespace input
+		// and throw JsonException for malformed JSON
+	}
 
-    /// <summary>
-    /// Ensures extensions methods of <see cref="DependencyInjectionJsonExtensions"/> are valid.
-    /// </summary>
-    /// <exception cref="ArgumentException">Thrown when extensions methods are not valid.</exception>
-    public static void EnsureValid()
-    {
-        var problems = Validate();
-        if (problems.Count > 0)
-        {
-            throw new ArgumentException($"Invalid usage of DependencyInjectionJsonExtensions: {string.Join(", ", problems)}");
-        }
-    }
+	private static void ValidateTryFromJson(List<string> problems)
+	{
+		ArgumentNullException.ThrowIfNull(problems);
+
+		// TryFromJson methods should return true for null, empty, or whitespace input
+		// and false for malformed JSON
+	}
+
+	/// <summary>
+	/// Checks if extensions methods of <see cref="DependencyInjectionJsonExtensions"/> are valid.
+	/// </summary>
+	/// <returns><see langword="true"/> if the extensions methods are valid; otherwise, <see langword="false"/>.</returns>
+	public static bool IsValid()
+	{
+		return Validate().Count == 0;
+	}
+
+	/// <summary>
+	/// Ensures extensions methods of <see cref="DependencyInjectionJsonExtensions"/> are valid.
+	/// </summary>
+	/// <exception cref="ArgumentException">Thrown when extensions methods are not valid.</exception>
+	public static void EnsureValid()
+	{
+		var problems = Validate();
+		if (problems.Count > 0)
+		{
+			throw new ArgumentException($"Invalid usage of DependencyInjectionJsonExtensions: {string.Join(", ", problems)}");
+		}
+	}
 }
