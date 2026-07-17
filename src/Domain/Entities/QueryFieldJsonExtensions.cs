@@ -13,7 +13,7 @@ namespace GraphQLEngine.Domain.Entities
         /// <summary>
         /// Private static readonly JSON serializer options with camelCase naming policy.
         /// </summary>
-        private static readonly JsonSerializerOptions JsonSerializerOptions = new()
+        private static readonly JsonSerializerOptions _jsonOptions = new()
         {
             WriteIndented = false,
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -27,30 +27,21 @@ namespace GraphQLEngine.Domain.Entities
         /// <param name="indented">Whether to format the JSON with indentation.</param>
         /// <returns>A JSON string representation of the <see cref="QueryField"/>.</returns>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
-        public static string ToJson(this QueryField value, bool indented = false)
-        {
-            ArgumentNullException.ThrowIfNull(value);
-            
-            JsonSerializerOptions options = new(JsonSerializerOptions)
-            {
-                WriteIndented = indented
-            };
-            
-            return JsonSerializer.Serialize(value, options);
-        }
+        public static string ToJson(this QueryField value, bool indented = false) =>
+            JsonSerializer.Serialize(value, indented ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true } : _jsonOptions);
 
         /// <summary>
         /// Deserializes a JSON string to a <see cref="QueryField"/> instance.
         /// </summary>
         /// <param name="json">The JSON string to deserialize.</param>
-        /// <returns>A <see cref="QueryField"/> instance.</returns>
+        /// <returns>A <see cref="QueryField"/> instance, or null if the JSON represents a null value.</returns>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null or empty.</exception>
         /// <exception cref="JsonException">Thrown when JSON deserialization fails.</exception>
         public static QueryField? FromJson(string json)
         {
             ArgumentException.ThrowIfNullOrEmpty(json);
-            
-            return JsonSerializer.Deserialize<QueryField>(json, JsonSerializerOptions);
+
+            return JsonSerializer.Deserialize<QueryField>(json, _jsonOptions);
         }
 
         /// <summary>
@@ -62,10 +53,10 @@ namespace GraphQLEngine.Domain.Entities
         public static bool TryFromJson(string json, out QueryField? value)
         {
             ArgumentException.ThrowIfNullOrEmpty(json);
-            
+
             try
             {
-                value = JsonSerializer.Deserialize<QueryField>(json, JsonSerializerOptions);
+                value = JsonSerializer.Deserialize<QueryField>(json, _jsonOptions);
                 return value is not null;
             }
             catch (JsonException)
