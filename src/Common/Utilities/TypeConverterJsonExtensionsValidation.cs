@@ -75,19 +75,23 @@ public static class TypeConverterJsonExtensionsValidation
     /// Determines whether <see cref="TypeConverterJsonExtensions"/> passes validation.
     /// </summary>
     /// <returns><c>true</c> if no validation problems are found; otherwise <c>false</c>.</returns>
-    public static bool IsValid() => !Validate().Any();
+    public static bool IsValid() => Validate().Count == 0;
 
     /// <summary>
     /// Ensures that <see cref="TypeConverterJsonExtensions"/> is valid.
     /// </summary>
     /// <exception cref="ArgumentException">
     /// Thrown when validation problems are detected. The exception message contains a
-    /// semicolon‑separated list of the problems.
+    /// semicolon-separated list of the problems.
     /// </exception>
+    /// <exception cref="ArgumentNullException"><paramref name="problems"/> is <c>null</c>.</exception>
     public static void EnsureValid()
     {
+        ArgumentNullException.ThrowIfNull(Validate());
         var problems = Validate();
-        if (problems.Any())
+        if (problems.Count > 0)
+        {
             throw new ArgumentException($"TypeConverterJsonExtensions validation failed: {string.Join("; ", problems)}");
+        }
     }
 }
