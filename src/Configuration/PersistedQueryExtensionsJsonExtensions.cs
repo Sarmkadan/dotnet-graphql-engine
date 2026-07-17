@@ -13,14 +13,14 @@ using GraphQLEngine.Configuration;
 namespace GraphQLEngine.Configuration;
 
 /// <summary>
-/// Provides JSON serialization and deserialization extensions for the <see cref="PersistedQueryExtensions"/> type.
+/// Provides JSON serialization and deserialization extensions for the <see cref="PersistedQueryOptions"/> type.
 /// </summary>
 public static class PersistedQueryExtensionsJsonExtensions
 {
     /// <summary>
     /// Private static readonly JSON serializer options with camelCase naming policy.
     /// </summary>
-    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new(JsonSerializerOptions.Default)
     {
         WriteIndented = false,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -63,8 +63,9 @@ public static class PersistedQueryExtensionsJsonExtensions
     /// Tries to deserialize a JSON string to a <see cref="PersistedQueryOptions"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <param name="value">The deserialized <see cref="PersistedQueryOptions"/> if successful.</param>
-    /// <returns>True if deserialization succeeded; otherwise false.</returns>
+    /// <param name="value">When this method returns, contains the deserialized <see cref="PersistedQueryOptions"/> if successful; otherwise, <see langword="null"/>.</param>
+    /// <returns><see langword="true"/> if deserialization succeeded; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is <see langword="null"/>, empty, or consists only of white-space characters.</exception>
     public static bool TryFromJson(string json, out PersistedQueryOptions? value)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
