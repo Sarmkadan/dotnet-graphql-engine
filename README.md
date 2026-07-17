@@ -268,6 +268,95 @@ The `DependencyInjectionJsonExtensions` class is particularly useful when you ne
 The extension methods use camelCase property naming and ignore null values by default, making them suitable for both API configuration and configuration file scenarios.
 
 
+## DependencyInjectionValidation
+
+The `DependencyInjectionValidation` class provides validation utilities for GraphQL engine configuration and dependency injection setup. It offers extension methods to validate `GraphQLEngineOptions`, `DotnetGraphqlEngineOptions`, and `IServiceCollection` instances, ensuring proper configuration before application startup. Validation methods return detailed error messages for misconfigurations, while convenience methods provide boolean checks and exception-throwing variants.
+
+### Usage Example
+
+```csharp
+using GraphQLEngine.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
+class Program
+{
+  static void Main()
+  {
+    // Example 1: Validate GraphQLEngineOptions
+    var options = new GraphQLEngineOptions
+    {
+      Schema = "https://api.example.com/graphql",
+      Timeout = TimeSpan.FromSeconds(30),
+      MaxQueryDepth = 10
+    };
+
+    // Validate and get error list
+    var validationErrors = options.Validate();
+    if (validationErrors.Count > 0)
+    {
+      Console.WriteLine("Validation failed:");
+      foreach (var error in validationErrors)
+      {
+        Console.WriteLine($"- {error}");
+      }
+    }
+    else
+    {
+      Console.WriteLine("GraphQLEngineOptions is valid");
+    }
+
+    // Example 2: Check validity with IsValid
+    bool isValid = options.IsValid();
+    Console.WriteLine($"Is valid: {isValid}");
+
+    // Example 3: Validate with EnsureValid (throws on failure)
+    try
+    {
+      options.EnsureValid();
+      Console.WriteLine("Options passed validation");
+    }
+    catch (ArgumentException ex)
+    {
+      Console.WriteLine($"Validation failed: {ex.Message}");
+    }
+
+    // Example 4: Validate service collection configuration
+    var services = new ServiceCollection();
+    services.AddGraphQLEngine(); // Register GraphQL engine services
+    
+    var serviceErrors = services.Validate();
+    if (serviceErrors.Count > 0)
+    {
+      Console.WriteLine("Service collection validation failed:");
+      foreach (var error in serviceErrors)
+      {
+        Console.WriteLine($"- {error}");
+      }
+    }
+    else
+    {
+      Console.WriteLine("Service collection is properly configured");
+    }
+
+    // Example 5: Check service collection validity
+    bool servicesValid = services.IsValid();
+    Console.WriteLine($"Services are valid: {servicesValid}");
+
+    // Example 6: Validate service collection with EnsureValid
+    try
+    {
+      services.EnsureValid();
+      Console.WriteLine("Service collection passed validation");
+    }
+    catch (ArgumentException ex)
+    {
+      Console.WriteLine($"Service validation failed: {ex.Message}");
+    }
+  }
+}
+```
+
+
 
 
 // ... rest of the original README content ...
