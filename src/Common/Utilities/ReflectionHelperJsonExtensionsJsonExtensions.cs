@@ -9,15 +9,15 @@ using System.Text.Json;
 namespace GraphQLEngine.Common.Utilities;
 
 /// <summary>
-/// Provides System.Text.Json serialization extension methods for the <see cref="ReflectionHelperJsonExtensions"/> type.
-/// These methods serialize and deserialize the ReflectionHelperJsonExtensions marker type for use in JSON contexts.
+/// Provides System.Text.Json serialization extension methods for marker types used with ReflectionHelper.
+/// These methods serialize and deserialize marker types to/from JSON strings for use in JSON contexts.
 /// </summary>
 public static class ReflectionHelperJsonExtensionsJsonExtensions
 {
     /// <summary>
     /// Private static readonly JSON serializer options with camelCase naming policy.
     /// </summary>
-    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new(JsonSerializerOptions.Default)
     {
         WriteIndented = false,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
@@ -48,17 +48,23 @@ public static class ReflectionHelperJsonExtensionsJsonExtensions
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>A <see cref="ReflectionHelperJsonExtensions"/> marker (always null for static classes) if successful; otherwise, null.</returns>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or whitespace.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is empty or whitespace.</exception>
     public static object? FromJson(string json)
     {
-        ArgumentException.ThrowIfNullOrEmpty(json);
+        ArgumentNullException.ThrowIfNull(json);
+
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return null;
+        }
 
         try
         {
             var result = JsonSerializer.Deserialize<ReflectionHelperWrapper>(json, JsonSerializerOptions);
             return result?.Type == nameof(ReflectionHelperJsonExtensions) ? null : null;
         }
-        catch (JsonException)
+        catch
         {
             return null;
         }
@@ -71,10 +77,18 @@ public static class ReflectionHelperJsonExtensionsJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">The deserialized <see cref="ReflectionHelperJsonExtensions"/> marker (always null for static classes).</param>
     /// <returns>True if deserialization succeeded and represents ReflectionHelperJsonExtensions; otherwise false.</returns>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or whitespace.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is empty or whitespace.</exception>
     public static bool TryFromJson(string json, out object? value)
     {
-        ArgumentException.ThrowIfNullOrEmpty(json);
+        value = default;
+
+        ArgumentNullException.ThrowIfNull(json);
+
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return false;
+        }
 
         try
         {
@@ -88,7 +102,7 @@ public static class ReflectionHelperJsonExtensionsJsonExtensions
             value = null;
             return false;
         }
-        catch (JsonException)
+        catch
         {
             value = null;
             return false;
