@@ -1,7 +1,6 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace GraphQLEngine.Exceptions;
 
@@ -11,16 +10,18 @@ namespace GraphQLEngine.Exceptions;
 public static class GraphQLExceptionValidation
 {
     /// <summary>
-    /// Validates the exception instance and returns a read‑only list of problems.
+    /// Validates the exception instance and returns a read-only list of problems.
     /// </summary>
     /// <param name="value">The exception to validate.</param>
     /// <returns>
-    /// A read‑only list of validation error messages. The list is empty if the instance is valid.
+    /// A read-only list of validation error messages. The list is empty if the instance is valid.
     /// </returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is <c>null</c>.</exception>
     public static IReadOnlyList<string> Validate(this GraphQLException value)
     {
         ArgumentNullException.ThrowIfNull(value);
+        ArgumentNullException.ThrowIfNull(value.Extensions);
+
         var problems = new List<string>();
 
         // Base members
@@ -38,19 +39,15 @@ public static class GraphQLExceptionValidation
             }
         }
 
-        // Derived‑type specific validation
+        // Derived-type specific validation
         switch (value)
         {
-            case ExecutionException exec:
-                if (string.IsNullOrWhiteSpace(exec.FieldPath))
-                {
-                    problems.Add("ExecutionException.FieldPath is null or whitespace.");
-                }
+            case ExecutionException exec when string.IsNullOrWhiteSpace(exec.FieldPath):
+                problems.Add("ExecutionException.FieldPath is null or whitespace.");
+                break;
 
-                if (exec.LineNumber is { } line && line < 1)
-                {
-                    problems.Add($"ExecutionException.LineNumber ({line}) must be greater than zero.");
-                }
+            case ExecutionException exec when exec.LineNumber is { } line && line < 1:
+                problems.Add($"ExecutionException.LineNumber ({line}) must be greater than zero.");
                 break;
 
             case QueryComplexityException qc:
@@ -83,18 +80,12 @@ public static class GraphQLExceptionValidation
                 }
                 break;
 
-            case DataLoaderException dl:
-                if (string.IsNullOrWhiteSpace(dl.LoaderName))
-                {
-                    problems.Add("DataLoaderException.LoaderName is null or whitespace.");
-                }
+            case DataLoaderException dl when string.IsNullOrWhiteSpace(dl.LoaderName):
+                problems.Add("DataLoaderException.LoaderName is null or whitespace.");
                 break;
 
-            case SubscriptionException sub:
-                if (sub.ClientId is not null && string.IsNullOrWhiteSpace(sub.ClientId))
-                {
-                    problems.Add("SubscriptionException.ClientId is whitespace.");
-                }
+            case SubscriptionException sub when sub.ClientId is not null && string.IsNullOrWhiteSpace(sub.ClientId):
+                problems.Add("SubscriptionException.ClientId is whitespace.");
                 break;
         }
 
