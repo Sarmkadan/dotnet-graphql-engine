@@ -44,18 +44,6 @@ public static class ReflectionHelperJsonExtensionsValidation
             problems.Add("Type AssemblyQualifiedName exceeds maximum length of 2048 characters");
         }
 
-        // Validate that generic type information is consistent
-        if (type.IsGenericType && type.GetGenericTypeDefinition() == null)
-        {
-            problems.Add("Generic type definition cannot be resolved");
-        }
-
-        // Validate IsAbstract is a valid boolean state
-        // (always valid as it's just a boolean)
-
-        // Validate IsValueType is a valid boolean state
-        // (always valid as it's just a boolean)
-
         return problems.AsReadOnly();
     }
 
@@ -66,7 +54,10 @@ public static class ReflectionHelperJsonExtensionsValidation
     /// <returns>True if valid, false otherwise</returns>
     /// <exception cref="ArgumentNullException"><paramref name="type"/> is <see langword="null"/></exception>
     public static bool IsValid(this Type type)
-        => Validate(type).Count == 0;
+    {
+        ArgumentNullException.ThrowIfNull(type);
+        return Validate(type).Count == 0;
+    }
 
     /// <summary>
     /// Ensures a Type object is valid, throwing ArgumentException if not
@@ -76,6 +67,8 @@ public static class ReflectionHelperJsonExtensionsValidation
     /// <exception cref="ArgumentException">Thrown when validation fails with list of problems</exception>
     public static void EnsureValid(this Type type)
     {
+        ArgumentNullException.ThrowIfNull(type);
+
         var problems = Validate(type);
 
         if (problems.Count > 0)
