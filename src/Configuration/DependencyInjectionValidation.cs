@@ -20,7 +20,7 @@ public static class DependencyInjectionValidation
     /// </summary>
     /// <param name="value">The options to validate</param>
     /// <returns>List of validation errors, empty if valid</returns>
-    /// <exception cref="ArgumentNullException">Thrown when value is null</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is null</exception>
     public static IReadOnlyList<string> Validate(this GraphQLEngineOptions value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -33,7 +33,7 @@ public static class DependencyInjectionValidation
     /// </summary>
     /// <param name="value">The options to validate</param>
     /// <returns>List of validation errors, empty if valid</returns>
-    /// <exception cref="ArgumentNullException">Thrown when value is null</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is null</exception>
     public static IReadOnlyList<string> Validate(this DotnetGraphqlEngineOptions value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -46,32 +46,30 @@ public static class DependencyInjectionValidation
     /// </summary>
     /// <param name="value">The options to check</param>
     /// <returns>True if valid, false otherwise</returns>
-    /// <exception cref="ArgumentNullException">Thrown when value is null</exception>
-    public static bool IsValid(this GraphQLEngineOptions value)
-    {
-        ArgumentNullException.ThrowIfNull(value);
-
-        return value.Validate().Count == 0;
-    }
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is null</exception>
+public static bool IsValid(this GraphQLEngineOptions value)
+{
+    ArgumentNullException.ThrowIfNull(value);
+    return value.Validate().Count == 0;
+}
 
     /// <summary>
     /// Checks if a DotnetGraphqlEngineOptions instance is valid
     /// </summary>
     /// <param name="value">The options to check</param>
     /// <returns>True if valid, false otherwise</returns>
-    /// <exception cref="ArgumentNullException">Thrown when value is null</exception>
-    public static bool IsValid(this DotnetGraphqlEngineOptions value)
-    {
-        ArgumentNullException.ThrowIfNull(value);
-
-        return value.Validate().Count == 0;
-    }
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is null</exception>
+public static bool IsValid(this DotnetGraphqlEngineOptions value)
+{
+    ArgumentNullException.ThrowIfNull(value);
+    return value.Validate().Count == 0;
+}
 
     /// <summary>
     /// Validates a GraphQLEngineOptions instance and throws ArgumentException if invalid
     /// </summary>
     /// <param name="value">The options to validate</param>
-    /// <exception cref="ArgumentNullException">Thrown when value is null</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is null</exception>
     /// <exception cref="ArgumentException">Thrown when validation fails, with detailed error messages</exception>
     public static void EnsureValid(this GraphQLEngineOptions value)
     {
@@ -91,7 +89,7 @@ public static class DependencyInjectionValidation
     /// Validates a DotnetGraphqlEngineOptions instance and throws ArgumentException if invalid
     /// </summary>
     /// <param name="value">The options to validate</param>
-    /// <exception cref="ArgumentNullException">Thrown when value is null</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is null</exception>
     /// <exception cref="ArgumentException">Thrown when validation fails, with detailed error messages</exception>
     public static void EnsureValid(this DotnetGraphqlEngineOptions value)
     {
@@ -112,7 +110,7 @@ public static class DependencyInjectionValidation
     /// </summary>
     /// <param name="services">The service collection to validate</param>
     /// <returns>List of validation errors, empty if valid</returns>
-    /// <exception cref="ArgumentNullException">Thrown when services is null</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="services"/> is null</exception>
     public static IReadOnlyList<string> Validate(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
@@ -163,19 +161,18 @@ public static class DependencyInjectionValidation
     /// </summary>
     /// <param name="services">The service collection to check</param>
     /// <returns>True if valid, false otherwise</returns>
-    /// <exception cref="ArgumentNullException">Thrown when services is null</exception>
-    public static bool IsValid(this IServiceCollection services)
-    {
-        ArgumentNullException.ThrowIfNull(services);
-
-        return services.Validate().Count == 0;
-    }
+    /// <exception cref="ArgumentNullException"><paramref name="services"/> is null</exception>
+public static bool IsValid(this IServiceCollection services)
+{
+    ArgumentNullException.ThrowIfNull(services);
+    return services.Validate().Count == 0;
+}
 
     /// <summary>
     /// Validates a service collection configuration and throws ArgumentException if invalid
     /// </summary>
     /// <param name="services">The service collection to validate</param>
-    /// <exception cref="ArgumentNullException">Thrown when services is null</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="services"/> is null</exception>
     /// <exception cref="ArgumentException">Thrown when validation fails, with detailed error messages</exception>
     public static void EnsureValid(this IServiceCollection services)
     {
