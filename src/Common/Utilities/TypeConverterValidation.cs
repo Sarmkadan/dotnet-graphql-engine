@@ -2,7 +2,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using System.Globalization;
 
@@ -10,86 +10,133 @@ namespace GraphQLEngine.Common.Utilities;
 
 /// <summary>
 /// Provides validation helpers for TypeConverter operations
-/// Validates input values before conversion and checks for common data issues
+/// Validates input values and TypeConverter behavior before conversion operations
 /// </summary>
 public static class TypeConverterValidation
 {
     /// <summary>
-    /// Validates TypeConverter operations and returns a list of human-readable problems
+    /// Validates that a value can be safely converted using TypeConverter
     /// </summary>
     /// <param name="value">The value to validate (used for null checking)</param>
     /// <returns>List of validation problems; empty list if valid</returns>
     /// <exception cref="ArgumentNullException">Thrown when value is null</exception>
     public static IReadOnlyList<string> Validate(object? value = null)
     {
-        ArgumentNullException.ThrowIfNull(value);
-
         var problems = new List<string>();
 
-        // Validate GetDefaultValue - should not return null for value types
+        if (value is null)
+        {
+            problems.Add("Value cannot be null");
+            return problems.AsReadOnly();
+        }
+
+        var valueType = value.GetType();
+
+        // Validate that null values are handled correctly
+        var nullConversion = TypeConverter.Convert<object?>(null);
+        if (nullConversion is not null)
+        {
+            problems.Add("TypeConverter.Convert<object?> should return null for null input");
+        }
+
+        // Validate that the value's type can be converted to itself
+        if (!TypeConverter.CanConvert(valueType, valueType))
+        {
+            problems.Add($"TypeConverter.CanConvert cannot convert {valueType.Name} to itself");
+        }
+
+        // Validate round-trip conversion for common types
         try
         {
-            var defaultValue = TypeConverter.GetDefaultValue(typeof(int));
-            if (defaultValue is null)
+            // Test conversion to string and back
+            var stringValue = TypeConverter.Convert<string>(value);
+            if (stringValue is not null)
             {
-                problems.Add("GetDefaultValue returns null for value types, which may cause issues during conversion");
+                var roundTrip = TypeConverter.Convert(value, value.GetType());
+                if (roundTrip is null)
+                {
+                    problems.Add("Round-trip conversion through string loses null safety");
+                }
             }
         }
         catch (Exception ex)
         {
-            problems.Add($"GetDefaultValue throws exception for value types: {ex.Message}");
+            problems.Add($"Round-trip conversion failed: {ex.Message}");
         }
 
-        // Validate CanConvert - basic functionality
-        if (!TypeConverter.CanConvert(typeof(string), typeof(int)))
-            problems.Add("CanConvert incorrectly returns false for string to int conversion");
+        // Validate that GetDefaultValue returns appropriate defaults
+        try
+        {
+            var intDefault = TypeConverter.GetDefaultValue(typeof(int));
+            if (intDefault is null or not int)
+            {
+                problems.Add("TypeConverter.GetDefaultValue(typeof(int)) should return default(int) (0)");
+            }
 
-        if (TypeConverter.CanConvert(typeof(int), typeof(string)))
-            problems.Add("CanConvert incorrectly returns true for int to string conversion (should be false)");
+            var stringDefault = TypeConverter.GetDefaultValue(typeof(string));
+            if (stringDefault is not null)
+            {
+                problems.Add("TypeConverter.GetDefaultValue(typeof(string)) should return null");
+            }
+        }
+        catch (Exception ex)
+        {
+            problems.Add($"GetDefaultValue validation failed: {ex.Message}");
+        }
 
-        // Validate ConvertList - should handle null input
+        // Validate ConvertList handles null input
         try
         {
             var emptyList = TypeConverter.ConvertList<int>(null);
             if (emptyList is null)
             {
-                problems.Add("ConvertList returns null for null input instead of empty list");
+                problems.Add("TypeConverter.ConvertList<T> should return empty list for null input, not null");
+            }
+            else if (emptyList.Count != 0)
+            {
+                problems.Add("TypeConverter.ConvertList<T> should return empty list for null input");
             }
         }
         catch (Exception ex)
         {
-            problems.Add($"ConvertList throws exception for null input: {ex.Message}");
+            problems.Add($"ConvertList validation failed: {ex.Message}");
         }
 
-        // Validate ToJsonCompatible - should handle null and various types
+        // Validate ToJsonCompatible handles null and preserves types
         try
         {
             var nullResult = TypeConverter.ToJsonCompatible(null);
             if (nullResult is not null)
             {
-                problems.Add("ToJsonCompatible should return null for null input");
+                problems.Add("TypeConverter.ToJsonCompatible should return null for null input");
+            }
+
+            var jsonResult = TypeConverter.ToJsonCompatible(value);
+            if (jsonResult is null && value is not null)
+            {
+                problems.Add("TypeConverter.ToJsonCompatible should not return null for non-null values");
             }
         }
         catch (Exception ex)
         {
-            problems.Add($"ToJsonCompatible throws exception for null input: {ex.Message}");
+            problems.Add($"ToJsonCompatible validation failed: {ex.Message}");
         }
 
         return problems.AsReadOnly();
     }
 
     /// <summary>
-    /// Checks if TypeConverter operations are valid
+    /// Checks if a value can be safely converted using TypeConverter
     /// </summary>
-    /// <param name="value">The value to check (used for null checking)</param>
+    /// <param name="value">The value to check</param>
     /// <returns>True if valid; false otherwise</returns>
-    public static bool IsValid(object? value = null)
+    public static bool IsValid(object? value)
     {
         return value is not null && Validate(value).Count == 0;
     }
 
     /// <summary>
-    /// Ensures TypeConverter operations are valid, throwing ArgumentException if not
+    /// Ensures a value can be safely converted using TypeConverter, throwing if not
     /// </summary>
     /// <param name="value">The value to validate</param>
     /// <exception cref="ArgumentNullException">Thrown when value is null</exception>
@@ -102,7 +149,8 @@ public static class TypeConverterValidation
         if (problems.Count > 0)
         {
             throw new ArgumentException(
-                $"TypeConverter validation failed:{Environment.NewLine}- {string.Join($"{Environment.NewLine}- ", problems)}");
+                $"TypeConverter validation failed:{Environment.NewLine}- {
+                string.Join($"{Environment.NewLine}- ", problems)}");
         }
     }
 }
