@@ -219,12 +219,12 @@ public static class TypeConverter
         if (type.IsClass)
         {
             var dict = new Dictionary<string, object?>();
-            var properties = type.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            var properties = ReflectionHelper.GetPublicProperties(type);
             foreach (var prop in properties)
             {
                 try
                 {
-                    var propValue = prop.GetValue(value);
+                    var propValue = ReflectionHelper.GetPropertyValue(value, prop.Name);
                     dict[prop.Name] = ToJsonCompatible(propValue);
                 }
                 catch { }
