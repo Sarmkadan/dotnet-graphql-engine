@@ -5,6 +5,7 @@
 // =============================================================================
 
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace GraphQLEngine.Domain.Entities;
 
@@ -14,13 +15,14 @@ namespace GraphQLEngine.Domain.Entities;
 /// </summary>
 public class QueryField
 {
-    public string Name { get; }
-    public string? Alias { get; }
-    public string? TypeCondition { get; } // For inline fragments (e.g., "... on User")
-    public IReadOnlyList<QueryArgument> Arguments { get; }
-    public IReadOnlyList<QueryField> Fields { get; } // Nested selections
+    public string Name { get; private set; }
+    public string? Alias { get; private set; }
+    public string? TypeCondition { get; private set; } // For inline fragments (e.g., "... on User")
+    public IReadOnlyList<QueryArgument> Arguments { get; private set; }
+    public IReadOnlyList<QueryField> Fields { get; private set; } // Nested selections
 
-    public QueryField(
+    [JsonConstructor]
+public QueryField(
         string name,
         string? alias = null,
         string? typeCondition = null,
@@ -40,8 +42,8 @@ public class QueryField
 /// </summary>
 public class QueryArgument
 {
-    public string Name { get; }
-    public object? Value { get; } // Parsed value of the argument
+    public string Name { get; private set; }
+    public object? Value { get; private set; } // Parsed value of the argument
 
     public QueryArgument(string name, object? value)
     {
