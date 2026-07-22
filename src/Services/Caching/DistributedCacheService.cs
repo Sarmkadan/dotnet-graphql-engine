@@ -18,6 +18,7 @@ sealed public class DistributedCacheService : IDisposable
     private readonly ILogger<DistributedCacheService> _logger;
     private readonly CacheOptions _options;
     private readonly ConcurrentDictionary<string, CacheEntry> _cache;
+    private readonly ConcurrentDictionary<string, Lazy<Task<object?>>> _pendingOperations;
     private readonly Timer? _cleanupTimer;
     private long _hits = 0;
     private long _misses = 0;
@@ -29,6 +30,7 @@ sealed public class DistributedCacheService : IDisposable
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _options = options ?? new CacheOptions();
         _cache = new ConcurrentDictionary<string, CacheEntry>();
+        _pendingOperations = new ConcurrentDictionary<string, Lazy<Task<object?>>>();
 
         // Start cleanup timer
         if (_options.EnableCleanup)
@@ -93,6 +95,7 @@ sealed public class DistributedCacheService : IDisposable
 
     /// <summary>
     /// Tries to get a value and sets it if not found
+    /// Uses cache stampede protection to ensure the factory is only called once per key
     /// </summary>
     public T? GetOrSet<T>(string key, Func<T?> factory, TimeSpan? expiration = null)
     {
@@ -100,13 +103,25 @@ sealed public class DistributedCacheService : IDisposable
         if (cached is not null)
             return cached;
 
-        var value = factory();
-        Set(key, value, expiration);
-        return value;
+        // Use coalescing to ensure factory is only called once per key
+        var pendingTask = _pendingOperations.GetOrAdd(
+            key,
+            k => new Lazy<Task<object?>>(() => Task.Run(() => (object?)factory()))
+        ).Value;
+
+        // Wait for the factory to complete and store the result
+        var result = pendingTask.Result;
+        Set(key, (T?)result, expiration);
+
+        // Clean up the pending operation
+        _pendingOperations.TryRemove(key, out _);
+
+        return (T?)result;
     }
 
     /// <summary>
     /// Asynchronously gets or sets a value
+    /// Uses cache stampede protection to ensure the factory is only called once per key
     /// </summary>
     public async Task<T?> GetOrSetAsync<T>(string key, Func<Task<T?>> factory, TimeSpan? expiration = null)
     {
@@ -114,9 +129,20 @@ sealed public class DistributedCacheService : IDisposable
         if (cached is not null)
             return cached;
 
-        var value = await factory();
-        Set(key, value, expiration);
-        return value;
+        // Use coalescing to ensure factory is only called once per key
+        var pendingTask = _pendingOperations.GetOrAdd(
+            key,
+            k => new Lazy<Task<object?>>(() => factory().ContinueWith(t => (object?)t.Result))
+        ).Value;
+
+        // Wait for the factory to complete and store the result
+        var result = await pendingTask;
+        Set(key, (T?)result, expiration);
+
+        // Clean up the pending operation
+        _pendingOperations.TryRemove(key, out _);
+
+        return (T?)result;
     }
 
     /// <summary>
