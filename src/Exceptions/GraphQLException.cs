@@ -117,6 +117,24 @@ sealed public class DataLoaderException : GraphQLException
 }
 
 /// <summary>
+/// Exception thrown when a resolver execution times out
+/// </summary>
+sealed public class ResolverTimeoutException : GraphQLException
+{
+    public string FieldPath { get; set; } = string.Empty;
+    public TimeSpan Timeout { get; set; }
+
+    public ResolverTimeoutException(string fieldPath, TimeSpan timeout)
+        : base($"Resolver '{fieldPath}' timed out after {timeout.TotalMilliseconds}ms", "TIMEOUT")
+    {
+        FieldPath = fieldPath;
+        Timeout = timeout;
+        AddExtension("timeoutMs", timeout.TotalMilliseconds);
+        AddExtension("field", fieldPath);
+    }
+}
+
+/// <summary>
 /// Exception thrown during subscription operations
 /// </summary>
 sealed public class SubscriptionException : GraphQLException
