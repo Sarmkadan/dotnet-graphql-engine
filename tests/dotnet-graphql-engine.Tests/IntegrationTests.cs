@@ -266,6 +266,76 @@ sealed public class ConcurrencyTests
     }
 
     [Fact]
+    public async Task DistributedCacheService_GetOrSet_WithConcurrentMisses_CallsFactoryOnce()
+    {
+        // Arrange
+        var cache = new DistributedCacheService(
+            new Mock<ILogger<DistributedCacheService>>().Object);
+        var key = "stampede-test-key";
+
+        var factoryCallCount = 0;
+        async Task<string> Factory()
+        {
+            Interlocked.Increment(ref factoryCallCount);
+            await Task.Delay(100); // Simulate expensive operation
+            return "expensive-result";
+        }
+
+        // Act: 20 concurrent misses should only call factory once
+        var tasks = Enumerable.Range(0, 20)
+            .Select(_ => cache.GetOrSetAsync(key, Factory))
+            .ToList();
+
+        var results = await Task.WhenAll(tasks);
+
+        // Assert: Factory was called exactly once
+        factoryCallCount.Should().Be(1);
+
+        // All results should be the same
+        results.Should().AllSatisfy(r => r.Should().Be("expensive-result"));
+        results.Should().HaveCount(20);
+
+        // Verify the value is now in cache
+        var cachedValue = cache.Get<string>(key);
+        cachedValue.Should().Be("expensive-result");
+    }
+
+    [Fact]
+    public async Task DistributedCacheService_GetOrSetSync_WithConcurrentMisses_CallsFactoryOnce()
+    {
+        // Arrange
+        var cache = new DistributedCacheService(
+            new Mock<ILogger<DistributedCacheService>>().Object);
+        var key = "stampede-test-key-sync";
+
+        var factoryCallCount = 0;
+        string Factory()
+        {
+            Interlocked.Increment(ref factoryCallCount);
+            Thread.Sleep(100); // Simulate expensive operation
+            return "expensive-result-sync";
+        }
+
+        // Act: 20 concurrent misses should only call factory once
+        var tasks = Enumerable.Range(0, 20)
+            .Select(_ => Task.Run(() => cache.GetOrSet(key, Factory)))
+            .ToList();
+
+        var results = await Task.WhenAll(tasks);
+
+        // Assert: Factory was called exactly once
+        factoryCallCount.Should().Be(1);
+
+        // All results should be the same
+        results.Should().AllSatisfy(r => r.Should().Be("expensive-result-sync"));
+        results.Should().HaveCount(20);
+
+        // Verify the value is now in cache
+        var cachedValue = cache.Get<string>(key);
+        cachedValue.Should().Be("expensive-result-sync");
+    }
+
+    [Fact]
     public async Task CacheService_WithConcurrentWrites_MaintainsDataIntegrity()
     {
         // Arrange
