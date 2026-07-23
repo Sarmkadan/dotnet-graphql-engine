@@ -95,18 +95,3 @@ public static class GraphQLHeaders
     public const string XGraphQLDepth = "X-GraphQL-Depth";
     public const string XRequestId = "X-Request-ID";
 }
-
-/// <summary>
-/// Configuration keys
-/// </summary>
-public static class ConfigurationKeys
-{
-    public const string MaxQueryComplexity = "graphql:maxQueryComplexity";
-    public const string MaxQueryDepth = "graphql:maxQueryDepth";
-    public const string QueryTimeoutMs = "graphql:queryTimeoutMs";
-    public const string EnableIntrospection = "graphql:enableIntrospection";
-    public const string EnableCaching = "graphql:enableCaching";
-    public const string CacheTTLSeconds = "graphql:cacheTTLSeconds";
-    public const string EnableSubscriptions = "graphql:enableSubscriptions";
-    public const string MaxSubscriptionConnections = "graphql:maxSubscriptionConnections";
-}
