@@ -6,6 +6,7 @@
 
 using System.ComponentModel.DataAnnotations;
 using GraphQLEngine.Common.Constants;
+using Microsoft.Extensions.Configuration;
 
 namespace GraphQLEngine.Configuration;
 
@@ -162,5 +163,85 @@ sealed public class DotnetGraphqlEngineOptions
                $"Introspection={EnableIntrospection}, " +
                $"Subscriptions={EnableSubscriptions}, " +
                $"Caching={EnableCaching}";
+    }
+
+    /// <summary>
+    /// Binds configuration from legacy string-based keys for backward compatibility.
+    /// This method supports the old ConfigurationKeys format and emits a deprecation warning.
+    /// </summary>
+    /// <param name="configuration">The configuration to bind from</param>
+    /// <returns>A new DotnetGraphqlEngineOptions instance with values from legacy configuration</returns>
+    /// <remarks>
+    /// This method provides backward compatibility for applications that previously used:
+    /// - graphql:maxQueryComplexity
+    /// - graphql:maxQueryDepth
+    /// - graphql:queryTimeoutMs
+    /// - graphql:enableIntrospection
+    /// - graphql:enableCaching
+    /// - graphql:cacheTTLSeconds
+    /// - graphql:enableSubscriptions
+    /// - graphql:maxSubscriptionConnections
+    ///
+    /// New applications should use the typed DotnetGraphqlEngineOptions pattern instead.
+    /// </remarks>
+    public static DotnetGraphqlEngineOptions BindFromLegacyConfiguration(IConfiguration configuration)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+
+        var options = new DotnetGraphqlEngineOptions();
+
+        // Log deprecation warning
+        Console.Error.WriteLine("[DEPRECATION WARNING] Legacy string-based configuration keys are deprecated. " +
+                            "Use the typed DotnetGraphqlEngineOptions pattern instead.");
+
+        // Bind from legacy configuration keys
+        options.MaxQueryComplexity = configuration.GetValue("graphql:maxQueryComplexity", options.MaxQueryComplexity);
+        options.MaxQueryDepth = configuration.GetValue("graphql:maxQueryDepth", options.MaxQueryDepth);
+        options.QueryTimeoutMs = configuration.GetValue("graphql:queryTimeoutMs", options.QueryTimeoutMs);
+        options.EnableIntrospection = configuration.GetValue("graphql:enableIntrospection", options.EnableIntrospection);
+        options.EnableCaching = configuration.GetValue("graphql:enableCaching", options.EnableCaching);
+        options.CacheTTLSeconds = configuration.GetValue("graphql:cacheTTLSeconds", options.CacheTTLSeconds);
+        options.EnableSubscriptions = configuration.GetValue("graphql:enableSubscriptions", options.EnableSubscriptions);
+        options.MaxSubscriptionConnections = configuration.GetValue("graphql:maxSubscriptionConnections", options.MaxSubscriptionConnections);
+
+        // Bind from new configuration structure (GraphQL section)
+        var graphQLConfig = configuration.GetSection("GraphQL");
+        if (graphQLConfig.Exists())
+        {
+            options.ServiceName = graphQLConfig.GetValue(nameof(options.ServiceName), options.ServiceName);
+            options.Version = graphQLConfig.GetValue(nameof(options.Version), options.Version);
+            options.MaxQueryComplexity = graphQLConfig.GetValue(nameof(options.MaxQueryComplexity), options.MaxQueryComplexity);
+            options.MaxQueryDepth = graphQLConfig.GetValue(nameof(options.MaxQueryDepth), options.MaxQueryDepth);
+            options.MaxQueryLength = graphQLConfig.GetValue(nameof(options.MaxQueryLength), options.MaxQueryLength);
+            options.QueryTimeoutMs = graphQLConfig.GetValue(nameof(options.QueryTimeoutMs), options.QueryTimeoutMs);
+            options.MaxQueryFields = graphQLConfig.GetValue(nameof(options.MaxQueryFields), options.MaxQueryFields);
+            options.MaxBatchSize = graphQLConfig.GetValue(nameof(options.MaxBatchSize), options.MaxBatchSize);
+            options.EnableIntrospection = graphQLConfig.GetValue(nameof(options.EnableIntrospection), options.EnableIntrospection);
+            options.EnableCaching = graphQLConfig.GetValue(nameof(options.EnableCaching), options.EnableCaching);
+            options.EnableSubscriptions = graphQLConfig.GetValue(nameof(options.EnableSubscriptions), options.EnableSubscriptions);
+            options.EnableDataLoading = graphQLConfig.GetValue(nameof(options.EnableDataLoading), options.EnableDataLoading);
+            options.EnableSchemaStitching = graphQLConfig.GetValue(nameof(options.EnableSchemaStitching), options.EnableSchemaStitching);
+            options.EnableDetailedErrorMessages = graphQLConfig.GetValue(nameof(options.EnableDetailedErrorMessages), options.EnableDetailedErrorMessages);
+            options.EnablePerformanceMetrics = graphQLConfig.GetValue(nameof(options.EnablePerformanceMetrics), options.EnablePerformanceMetrics);
+            options.EnableFederation = graphQLConfig.GetValue(nameof(options.EnableFederation), options.EnableFederation);
+            options.FederationDiscoveryEndpoint = graphQLConfig.GetValue(nameof(options.FederationDiscoveryEndpoint), options.FederationDiscoveryEndpoint);
+            options.FederationTimeout = graphQLConfig.GetValue<TimeSpan>(nameof(options.FederationTimeout), options.FederationTimeout);
+            options.EntityCacheTtlSeconds = graphQLConfig.GetValue(nameof(options.EntityCacheTtlSeconds), options.EntityCacheTtlSeconds);
+            options.EntityCacheMaxSize = graphQLConfig.GetValue(nameof(options.EntityCacheMaxSize), options.EntityCacheMaxSize);
+            options.CacheTTLSeconds = graphQLConfig.GetValue(nameof(options.CacheTTLSeconds), options.CacheTTLSeconds);
+            options.CacheMaxSize = graphQLConfig.GetValue(nameof(options.CacheMaxSize), options.CacheMaxSize);
+            options.CacheMaxSizeBytes = graphQLConfig.GetValue(nameof(options.CacheMaxSizeBytes), options.CacheMaxSizeBytes);
+            options.MaxSubscriptionConnections = graphQLConfig.GetValue(nameof(options.MaxSubscriptionConnections), options.MaxSubscriptionConnections);
+            options.SubscriptionTimeoutMs = graphQLConfig.GetValue(nameof(options.SubscriptionTimeoutMs), options.SubscriptionTimeoutMs);
+            options.HeartbeatIntervalMs = graphQLConfig.GetValue(nameof(options.HeartbeatIntervalMs), options.HeartbeatIntervalMs);
+            options.DataLoaderBatchSize = graphQLConfig.GetValue(nameof(options.DataLoaderBatchSize), options.DataLoaderBatchSize);
+            options.DataLoaderDelayMs = graphQLConfig.GetValue(nameof(options.DataLoaderDelayMs), options.DataLoaderDelayMs);
+            options.EnableRemoteSchemaIntrospection = graphQLConfig.GetValue(nameof(options.EnableRemoteSchemaIntrospection), options.EnableRemoteSchemaIntrospection);
+            options.RemoteSchemaTimeoutMs = graphQLConfig.GetValue(nameof(options.RemoteSchemaTimeoutMs), options.RemoteSchemaTimeoutMs);
+            options.LogInternalErrors = graphQLConfig.GetValue(nameof(options.LogInternalErrors), options.LogInternalErrors);
+            options.IncludeDetailedErrorMessages = graphQLConfig.GetValue(nameof(options.IncludeDetailedErrorMessages), options.IncludeDetailedErrorMessages);
+        }
+
+        return options;
     }
 }
