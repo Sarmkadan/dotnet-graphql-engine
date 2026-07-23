@@ -6,6 +6,7 @@
 
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using GraphQLEngine.Common.Utilities;
 
 namespace GraphQLEngine.Domain.Entities;
 
@@ -42,11 +43,44 @@ public QueryField(
 /// </summary>
 public class QueryArgument
 {
+    /// <summary>
+    /// Gets the name of the argument. Must be a valid GraphQL name.
+    /// </summary>
     public string Name { get; private set; }
-    public object? Value { get; private set; } // Parsed value of the argument
 
+    /// <summary>
+    /// Gets the value of the argument.
+    /// </summary>
+    public object? Value { get; private set; }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="QueryArgument"/> class.
+    /// </summary>
+    /// <param name="name">The name of the argument (must be a valid GraphQL name).</param>
+    /// <param name="value">The value of the argument.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="name"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="name"/> is empty or contains invalid characters.</exception>
     public QueryArgument(string name, object? value)
     {
+        ArgumentNullException.ThrowIfNull(name);
+
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new ArgumentException("Argument name cannot be null, empty, or whitespace.", nameof(name));
+        }
+
+        if (name.Any(char.IsWhiteSpace))
+        {
+            throw new ArgumentException("Argument name cannot contain whitespace characters.", nameof(name));
+        }
+
+        if (!name.IsValidGraphQLName())
+        {
+            throw new ArgumentException(
+                "Argument name must be a valid GraphQL name (start with letter/underscore, followed by letters/digits/underscores).",
+                nameof(name));
+        }
+
         Name = name;
         Value = value;
     }
