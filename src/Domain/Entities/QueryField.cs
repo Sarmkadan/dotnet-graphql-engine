@@ -22,19 +22,41 @@ public class QueryField
     public IReadOnlyList<QueryArgument> Arguments { get; private set; }
     public IReadOnlyList<QueryField> Fields { get; private set; } // Nested selections
 
+    /// <summary>
+    /// Gets the base cost of this field (default: 1)
+    /// </summary>
+    public int Cost { get; private set; } = 1;
+
+    /// <summary>
+    /// Gets the argument name that represents the list multiplier (e.g., "first", "limit", "take")
+    /// When present, complexity = Cost + (multiplier value * children complexity)
+    /// </summary>
+    public string? ChildMultiplierArgument { get; private set; }
+
+    /// <summary>
+    /// Gets whether this field uses DataLoader batching (reduces N+1 problem)
+    /// </summary>
+    public bool IsBatched { get; private set; }
+
     [JsonConstructor]
-public QueryField(
+    public QueryField(
         string name,
         string? alias = null,
         string? typeCondition = null,
         IEnumerable<QueryArgument>? arguments = null,
-        IEnumerable<QueryField>? fields = null)
+        IEnumerable<QueryField>? fields = null,
+        int cost = 1,
+        string? childMultiplierArgument = null,
+        bool isBatched = false)
     {
         Name = name;
         Alias = alias;
         TypeCondition = typeCondition;
         Arguments = arguments?.ToList().AsReadOnly() ?? (IReadOnlyList<QueryArgument>)Array.Empty<QueryArgument>();
         Fields = fields?.ToList().AsReadOnly() ?? (IReadOnlyList<QueryField>)Array.Empty<QueryField>();
+        Cost = cost;
+        ChildMultiplierArgument = childMultiplierArgument;
+        IsBatched = isBatched;
     }
 }
 

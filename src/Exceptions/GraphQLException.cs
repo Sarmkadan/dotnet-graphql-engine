@@ -71,12 +71,25 @@ sealed public class QueryComplexityException : GraphQLException
 {
     public int ActualScore { get; set; }
     public int MaxScore { get; set; }
+    public int? ComputedScore { get; set; }
 
     public QueryComplexityException(string message, int actual, int max)
         : base(message, "QUERY_COMPLEXITY_EXCEEDED")
     {
         ActualScore = actual;
         MaxScore = max;
+        AddExtension("actualScore", actual);
+        AddExtension("maxScore", max);
+    }
+
+    /// <summary>
+    /// Sets the computed score before execution
+    /// </summary>
+    /// <param name="computedScore">The computed complexity score before rejection</param>
+    public void SetComputedScore(int computedScore)
+    {
+        ComputedScore = computedScore;
+        AddExtension("computedScore", computedScore);
     }
 }
 
