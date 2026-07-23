@@ -4,8 +4,9 @@
 // CTO & Software Architect
 // =============================================================================
 
-using System.Collections.Concurrent;
+using GraphQLEngine.Common.Constants;
 using GraphQLEngine.Configuration;
+using GraphQLEngine.Services.Caching;
 using GraphQLEngine.Data.Repositories;
 using GraphQLEngine.Domain.Entities;
 using GraphQLEngine.Exceptions;
@@ -28,21 +29,44 @@ sealed public class PersistedQueryService
     private readonly ILogger<PersistedQueryService> _logger;
     private readonly PersistedQueryOptions _options;
 
-    // Fast hash→entity index; the repository remains source of truth
-    private readonly ConcurrentDictionary<string, PersistedQuery> _hashIndex =
-        new(StringComparer.OrdinalIgnoreCase);
+    // Fast bounded hash→entity index; the repository remains source of truth.
+    // LRU eviction caps memory even when clients register unlimited unique queries.
+    private readonly ICacheStore<string, PersistedQuery> _hashIndex;
 
     /// <summary>
     /// Initialises the service with the required repository and logger.
     /// </summary>
+    /// <param name="repository">Durable store for persisted queries.</param>
+    /// <param name="logger">Diagnostic logger.</param>
+    /// <param name="options">Optional behaviour options; defaults are used when omitted.</param>
+    /// <param name="hashIndex">
+    /// Optional cache store for the in-process hash index. When omitted, a
+    /// <see cref="LruCacheStore{TKey, TValue}"/> bounded by
+    /// <see cref="PersistedQueryOptions.MaxIndexSize"/> (falling back to
+    /// <see cref="GraphQLConstants.PersistedQueryMaxEntries"/>) is used.
+    /// </param>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="repository"/> or <paramref name="logger"/> is <c>null</c>.
+    /// </exception>
     public PersistedQueryService(
         IRepository<PersistedQuery> repository,
         ILogger<PersistedQueryService> logger,
-        PersistedQueryOptions? options = null)
+        PersistedQueryOptions? options = null,
+        ICacheStore<string, PersistedQuery>? hashIndex = null)
     {
-        _repository = repository ?? throw new ArgumentNullException(nameof(repository));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        ArgumentNullException.ThrowIfNull(repository);
+        ArgumentNullException.ThrowIfNull(logger);
+
+        _repository = repository;
+        _logger = logger;
         _options = options ?? new PersistedQueryOptions();
+
+        var maxEntries = _options.MaxIndexSize > 0
+            ? _options.MaxIndexSize
+            : GraphQLConstants.PersistedQueryMaxEntries;
+
+        _hashIndex = hashIndex ?? new LruCacheStore<string, PersistedQuery>(
+            maxEntries, keyComparer: StringComparer.OrdinalIgnoreCase);
     }
 
     /// <summary>

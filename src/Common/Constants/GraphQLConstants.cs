@@ -62,6 +62,19 @@ public static class GraphQLConstants
     public const int DefaultCacheTTLSeconds = 300;
     public const int DefaultCacheMaxSize = 1000;
 
+    /// <summary>
+    /// Upper bound on the number of persisted queries kept in the in-process
+    /// hash index. Limits the memory an attacker can consume by registering
+    /// unlimited unique persisted queries; the repository remains the durable store.
+    /// </summary>
+    public const int PersistedQueryMaxEntries = 10000;
+
+    /// <summary>
+    /// Upper bound on the number of parsed query documents (ASTs) cached per
+    /// execution service instance. Least recently used documents are evicted first.
+    /// </summary>
+    public const int DocumentCacheMaxEntries = 1000;
+
     // Logging
     public const string LogCategoryCore = "GraphQLEngine.Core";
     public const string LogCategorySchema = "GraphQLEngine.Schema";
