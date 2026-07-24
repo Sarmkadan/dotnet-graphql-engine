@@ -37,7 +37,10 @@ public static class PersistedQueryExtensions
         ArgumentNullException.ThrowIfNull(services);
 
         services.AddSingleton<IRepository<PersistedQuery>, InMemoryRepository<PersistedQuery>>();
-        services.AddScoped<PersistedQueryService>();
+
+        // Singleton: the in-process bounded hash index must persist across requests,
+        // otherwise it is rebuilt empty on every scope and never bounds process memory.
+        services.AddSingleton<PersistedQueryService>();
 
         return services;
     }
@@ -68,7 +71,10 @@ public static class PersistedQueryExtensions
 
         services.AddSingleton(options);
         services.AddSingleton<IRepository<PersistedQuery>, InMemoryRepository<PersistedQuery>>();
-        services.AddScoped<PersistedQueryService>();
+
+        // Singleton: the in-process bounded hash index must persist across requests,
+        // otherwise it is rebuilt empty on every scope and never bounds process memory.
+        services.AddSingleton<PersistedQueryService>();
 
         return services;
     }
