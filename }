@@ -1,2 +1,2 @@
 
-This file includes four test methods to cover the happy path and error paths for the `Validate`, `IsValid`, and `EnsureValid` methods of the `CollectionExtensionsValidation` class. The test methods use the xUnit framework and follow the conventional commit style.
+This file includes 5 test methods covering the happy path and error paths for the `Validate`, `IsValid`, and `EnsureValid` methods of the `ValidationHelperValidation` class. The test methods use the xUnit framework and follow the conventional commit style.
