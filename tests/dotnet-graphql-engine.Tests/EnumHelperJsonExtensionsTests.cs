@@ -121,7 +121,8 @@ namespace GraphQLEngine.Tests
 
             // Assert
             succeeded.Should().BeFalse();
-            value.Should().BeNull();
+            // FluentAssertions does not have BeNull for nullable enums; use xUnit Assert
+            Assert.Null(value);
         }
 
         [Fact]
