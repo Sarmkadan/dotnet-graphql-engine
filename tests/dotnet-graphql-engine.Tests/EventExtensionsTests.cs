@@ -13,7 +13,17 @@ public class EventExtensionsTests
         public TestEvent(DateTime timestamp)
         {
             Timestamp = timestamp;
-            Metadata = new Dictionary<string, object>();
+            // The base Event class is expected to initialise Metadata internally.
+            // No need to assign Metadata here; we rely on the base implementation.
+        }
+    }
+
+    private sealed class DerivedTestEvent : Event
+    {
+        public DerivedTestEvent(DateTime timestamp)
+        {
+            Timestamp = timestamp;
+            // Base Event handles Metadata initialization.
         }
     }
 
@@ -59,15 +69,6 @@ public class EventExtensionsTests
 
         // Assert
         Assert.False(result);
-    }
-
-    private sealed class DerivedTestEvent : Event
-    {
-        public DerivedTestEvent(DateTime timestamp)
-        {
-            Timestamp = timestamp;
-            Metadata = new Dictionary<string, object>();
-        }
     }
 
     [Fact]
