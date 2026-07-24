@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json;
 using FluentAssertions;
 using GraphQLEngine.Common.Utilities;
 using Xunit;
