@@ -90,7 +90,7 @@ sealed public class PersistedQueryService
 
         var hash = PersistedQuery.ComputeHash(queryString);
 
-        if (_hashIndex.TryGetValue(hash, out var cached))
+        if (_hashIndex.TryGet(hash, out var cached))
         {
             _logger.LogDebug("Persisted query already registered: {Hash}", hash);
             return cached;
@@ -106,7 +106,7 @@ sealed public class PersistedQueryService
 
         cancellationToken.ThrowIfCancellationRequested();
         await _repository.AddAsync(persisted);
-        _hashIndex[hash] = persisted;
+        _hashIndex.Set(hash, persisted);
 
         _logger.LogInformation(
             "Registered persisted query {Hash} on schema {SchemaName}",
@@ -131,7 +131,7 @@ sealed public class PersistedQueryService
         if (string.IsNullOrWhiteSpace(hash))
             return null;
 
-        if (_hashIndex.TryGetValue(hash, out var cached))
+        if (_hashIndex.TryGet(hash, out var cached))
         {
             _logger.LogDebug("APQ cache hit: {Hash}", hash);
             cached.RecordExecution();
@@ -150,7 +150,7 @@ sealed public class PersistedQueryService
             return null;
         }
 
-        _hashIndex[found.Hash] = found;
+        _hashIndex.Set(found.Hash, found);
         found.RecordExecution();
 
         _logger.LogDebug("APQ cache miss — populated from repository: {Hash}", hash);
@@ -224,7 +224,7 @@ sealed public class PersistedQueryService
         if (string.IsNullOrWhiteSpace(hash))
             return false;
 
-        _hashIndex.TryRemove(hash, out _);
+        _hashIndex.Remove(hash);
 
         cancellationToken.ThrowIfCancellationRequested();
         var all = await _repository.GetAllAsync();
@@ -274,7 +274,7 @@ sealed public class PersistedQueryService
 
         var hash = PersistedQuery.ComputeHash(queryString);
 
-        if (_hashIndex.ContainsKey(hash))
+        if (_hashIndex.TryGet(hash, out _))
             return true;
 
         cancellationToken.ThrowIfCancellationRequested();
