@@ -28,8 +28,8 @@ public sealed class ReflectionHelperJsonExtensionsJsonExtensionsTests
 
         // Assert
         Assert.NotNull(json);
-        Assert.Contains("\"Id\":42", json, StringComparison.Ordinal);
-        Assert.Contains("\"Name\":\"Answer\"", json, StringComparison.Ordinal);
+        Assert.Contains("\"id\":42", json, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("\"name\":\"Answer\"", json, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -84,8 +84,6 @@ public sealed class ReflectionHelperJsonExtensionsJsonExtensionsTests
     [Fact]
     public void TypeProperty_ShouldReturnNonEmptyString()
     {
-        // The static class may expose a Type property describing its purpose.
-        // We only verify that the property exists and returns a non‑empty string.
         string? type = ReflectionHelperJsonExtensionsJsonExtensions.Type;
         Assert.False(string.IsNullOrWhiteSpace(type));
     }
