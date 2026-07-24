@@ -17,6 +17,11 @@ def main() -> None:
     # Resolve the directory containing this script – assumed to be the repo root.
     repo_root = pathlib.Path(__file__).resolve().parent
 
+    # Check if the repository root exists
+    if not repo_root.exists():
+        sys.stderr.write("Error: Repository root does not exist.\n")
+        sys.exit(1)
+
     # Run the dotnet test command in the repository root.
     # The subprocess inherits stdout/stderr so test output is displayed directly.
     try:
