@@ -100,6 +100,13 @@ public static class DependencyInjection
                 HeartbeatIntervalMs = options.Value.HeartbeatIntervalMs
             };
         });
+        services.AddSingleton<SubscriptionResilienceOptions>(provider =>
+        {
+            var configuration = provider.GetService<Microsoft.Extensions.Configuration.IConfiguration>();
+            return configuration is not null
+                ? SubscriptionResilienceOptions.FromConfiguration(configuration)
+                : new SubscriptionResilienceOptions();
+        });
         services.AddScoped<SubscriptionService>();
 
         // -----------------------------------------------------------------

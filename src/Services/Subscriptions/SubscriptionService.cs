@@ -17,13 +17,46 @@ sealed public class SubscriptionService
 {
     private readonly ILogger<SubscriptionService> _logger;
     private readonly SubscriptionConfig _config;
+    private readonly SubscriptionResilienceOptions _resilienceOptions;
     private readonly ConcurrentDictionary<string, SubscriptionConnection> _connections = new();
     private readonly ConcurrentDictionary<string, AsyncEventHandler<SubscriptionUpdate>> _handlers = new();
+    private readonly ConcurrentDictionary<string, BoundedSubscriberBuffer<SubscriptionUpdate>> _buffers = new();
 
+    /// <summary>
+    /// Creates the subscription service using the default resilience settings
+    /// (256-item bounded buffer per subscriber, drop-oldest overflow policy).
+    /// </summary>
+    /// <param name="logger">Logger for connection and delivery diagnostics.</param>
+    /// <param name="config">Subscription connection limits and timeouts.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="logger"/> or <paramref name="config"/> is null.</exception>
     public SubscriptionService(ILogger<SubscriptionService> logger, SubscriptionConfig config)
+        : this(logger, config, new SubscriptionResilienceOptions())
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _config = config ?? throw new ArgumentNullException(nameof(config));
+    }
+
+    /// <summary>
+    /// Creates the subscription service with explicit per-subscriber buffering and
+    /// overflow resilience settings.
+    /// </summary>
+    /// <param name="logger">Logger for connection and delivery diagnostics.</param>
+    /// <param name="config">Subscription connection limits and timeouts.</param>
+    /// <param name="resilienceOptions">
+    /// Per-subscriber buffer capacity and overflow policy applied to every subscription.
+    /// </param>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="logger"/>, <paramref name="config"/> or <paramref name="resilienceOptions"/> is null.
+    /// </exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="resilienceOptions"/> contains invalid values.</exception>
+    public SubscriptionService(ILogger<SubscriptionService> logger, SubscriptionConfig config, SubscriptionResilienceOptions resilienceOptions)
+    {
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(config);
+        ArgumentNullException.ThrowIfNull(resilienceOptions);
+        resilienceOptions.Validate();
+
+        _logger = logger;
+        _config = config;
+        _resilienceOptions = resilienceOptions;
     }
 
     /// <summary>
@@ -66,6 +99,14 @@ sealed public class SubscriptionService
         if (_connections.TryRemove(clientId, out var connection))
         {
             connection.State = SubscriptionState.Closed;
+
+            foreach (var key in _buffers.Keys.Where(k => k.StartsWith($"{clientId}:", StringComparison.Ordinal)).ToList())
+            {
+                if (_buffers.TryRemove(key, out var buffer))
+                    buffer.Dispose();
+                _handlers.TryRemove(key, out _);
+            }
+
             _logger.LogInformation("Subscription connection closed: {ClientId}", clientId);
             return true;
         }
@@ -107,10 +148,61 @@ sealed public class SubscriptionService
         var eventHandler = new AsyncEventHandler<SubscriptionUpdate>(handler);
 
         _handlers.TryAdd(key, eventHandler);
+
+        // A bounded per-subscriber buffer decouples the producer (PublishAsync) from
+        // this subscriber's handler, so a slow or stalled client cannot make the
+        // buffered items - and therefore process memory - grow without limit.
+        var buffer = new BoundedSubscriberBuffer<SubscriptionUpdate>(_resilienceOptions.BufferCapacity, _resilienceOptions.OverflowPolicy);
+        _buffers[key] = buffer;
+        _ = PumpBufferAsync(key, clientId, eventName, buffer, eventHandler);
+
         connection.State = SubscriptionState.Active;
 
         _logger.LogInformation("Client subscribed to event: {ClientId} -> {EventName} with filter: {Filter}",
             clientId, eventName, filterExpression ?? "None");
+    }
+
+    /// <summary>
+    /// Drains a subscriber's bounded buffer, invoking the subscriber's handler for
+    /// each buffered update in order until the buffer completes or is terminated.
+    /// </summary>
+    /// <param name="key">The internal "{clientId}:{eventName}" subscription key.</param>
+    /// <param name="clientId">The subscribing client's identifier.</param>
+    /// <param name="eventName">The subscribed event name.</param>
+    /// <param name="buffer">The bounded buffer to drain.</param>
+    /// <param name="eventHandler">The subscriber's handler to invoke for each item.</param>
+    private async Task PumpBufferAsync(
+        string key,
+        string clientId,
+        string eventName,
+        BoundedSubscriberBuffer<SubscriptionUpdate> buffer,
+        AsyncEventHandler<SubscriptionUpdate> eventHandler)
+    {
+        try
+        {
+            await foreach (var update in buffer.ReadAllAsync())
+            {
+                await eventHandler.InvokeAsync(update).ConfigureAwait(false);
+            }
+        }
+        catch (SubscriptionTerminatedException ex)
+        {
+            _logger.LogWarning(ex,
+                "Subscription stream terminated for {ClientId} -> {EventName}: {ErrorCode}",
+                clientId, eventName, ex.ErrorCode);
+            CloseConnection(clientId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Unhandled error delivering subscription updates for {ClientId} -> {EventName}",
+                clientId, eventName);
+        }
+        finally
+        {
+            _handlers.TryRemove(key, out _);
+            _buffers.TryRemove(key, out _);
+        }
     }
 
     /// <summary>
@@ -128,7 +220,6 @@ sealed public class SubscriptionService
             PublishedAt = DateTime.UtcNow
         };
 
-        var tasks = new List<Task>();
         var subscribersCount = 0;
 
         foreach (var handlerEntry in _handlers.Where(h => h.Key.EndsWith($":{eventName}")))
@@ -139,22 +230,22 @@ sealed public class SubscriptionService
                 // Evaluate filter if present
                 if (connection.Filter == null || connection.Filter.Evaluate(update.Data))
                 {
-                    tasks.Add(handlerEntry.Value.InvokeAsync(update));
+                    // Publishing writes into the subscriber's bounded buffer rather than
+                    // invoking the handler inline: a slow consumer's handler can never
+                    // block the producer, and the buffer's overflow policy - not
+                    // unbounded queuing - decides what happens when it falls behind.
+                    if (_buffers.TryGetValue(handlerEntry.Key, out var buffer))
+                        buffer.TryPublish(update);
+
                     subscribersCount++;
                 }
             }
         }
 
-        try
-        {
-            await Task.WhenAll(tasks);
-            _logger.LogInformation("Update published to {Count} filtered subscribers: {EventName}",
-                subscribersCount, eventName);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error publishing subscription update: {EventName}", eventName);
-        }
+        _logger.LogInformation("Update published to {Count} filtered subscribers: {EventName}",
+            subscribersCount, eventName);
+
+        await Task.CompletedTask;
     }
 
     /// <summary>
