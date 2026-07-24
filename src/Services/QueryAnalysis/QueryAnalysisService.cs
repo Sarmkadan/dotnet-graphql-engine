@@ -4,7 +4,9 @@
 // CTO & Software Architect
 // =============================================================================
 
+using GraphQLEngine.Common.Constants;
 using GraphQLEngine.Domain.Entities;
+using GraphQLEngine.Services.Caching;
 using Microsoft.Extensions.Logging;
 using System.Linq; // Added for LINQ extensions
 
@@ -16,11 +18,31 @@ namespace GraphQLEngine.Services.QueryAnalysis;
 sealed public class QueryAnalysisService
 {
     private readonly ILogger<QueryAnalysisService> _logger;
-    private readonly Dictionary<string, QueryComplexity> _analyses = new();
 
-    public QueryAnalysisService(ILogger<QueryAnalysisService> logger)
+    // Bounded analysis cache keyed by query id. Analyses derive from parsed query
+    // documents, so this store is capped and evicts on an LRU basis to prevent
+    // unbounded memory growth when callers submit unlimited unique queries.
+    private readonly ICacheStore<string, QueryComplexity> _analyses;
+
+    /// <summary>
+    /// Initialises the service with the required logger.
+    /// </summary>
+    /// <param name="logger">Diagnostic logger.</param>
+    /// <param name="analysisCache">
+    /// Optional cache store for analyzed queries. When omitted, a
+    /// <see cref="LruCacheStore{TKey, TValue}"/> bounded by
+    /// <see cref="GraphQLConstants.DocumentCacheMaxEntries"/> is used.
+    /// </param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="logger"/> is <c>null</c>.</exception>
+    public QueryAnalysisService(
+        ILogger<QueryAnalysisService> logger,
+        ICacheStore<string, QueryComplexity>? analysisCache = null)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        ArgumentNullException.ThrowIfNull(logger);
+
+        _logger = logger;
+        _analyses = analysisCache ?? new LruCacheStore<string, QueryComplexity>(
+            GraphQLConstants.DocumentCacheMaxEntries);
     }
 
     /// <summary>
@@ -59,7 +81,7 @@ sealed public class QueryAnalysisService
                 analysis.AddWarning("Query complexity is high. Consider optimizing.");
             }
 
-            _analyses[query.Id] = analysis;
+            _analyses.Set(query.Id, analysis);
 
             _logger.LogInformation("Query analysis completed: {QueryId}, Score: {Score}, Level: {Level}",
                 query.Id, analysis.TotalScore, analysis.Level);
@@ -268,7 +290,7 @@ sealed public class QueryAnalysisService
     /// </summary>
     public QueryComplexity? GetAnalysis(string queryId)
     {
-        _analyses.TryGetValue(queryId, out var analysis);
+        _analyses.TryGet(queryId, out var analysis);
         return analysis;
     }
 
@@ -298,36 +320,41 @@ sealed public class QueryAnalysisService
     /// </summary>
     public Dictionary<string, object> GetStatistics()
     {
-        var totalScore = _analyses.Values.Sum(a => a.TotalScore);
-        var avgScore = _analyses.Count > 0 ? totalScore / _analyses.Count : 0;
+        var snapshot = _analyses.Snapshot();
+        var totalScore = snapshot.Sum(a => a.TotalScore);
+        var avgScore = snapshot.Count > 0 ? totalScore / snapshot.Count : 0;
 
         var complexityDistribution = new Dictionary<string, int>
         {
-            { "Low", _analyses.Values.Count(a => a.Level == QueryComplexityLevel.Low) },
-            { "Medium", _analyses.Values.Count(a => a.Level == QueryComplexityLevel.Medium) },
-            { "High", _analyses.Values.Count(a => a.Level == QueryComplexityLevel.High) },
-            { "Critical", _analyses.Values.Count(a => a.Level == QueryComplexityLevel.Critical) }
+            { "Low", snapshot.Count(a => a.Level == QueryComplexityLevel.Low) },
+            { "Medium", snapshot.Count(a => a.Level == QueryComplexityLevel.Medium) },
+            { "High", snapshot.Count(a => a.Level == QueryComplexityLevel.High) },
+            { "Critical", snapshot.Count(a => a.Level == QueryComplexityLevel.Critical) }
         };
 
         return new Dictionary<string, object>
         {
-            { "TotalQueriesAnalyzed", _analyses.Count },
+            { "TotalQueriesAnalyzed", snapshot.Count },
             { "AverageComplexityScore", avgScore },
-            { "MaxComplexityScore", _analyses.Count > 0 ? _analyses.Values.Max(a => a.TotalScore) : 0 },
+            { "MaxComplexityScore", snapshot.Count > 0 ? snapshot.Max(a => a.TotalScore) : 0 },
             { "ComplexityDistribution", complexityDistribution },
+            { "MaxCacheEntries", _analyses.MaxEntries },
             { "Timestamp", DateTime.UtcNow }
         };
     }
 
     /// <summary>
-    /// Clears old analyses (older than specified days)
+    /// Clears analyses older than <paramref name="daysOld"/> days.
     /// </summary>
+    /// <param name="daysOld">Age threshold in days; analyses older than this are evicted.</param>
+    /// <returns>The number of analyses removed.</returns>
     public int ClearOldAnalyses(int daysOld = 30)
     {
         var cutoffDate = DateTime.UtcNow.AddDays(-daysOld);
         var keysToRemove = _analyses
-            .Where(kv => kv.Value.AnalyzedAt < cutoffDate)
-            .Select(kv => kv.Key)
+            .Snapshot()
+            .Where(a => a.AnalyzedAt < cutoffDate)
+            .Select(a => a.QueryId)
             .ToList();
 
         foreach (var key in keysToRemove)

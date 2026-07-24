@@ -63,4 +63,11 @@ public interface ICacheStore<TKey, TValue> where TKey : notnull
 
     /// <summary>Removes all entries from the store.</summary>
     void Clear();
+
+    /// <summary>
+    /// Returns a point-in-time snapshot of the values currently held by the store,
+    /// excluding expired entries. Intended for statistics/reporting; callers must
+    /// not rely on the snapshot reflecting subsequent mutations.
+    /// </summary>
+    IReadOnlyCollection<TValue> Snapshot();
 }

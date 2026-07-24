@@ -179,6 +179,23 @@ public sealed class LruCacheStore<TKey, TValue> : ICacheStore<TKey, TValue> wher
         }
     }
 
+    /// <inheritdoc />
+    public IReadOnlyCollection<TValue> Snapshot()
+    {
+        lock (_gate)
+        {
+            var values = new List<TValue>(_map.Count);
+
+            foreach (var node in _map.Values)
+            {
+                if (!IsExpired(node.Value))
+                    values.Add(node.Value.Value);
+            }
+
+            return values;
+        }
+    }
+
     private bool IsExpired(in Entry entry) =>
         _timeToLive is { } ttl && DateTime.UtcNow - entry.WrittenAtUtc > ttl;
 
