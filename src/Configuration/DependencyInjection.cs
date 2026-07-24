@@ -81,7 +81,10 @@ public static class DependencyInjection
         services.AddScoped<ErrorFormattingService>(provider => new ErrorFormattingService(
             provider.GetRequiredService<ILogger<ErrorFormattingService>>(),
             provider.GetRequiredService<IOptions<GraphQLEngineOptions>>().Value));
-        services.AddScoped<PersistedQueryService>();
+        // Singleton: the in-process bounded hash index (see PersistedQueryService)
+        // must outlive a single request scope, otherwise every request rebuilds an
+        // empty LRU cache and the eviction bound never actually caps process memory.
+        services.AddSingleton<PersistedQueryService>();
 
         // -----------------------------------------------------------------
         // Subscription configuration and service
