@@ -4,11 +4,17 @@ using GraphQLEngine.Services.Caching;
 
 namespace GraphQLEngine.Tests
 {
+    /// <summary>
+    /// Tests for the <see cref="CacheKeyBuilder"/> class.
+    /// </summary>
     public class CacheKeyBuilderTests
     {
         private const string SchemaName = "TestSchema";
         private const string Query = "{ user { id name } }";
 
+        /// <summary>
+        /// Tests that the <see cref="CacheKeyBuilder.BuildQueryKey(string,string,System.Collections.Generic.IDictionary{string,object})"/> method produces the same key for the same input.
+        /// </summary>
         [Fact]
         public void BuildQueryKey_IsDeterministic()
         {
@@ -24,6 +30,9 @@ namespace GraphQLEngine.Tests
             Assert.Equal(key1, key2);
         }
 
+        /// <summary>
+        /// Tests that the <see cref="CacheKeyBuilder.BuildQueryKey(string,string,System.Collections.Generic.IDictionary{string,object})"/> method produces different keys for different variable dictionaries.
+        /// </summary>
         [Fact]
         public void BuildQueryKey_WithDifferentVariables_GeneratesDifferentKeys()
         {
@@ -47,6 +56,9 @@ namespace GraphQLEngine.Tests
             Assert.Contains(":vars:", key2);
         }
 
+        /// <summary>
+        /// Tests that the <see cref="CacheKeyBuilder.BuildQueryKey(string,string,System.Collections.Generic.IDictionary{string,object})"/> method produces the same key regardless of the order of variables in the dictionary.
+        /// </summary>
         [Fact]
         public void BuildQueryKey_VariableOrderIsInsignificant()
         {
@@ -68,6 +80,9 @@ namespace GraphQLEngine.Tests
             Assert.Equal(keyA, keyB);
         }
 
+        /// <summary>
+        /// Tests that the <see cref="CacheKeyBuilder.BuildQueryKey(string,string,System.Collections.Generic.IDictionary{string,object})"/> method does not include a variables segment when the variables dictionary is null or empty.
+        /// </summary>
         [Fact]
         public void BuildQueryKey_WithNullOrEmptyVariables_NoVarsSegment()
         {
@@ -78,6 +93,9 @@ namespace GraphQLEngine.Tests
             Assert.DoesNotContain(":vars:", keyWithEmpty);
         }
 
+        /// <summary>
+        /// Tests that the <see cref="CacheKeyBuilder.WithNamespace(string)"/> method correctly prefixes the namespace to the generated key.
+        /// </summary>
         [Fact]
         public void BuildQueryKeyNs_PrefixesNamespace()
         {
