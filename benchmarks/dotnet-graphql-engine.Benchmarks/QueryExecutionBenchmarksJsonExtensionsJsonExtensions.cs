@@ -2,7 +2,7 @@ using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace dotnet-graphql-engine.Benchmarks
+namespace dotnet_graphql_engine.Benchmarks
 {
     public static class QueryExecutionBenchmarksJsonExtensions
     {
